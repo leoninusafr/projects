@@ -75,7 +75,17 @@ a:hover { text-decoration: underline; }
   max-width: var(--maxw); margin: 0 auto; padding: 0 22px;
   height: var(--nav-h); display: flex; align-items: center; gap: 22px;
 }
-.brand { display: inline-block; font-weight: 600; letter-spacing: -.01em; font-size: 19px; color: var(--ink); text-decoration: none; }
+.brand { display: inline-flex; align-items: center; gap: 9px; font-weight: 600; letter-spacing: -.01em; font-size: 19px; color: var(--ink); text-decoration: none; }
+.brand:hover { text-decoration: none; }
+.brand-mark { display: inline-flex; width: 26px; height: 26px; }
+.brand-mark svg { width: 100%; height: 100%; }
+.brand-mark rect { fill: var(--ink); }
+.brand-mark path { stroke: var(--bg-elev); }
+.theme-studio .brand-mark rect { fill: var(--ink); }
+.theme-studio .brand-mark path { stroke: #fff; }
+.theme-mono .brand-mark rect { fill: var(--ink); }
+.theme-mono .brand-mark path { stroke: #fff; }
+.brand-word { line-height: 1; }
 .nav a { color: var(--ink); font-size: 14px; opacity: .9; }
 .nav a:hover { opacity: 1; text-decoration: none; }
 .nav .spacer { flex: 1; }

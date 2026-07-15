@@ -7,7 +7,9 @@
   document.body.className = 'theme-' + t;
   localStorage.setItem('kast_theme', t);
 
-  // Mini-Switcher (Entwicklung/Preview)
+  // Mini-Switcher NUR im Entwickler-Modus (?dev=1) — echte Besucher sehen ihn nie.
+  if (!params.has('dev')) return;
+
   const sw = document.createElement('div');
   sw.style.cssText = 'position:fixed;bottom:14px;right:14px;z-index:99;display:flex;gap:6px;' +
     'background:#fff;border:1px solid var(--line);border-radius:980px;padding:6px;box-shadow:var(--shadow-sm)';

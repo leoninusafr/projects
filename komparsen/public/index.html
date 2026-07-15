@@ -11,6 +11,8 @@
   <meta property="og:title" content="Kast — Komparsen-Agentur">
   <meta property="og:description" content="Kostenlos Komparse werden. Von Produktionen in Sekunden gefunden.">
   <meta property="og:locale" content="de_DE">
+  <link rel="icon" href="/logo.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/logo.svg">
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/styles-alt.css">
   <script type="application/ld+json">
@@ -27,9 +29,14 @@
 </head>
 <body>
   <nav class="nav"><div class="nav-inner">
-    <a class="brand" href="/">Kast</a>
+    <a class="brand" href="/" aria-label="Kast — Startseite">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32"><rect x="1.5" y="1.5" width="29" height="29" rx="8"/><path d="M11 8v16M11 16l8-8M12.8 16l8.2 8" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <span class="brand-word">Kast</span>
+    </a>
     <span class="spacer"></span>
-    <a href="/onboarding.html">Komparse werden</a>
+    <a href="/onboarding.html?role=extra">Komparse werden</a>
     <a href="/onboarding.html?role=production">Produktion anmelden</a>
     <span id="navAuth"></span>
   </div></nav>
@@ -40,11 +47,11 @@
   <header class="hero">
     <div class="container">
       <p class="hero-eyebrow">Mitgliedschaft kostenlos</p>
-      <h1>Komparsen.<br>Einfach.</h1>
+      <h1>Vom Profil<br>zum Set.</h1>
       <p class="lead">Werde in zwei Minuten Komparse — und werde von Produktionen
-        in Sekunden gefunden. Ob jung oder alt, groß oder klein: bei uns bist du richtig.</p>
+        in Sekunden gefunden. Ohne Papierkram, ohne Umwege, deutschlandweit.</p>
       <div class="row hero-cta">
-        <a class="btn block" href="/onboarding.html">Komparse werden</a>
+        <a class="btn block" href="/onboarding.html?role=extra">Komparse werden</a>
         <a class="btn secondary block" href="/onboarding.html?role=production">Produktion anmelden</a>
       </div>
       <p class="hero-stat" id="stat">Lade Statistik…</p>
@@ -72,11 +79,12 @@
     </div>
   </section>
 
-  <!-- ZITAT -->
+  <!-- MARKEN-STATEMENT (eigen) -->
   <section class="container">
     <blockquote class="quote">
-      „Es gibt keine kleinen Rollen — nur kleine Schauspieler."
-      <span class="quote-sub">Unsere Komparsen und Kunden schätzen die Flexibilität, Zuverlässigkeit und Schnelligkeit.</span>
+      Ein Gesicht, ein Profil, ein Klick zum Set.
+      <span class="quote-sub">Kein Papierkram, keine versteckten Kosten — nur der schnellste Weg
+        zwischen dir und deiner nächsten Produktion.</span>
     </blockquote>
   </section>
 

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mein Profil — Kast</title>
+  <link rel="icon" href="/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/styles-alt.css">
+</head>
+<body>
+  <nav class="nav"><div class="nav-inner">
+    <a class="brand" href="/" aria-label="Kast — Startseite">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32"><rect x="1.5" y="1.5" width="29" height="29" rx="8"/><path d="M11 8v16M11 16l8-8M12.8 16l8.2 8" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <span class="brand-word">Kast</span>
+    </a>
+    <a href="/search.html">Suche</a>
+    <span class="spacer"></span>
+    <span id="navAuth"></span>
+  </div></nav>
+  <script src="/app.js"></script>
+  <script src="/nav.js"></script>
+
+  <div class="container narrow">
+    <h1>Mein Profil</h1>
+    <p class="lead">Deine Daten. Deine Kontrolle. Jederzeit änderbar.</p>
+    <div id="msg"></div>
+
+    <div class="card">
+      <h3>Steckbrief</h3>
+      <div class="row">
+        <div><label for="fn">Vorname</label><input id="fn"></div>
+        <div><label for="ln">Nachname</label><input id="ln"></div>
+      </div>
+      <label for="dob">Geburtsdatum</label>
+      <input id="dob" type="date">
+      <div class="row">
+        <div><label for="gender">Geschlecht</label>
+          <select id="gender"><option value="">–</option><option>weiblich</option><option>männlich</option><option>divers</option></select></div>
+        <div><label for="height">Größe (cm)</label><input id="height" type="number"></div>
+      </div>
+      <div class="row">
+        <div><label for="hair">Haarfarbe</label>
+          <select id="hair"><option value="">–</option><option>braun</option><option>blond</option><option>schwarz</option><option>rot</option><option>grau</option><option>gefärbt</option></select></div>
+        <div><label for="eye">Augenfarbe</label>
+          <select id="eye"><option value="">–</option><option>blau</option><option>braun</option><option>grün</option><option>grau</option><option>sonstige</option></select></div>
+      </div>
+      <div class="row">
+        <div><label for="city">Wohnort</label><input id="city"></div>
+        <div><label for="plz">PLZ</label><input id="plz"></div>
+      </div>
+      <label for="skills">Fähigkeiten (Komma-getrennt)</label>
+      <input id="skills">
+      <label for="bio">Kurz zu dir</label>
+      <textarea id="bio"></textarea>
+      <button class="btn block" id="save" style="margin-top:16px">Speichern</button>
+    </div>
+
+    <div class="card">
+      <h3>Sichtbarkeit</h3>
+      <p class="muted">Nur wenn du sichtbar bist, wirst du von Produktionen in der Suche gefunden.</p>
+      <label class="check"><input type="checkbox" id="visible">
+        <span>Ich möchte in der Casting-Kartei sichtbar sein.</span></label>
+      <p id="selfieInfo" class="muted" style="margin-top:10px"></p>
+    </div>
+
+    <div class="card">
+      <h3>Konto</h3>
+      <button class="btn danger block" id="del">Konto unwiderruflich löschen (DSGVO)</button>
+    </div>
+  </div>
+
+  <script src="/theme.js"></script>
+  <script>
+    (async () => {
+      const $ = (id) => document.getElementById(id);
+      const me = await window.requireAuth('/me.html');
+      if (!me) return;
+
+      // Profil laden
+      const r = await api('/api/profile/me');
+      if (r.ok) {
+        const p = await r.json();
+        $('fn').value = p.first_name || ''; $('ln').value = p.last_name || '';
+        $('dob').value = p.dob || ''; $('gender').value = p.gender || '';
+        $('height').value = p.height_cm || ''; $('hair').value = p.hair_color || '';
+        $('eye').value = p.eye_color || ''; $('city').value = p.city || '';
+        $('plz').value = p.plz || ''; $('skills').value = (p.skills || []).join(', ');
+        $('bio').value = p.bio || '';
+        $('visible').checked = !!p.visible;
+        if (p.selfie_due_at) {
+          const due = new Date(p.selfie_due_at);
+          $('selfieInfo').innerHTML = due < new Date()
+            ? '<span class="badge warn">Selfie-Auffrischung fällig</span>'
+            : 'Selfie gültig bis ' + due.toLocaleDateString('de-DE');
+        }
+      }
+
+      $('save').addEventListener('click', async () => {
+        $('save').classList.add('loading');
+        try {
+          const body = {
+            first_name: $('fn').value, last_name: $('ln').value, dob: $('dob').value,
+            gender: $('gender').value, height_cm: Number($('height').value) || null,
+            hair_color: $('hair').value, eye_color: $('eye').value,
+            city: $('city').value, plz: $('plz').value,
+            skills: $('skills').value.split(',').map(s => s.trim()).filter(Boolean),
+            bio: $('bio').value, visible: $('visible').checked
+          };
+          const res = await api('/api/profile/me', { method: 'PUT', body: JSON.stringify(body) });
+          if (!res.ok) throw new Error('Speichern fehlgeschlagen');
+          $('msg').innerHTML = '<div class="notice ok">Profil gespeichert.</div>';
+        } catch (e) {
+          $('msg').innerHTML = '<div class="notice err">' + esc(e.message) + '</div>';
+        } finally { $('save').classList.remove('loading'); }
+      });
+
+      $('del').addEventListener('click', async () => {
+        if (!confirm('Konto unwiderruflich löschen? Alle deine Daten (Profil, Fotos, Selfie) werden gelöscht (DSGVO Art. 17).')) return;
+        const res = await api('/api/profile/me', { method: 'DELETE' });
+        if (res.ok) location.href = '/';
+        else alert('Löschen fehlgeschlagen.');
+      });
+    })();
+  </script>
+</body>
+</html>

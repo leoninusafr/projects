@@ -34,6 +34,9 @@
   }
   document.querySelectorAll('input[name="role"]').forEach(r => r.addEventListener('change', syncRoleUI));
 
+  // Schritt 0 -> Account (Rolle steht fest)
+  $('next0').addEventListener('click', () => show(1));
+
   // Schritt 1 -> Register (Double-Opt-In)
   $('next1').addEventListener('click', async (e) => {
     const btn = e.currentTarget;
@@ -157,11 +160,14 @@
   });
 
   syncRoleUI();
-  // Vorauswahl der Rolle per URL (?role=production)
+  // Rolle per URL vorwählen (?role=extra | ?role=production) und Step 0 überspringen —
+  // die Rolle wurde ja bereits auf der Startseite per Klick gewählt.
   const pre = new URLSearchParams(location.search).get('role');
-  if (pre === 'production') {
-    const rb = document.querySelector('input[name="role"][value="production"]');
+  if (pre === 'production' || pre === 'extra') {
+    const rb = document.querySelector('input[name="role"][value="' + pre + '"]');
     if (rb) { rb.checked = true; syncRoleUI(); }
+    show(1); // direkt zu "Account"
+  } else {
+    show(0); // keine Rolle vorgegeben -> Rollenwahl zeigen
   }
-  show(0);
 })();

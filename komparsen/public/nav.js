@@ -13,7 +13,8 @@
     let target = '/';
     if (me) {
       if (me.role === 'admin') target = '/dashboard.html';
-      else target = '/search.html'; // Komparse & Produktion -> Suche als Hub
+      else if (me.role === 'production') target = '/search.html';
+      else target = '/me.html'; // Komparse -> eigenes Profil-Dashboard
     }
     brand.setAttribute('href', target);
   }

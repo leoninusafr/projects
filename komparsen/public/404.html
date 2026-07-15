@@ -4,12 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Nicht gefunden — Kast</title>
+  <link rel="icon" href="/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/styles-alt.css">
 </head>
 <body>
   <nav class="nav"><div class="nav-inner">
-    <a class="brand" href="/">Kast</a><span class="spacer"></span>
+    <a class="brand" href="/" aria-label="Kast — Startseite">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32"><rect x="1.5" y="1.5" width="29" height="29" rx="8"/><path d="M11 8v16M11 16l8-8M12.8 16l8.2 8" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <span class="brand-word">Kast</span>
+    </a><span class="spacer"></span>
     <span id="navAuth"></span>
   </div></nav>
   <script src="/app.js"></script>
