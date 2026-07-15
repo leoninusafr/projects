@@ -252,6 +252,13 @@ footer { border-top: 1px solid var(--line); padding: 22px; text-align: center; c
 .notice.err { background: rgba(201,52,52,.1); color: var(--danger); }
 .notice.ok { background: rgba(47,168,79,.12); color: var(--ok); }
 
+/* Pflichtfeld-Marker ("!") für Setup-Checkliste */
+.reqflag {
+  display: inline-block; font-weight: 700; font-size: 13px; color: var(--danger);
+  margin-left: 6px; vertical-align: baseline;
+}
+.reqflag.ok { color: var(--ok); }
+
 /* Selfie */
 .selfie-view { width: 100%; max-width: 360px; border-radius: var(--radius); background: #000; aspect-ratio: 3/4; }
 .hidden { display: none !important; }

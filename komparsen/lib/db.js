@@ -45,12 +45,56 @@ function emptyDb() {
 function defaultSettings() {
   return [
     { key: 'company_name', value: 'Kast — Komparsen Agentur' },
-    { key: 'impressum', value: '##_ Impressum\n\nAngaben gemäß § 5 TMG\n\n**Firma:** Kast Komparsen Agentur\n**Vertreten durch:** Leon\n**Adresse:** Musterstraße 1, 12345 Musterstadt\n**Kontakt:** hallo@kast.example\n\n_Adresse im Admin-Panel änderbar._' },
-    { key: 'agb', value: '##_ AGB\n\n1. Mit der Registrierung überträgst du uns die Nutzungsrechte an von dir hochgeladenen Bildern für Casting-Zwecke.\n2. Wir sind berechtigt, deinen Account jederzeit zu löschen.\n3. Deine Daten werden DSGVO-konform verarbeitet.' },
-    { key: 'privacy', value: '##_ Datenschutz\n\nWir verarbeiten deine Daten ausschließlich zur Vermittlung als Komparse. Ein Selfie (biometrische Daten, Art. 9 DSGVO) wird nur mit deiner ausdrücklichen Einwilligung verarbeitet.' },
-    { key: 'separate_imprint_address', value: '' }
+    { key: 'impressum', value: '##_ Impressum\\n\\nAngaben gemäß § 5 TMG\\n\\n**Firma:** Kast Komparsen Agentur\\n**Vertreten durch:** Leon\\n**Adresse:** Musterstraße 1, 12345 Musterstadt\\n**Kontakt:** hallo@kast.example\\n\\n_Adresse im Admin-Panel änderbar._' },
+    { key: 'agb', value: '##_ AGB\\n\\n1. Mit der Registrierung überträgst du uns die Nutzungsrechte an von dir hochgeladenen Bildern für Casting-Zwecke.\\n2. Wir sind berechtigt, deinen Account jederzeit zu löschen.\\n3. Deine Daten werden DSGVO-konform verarbeitet.' },
+    { key: 'privacy', value: '##_ Datenschutz\\n\\nWir verarbeiten deine Daten ausschließlich zur Vermittlung als Komparse. Ein Selfie (biometrische Daten, Art. 9 DSGVO) wird nur mit deiner ausdrücklichen Einwilligung verarbeitet.' },
+    { key: 'separate_imprint_address', value: '' },
+    // --- Setup / Pflichtfelder für den "Publish"-Blocker ---
+    // (leer = noch nicht ausgefüllt; im Admin-Panel mit "!" markiert)
+    { key: 'setup_done', value: '0' },
+    { key: 'owner_name', value: '' },
+    { key: 'owner_address', value: '' },
+    { key: 'owner_city', value: '' },
+    { key: 'owner_email', value: '' },
+    { key: 'owner_phone', value: '' },
+    { key: 'domain', value: '' }
   ];
 }
+
+// Definition der Pflichtfelder, die ausgefüllt sein MÜSSEN, bevor die Seite
+// "live/published" geht (DSGVO/TMG: Impressum braucht echte Angaben).
+// Jeder Eintrag: key = site_settings-Schlüssel, label = Anzeige, section = Gruppe.
+const REQUIRED_SETUP_FIELDS = [
+  { key: 'company_name', label: 'Firmenname / Name der Agentur', section: 'Grunddaten' },
+  { key: 'owner_name', label: 'Name des Inhabers (Vertreten durch)', section: 'Impressum' },
+  { key: 'owner_address', label: 'Straße & Hausnummer', section: 'Impressum' },
+  { key: 'owner_city', label: 'PLZ & Stadt', section: 'Impressum' },
+  { key: 'owner_email', label: 'Kontakt-E-Mail (Impressum)', section: 'Impressum' },
+  { key: 'owner_phone', label: 'Telefon (Impressum)', section: 'Impressum' },
+  { key: 'domain', label: 'Eigene Domain (z. B. kast.de)', section: 'Technik' },
+  { key: 'agb', label: 'AGB hinterlegt', section: 'Rechtstexte' },
+  { key: 'privacy', label: 'Datenschutzerklärung hinterlegt', section: 'Rechtstexte' }
+];
+
+// Liefert den aktuellen Setup-Status: welche Pflichtfelder fehlen.
+async function getSetupStatus() {
+  const db = await ensure();
+  const get = (k) => { const s = db.site_settings.find(x => x.key === k); return s ? s.value : ''; };
+  const missing = REQUIRED_SETUP_FIELDS
+    .filter(f => !String(get(f.key)).trim())
+    .map(f => ({ key: f.key, label: f.label, section: f.section }));
+  const done = missing.length === 0;
+  if (done && get('setup_done') !== '1') await setSetting('setup_done', '1');
+  if (!done && get('setup_done') === '1') await setSetting('setup_done', '0');
+  return {
+    done,
+    missing,
+    total: REQUIRED_SETUP_FIELDS.length,
+    filled: REQUIRED_SETUP_FIELDS.length - missing.length
+  };
+}
+
+module.exports.REQUIRED_SETUP_FIELDS = REQUIRED_SETUP_FIELDS;
 
 // Persistenz (debounced, atomar via tmp+rename)
 async function persist() {
@@ -203,5 +247,6 @@ async function searchExtras(query = {}) {
 module.exports = {
   ensure, persist, all, find, filter, insert, update, remove,
   getSetting, setSetting, getUserByEmail, getUserById, createUser,
-  ensureProfile, searchExtras, defaultSettings, deleteUserCascade
+  ensureProfile, searchExtras, defaultSettings, deleteUserCascade,
+  getSetupStatus, REQUIRED_SETUP_FIELDS
 };

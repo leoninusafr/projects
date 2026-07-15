@@ -82,7 +82,7 @@ const assert = (cond, msg) => { if (!cond) { console.error('  ✗ FAIL: ' + msg)
   assert(r.status === 401 && /bestätigen/.test(r.body.error || ''), 'Login vor Verify -> 401 Double-Opt-In');
   // Token aus mailbox lesen
   const fs = require('fs');
-  const mdir = '/opt/data/projects/komparsen/data/mailbox';
+  const mdir = require('path').join(__dirname, '..', 'data', 'mailbox');
   const files = fs.readdirSync(mdir).sort();
   const last = files[files.length - 1];
   const txt = fs.readFileSync(mdir + '/' + last, 'utf8');

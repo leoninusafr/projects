@@ -223,6 +223,11 @@ async function handleApi(req, res, parsed) {
     d.site_settings.forEach(s => out[s.key] = s.value);
     return json(res, 200, out);
   }
+  // Setup-Status: welche Pflichtfelder (noch) fehlen? (Admin-Panel "!"-Marker)
+  if (p === '/api/admin/setup-status' && method === 'GET') {
+    if (!need(['admin'])) return json(res, 403, { error: 'admin' });
+    return json(res, 200, await db.getSetupStatus());
+  }
   // Impressum (Einzelwert, öffentlich)
   if (p === '/api/impressum' && method === 'GET') {
     const imp = await db.getSetting('impressum');

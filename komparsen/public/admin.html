@@ -18,29 +18,80 @@
     </a>
     <a href="/dashboard.html">Dashboard</a>
     <a href="/admin.html">Einstellungen</a>
+    <a href="/kalender.html">Kalender</a>
+    <a href="/team.html">Team</a>
     <span class="spacer"></span>
     <span id="navAuth"></span>
   </div></nav>
 
   <div class="container">
-    <h1>Website-Einstellungen</h1>
-    <p class="lead">Rechtstexte &amp; Impressum direkt hier ändern — ohne HTML anzufassen.</p>
+    <h1>Einstellungen</h1>
+    <p class="lead">Rechtstexte, Impressum &amp; Live-Schalter — alles an einem Ort, ohne HTML anzufassen.</p>
 
+    <!-- PUBLISH-STATUS (Setup-Checkliste) -->
+    <div id="publishBox" class="card" style="border-color:var(--accent)">
+      <div id="publishHead" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span id="publishBadge" class="badge">…</span>
+        <strong id="publishTitle">Einrichtung wird geprüft …</strong>
+      </div>
+      <div id="publishBody" style="margin-top:12px"></div>
+    </div>
+
+    <!-- KATEGORIE: Website / Rechtstexte -->
+    <h2 style="margin-top:30px">Website &amp; Rechtstexte</h2>
     <div class="card">
-      <label for="company_name">Firmenname</label>
-      <input id="company_name">
-      <label for="impressum">Impressum (Markdown)</label>
-      <textarea id="impressum" style="min-height:160px"></textarea>
+      <label for="company_name">Firmenname / Name der Agentur</label>
+      <input id="company_name" aria-describedby="req-company_name">
+      <span class="reqflag" id="req-company_name" aria-live="polite"></span>
+
+      <div class="grid cols-2" style="margin-top:8px">
+        <div>
+          <label for="owner_name">Inhaber („Vertreten durch")</label>
+          <input id="owner_name" aria-describedby="req-owner_name">
+          <span class="reqflag" id="req-owner_name" aria-live="polite"></span>
+        </div>
+        <div>
+          <label for="owner_email">Kontakt-E-Mail (Impressum)</label>
+          <input id="owner_email" type="email" aria-describedby="req-owner_email">
+          <span class="reqflag" id="req-owner_email" aria-live="polite"></span>
+        </div>
+        <div>
+          <label for="owner_address">Straße &amp; Hausnummer</label>
+          <input id="owner_address" aria-describedby="req-owner_address">
+          <span class="reqflag" id="req-owner_address" aria-live="polite"></span>
+        </div>
+        <div>
+          <label for="owner_city">PLZ &amp; Stadt</label>
+          <input id="owner_city" aria-describedby="req-owner_city">
+          <span class="reqflag" id="req-owner_city" aria-live="polite"></span>
+        </div>
+        <div>
+          <label for="owner_phone">Telefon (Impressum)</label>
+          <input id="owner_phone" type="tel" aria-describedby="req-owner_phone">
+          <span class="reqflag" id="req-owner_phone" aria-live="polite"></span>
+        </div>
+        <div>
+          <label for="domain">Eigene Domain (z. B. kast.de)</label>
+          <input id="domain" placeholder="kast.de" aria-describedby="req-domain">
+          <span class="reqflag" id="req-domain" aria-live="polite"></span>
+        </div>
+      </div>
+
       <label class="check"><input type="checkbox" id="useSeparate">
-        <span>Abweichende Adresse nur fürs Impressum verwenden</span></label>
+        <span>Abweichende Adresszeile nur fürs Impressum verwenden</span></label>
       <div id="sepBox" class="hidden">
         <label for="separate_imprint_address">Impressum-Adresse (eigene Zeile)</label>
         <input id="separate_imprint_address">
       </div>
+
+      <label for="impressum">Impressum (Markdown)</label>
+      <textarea id="impressum" style="min-height:160px"></textarea>
       <label for="agb">AGB (Markdown)</label>
       <textarea id="agb" style="min-height:140px"></textarea>
+      <span class="reqflag" id="req-agb" aria-live="polite"></span>
       <label for="privacy">Datenschutz (Markdown)</label>
       <textarea id="privacy" style="min-height:140px"></textarea>
+      <span class="reqflag" id="req-privacy" aria-live="polite"></span>
       <button class="btn" id="save" style="margin-top:16px">Speichern</button>
     </div>
 
