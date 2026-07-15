@@ -255,6 +255,18 @@ footer { border-top: 1px solid var(--line); padding: 22px; text-align: center; c
 /* Selfie */
 .selfie-view { width: 100%; max-width: 360px; border-radius: var(--radius); background: #000; aspect-ratio: 3/4; }
 .hidden { display: none !important; }
+
+/* Auth-Gate: geschützte Seiten (body.guard) verstecken ALLES außer Nav,
+   bis der Server die Rolle bestätigt hat (body.auth-ok). Kein Aufblitzen,
+   kein Eindruck, man könne per HTML das Login umgehen. */
+body.guard .container { visibility: hidden; }
+body.guard.auth-ok .container { visibility: visible; }
+body.guard .container::before {
+  content: "Wird geladen …"; visibility: visible;
+  display: block; text-align: center; color: var(--ink-2);
+  padding: 60px 0; font-size: 15px;
+}
+body.guard.auth-ok .container::before { content: none; }
 .ico { width: 16px; height: 16px; vertical-align: -3px; display: inline-block; }
 
 /* ===== KLEINKRAM: States & Zugänglichkeit (beide Themes) ===== */

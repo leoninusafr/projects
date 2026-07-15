@@ -27,15 +27,19 @@ window.requireAuth = async function (next) {
   if (!r.ok) { location.href = '/login.html?next=' + encodeURIComponent(next || location.pathname); return false; }
   const me = await r.json();
   window.ME = me;
+  document.body.classList.add('auth-ok');
   return me;
 };
 // Wie requireAuth, verlangt zusätzlich eine der Rollen. Sonst -> 403-Seite.
 window.requireRole = async function (roles, next) {
-  const me = await window.requireAuth(next);
-  if (!me) return false;
+  const r = await api('/api/auth/me');
+  if (!r.ok) { location.href = '/login.html?next=' + encodeURIComponent(next || location.pathname); return false; }
+  const me = await r.json();
+  window.ME = me;
   if (roles && !roles.includes(me.role)) {
     location.href = '/403.html';
     return false;
   }
+  document.body.classList.add('auth-ok');
   return me;
 };
