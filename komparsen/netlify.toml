@@ -2,7 +2,16 @@
 # Build: keiner nötig (reines Node, keine Dependencies).
 # Monorepo: Base = "komparsen", danach sind publish/functions relativ dazu.
 # Statische Seiten aus public/, API aus netlify/functions/api.js.
-
+#
+# PERSISTENZ (DSGVO-sicher, produktionsreif):
+# Netlify Functions haben KEIN persistentes Dateisystem -> JSON-DB geht nach
+# Cold-Start verloren. Lösung: Supabase (kostenloser Tier) als DB.
+# Env-Variablen in Netlify setzen (Site settings -> Environment variables):
+#   SUPABASE_URL=https://xxxx.supabase.co
+#   SUPABASE_ANON_KEY=eyJ... (public anon key)
+#   SUPABASE_SERVICE_KEY=eyJ... (SERVICE ROLE key — NUR serverseitig!)
+# Sobald alle 3 gesetzt sind, schaltet lib/db.js automatisch auf Supabase um
+# (siehe server.js). Migration: supabase db push (migrations/001_init.sql).
 [build]
   base = "komparsen"
   command = "echo 'no build'"
@@ -20,8 +29,5 @@
   to = "/.netlify/functions/api/:splat"
   status = 200
 
-# SPA-like Fallback: unbekannte Routen auf index.html
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# KEINE Catch-all-Redirect auf index.html: KAST ist keine SPA, unbekannte
+# Routen sollen echte 404 liefern (siehe public/404.html).

@@ -1,13 +1,16 @@
 'use strict';
 // KAST — Null-Dependency Node-Server (HTTP + API + statische Dateien).
-// Datenschicht: lokale JSON (lib/db.js). Supabase-ready: nur db.js tauschen.
+// Datenschicht: lokale JSON (lib/db.js) oder Supabase (lib/db-supabase.js),
+// sobald SUPABASE_URL + SUPABASE_ANON_KEY gesetzt sind. Gleiche Schnittstelle.
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const url = require('url');
 
-const db = require('./lib/db');
+const db = (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY)
+  ? require('./lib/db-supabase')
+  : require('./lib/db');
 const auth = require('./lib/auth');
 const { exportBookings } = require('./lib/export');
 const { newId, esc, plusMonths, ageFromDob, isEmail } = require('./lib/util');
