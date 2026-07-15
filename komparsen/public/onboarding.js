@@ -35,7 +35,9 @@
   document.querySelectorAll('input[name="role"]').forEach(r => r.addEventListener('change', syncRoleUI));
 
   // Schritt 1 -> Register (Double-Opt-In)
-  $('next1').addEventListener('click', async () => {
+  $('next1').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    btn.classList.add('loading'); btn.disabled = true;
     try {
       const role = currentRole();
       const body = { email: $('email').value, password: $('pw').value, role };
@@ -47,7 +49,8 @@
         'Für die Demo hier klicken: <a href="' + j.verifyLink + '&redirect=1">E-Mail bestätigen</a></div>';
       state.userId = j.userId;
       show(2);
-    } catch (e) { fail(e); }
+    } catch (err) { fail(err); }
+    finally { btn.classList.remove('loading'); btn.disabled = false; }
   });
 
   // Bei Opt-In-Link automatisch Verifizierung abschließen + einloggen,

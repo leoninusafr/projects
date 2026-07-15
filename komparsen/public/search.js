@@ -50,7 +50,7 @@
     }).then(res => {
       if (!res) return;
       const box = $('results');
-      if (!res.length) { box.innerHTML = '<p class="muted">Keine Treffer. Suchbegriff anpassen?</p>'; return; }
+      if (!res.length) { box.innerHTML = '<div class="empty"><h3>Keine Treffer</h3><p>Suchbegriff oder Filter anpassen?</p></div>'; return; }
       box.innerHTML = res.map(card).join('');
       box.querySelectorAll('button[data-id]').forEach(b => {
         b.addEventListener('click', () => {
