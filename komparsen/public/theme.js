@@ -3,7 +3,7 @@
 // Bietet einen Mini-Switcher (Editorial / Studio / Mono) zum Live-Vergleich.
 (function () {
   const params = new URLSearchParams(location.search);
-  const t = params.get('theme') || localStorage.getItem('kast_theme') || 'editorial';
+  const t = params.get('theme') || localStorage.getItem('kast_theme') || 'studio';
   function applyTheme(name) {
     // Nur Theme-Klassen ersetzen — guard/auth-ok u.a. bleiben erhalten.
     document.body.classList.remove('theme-editorial', 'theme-studio', 'theme-mono');
