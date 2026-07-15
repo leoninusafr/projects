@@ -1,28 +1,34 @@
-# CONTINUE.md — WICHTIG: Lies mich bei jedem neuen Chat!
+# CONTINUE.md — KAST Komparsen-Agentur
 
-Dieses Projekt liegt unter: **/opt/data/projects/komparsen/** (persistent, gleiches Volume wie /workspace).
-Es wird NICHT nach /workspace geschrieben, weil /workspace root-owned ist und der Agent
-(hermes, uid 10000) dort nicht schreiben darf. Falls /workspace später freigegeben wird
-(`sudo chown hermes:hermes /workspace`), kann alles 1:1 dorthin verschoben werden.
+**Stand:** 2026-07-15 · Letzter Push: `e6ec164` auf `github.com/leoninusafr/projects` (Ordner `komparsen/`)
+**Lokal:** `/opt/data/projects/komparsen/` (persistent, überlebt Container-Reset)
+**Status:** Frontend + API funktionsfähig, 47 E2E-Tests grün. Läuft lokal via `node server.js` (Port per `PORT=xxxx`).
 
-## Was ist das?
-Komparsen-Agentur "Kast" — Apple-Stil Plattform. Extras registrieren sich + laden Fotos,
-Produktionen suchen per Filter/Freitext + Merkzettel ("Warenkorb"). Admin-Dashboard, Kalender,
-ADAG-Export. Lokal-first (Node, null Deps), Supabase-ready. DSGVO-sicher.
+## Was fertig ist
+- **DSGVO-konform:** Suche/Fotos/Export NUR für eingeloggte Produktion/Admin (Gast = 401). Gäste sehen nur aggregierte, anonyme Teaser-Stats (`/api/stats/public`).
+- **Onboarding:** Rollenwahl (Komparse / "Ich suche Komparsen"), Firmenfeld optional, Selfie-Consent (Art.9), Double-Opt-In.
+- **Login:** Auto-Erkennung der Rolle → Weiterleitung (Produktion/Extra→Suche, Admin→Dashboard).
+- **Landing:** Apple-simple, "Mitgliedschaft kostenlos", Pitch, Zitat, Social-Footer.
+- **SEO/GEO:** Meta/OG/JSON-LD + `robots.txt` + `sitemap.xml`.
+- **Authz:** Rollen-Gates (Extra kein Admin, Produktion kein Export ohne Login etc.).
+- **Persistenz lokal:** JSON-DB in `data/db.json` + gemockte Mailbox in `data/mailbox/`.
 
-## Wie weiterarbeiten?
-1. Lies `docs/project_map.md`, `docs/database_schema.md`, `docs/todo_state.md`.
-2. Lies `state.md` (Fortschritt) und `docs/todo_state.md` (Offene Punkte).
-3. Server starten: `node /opt/data/projects/komparsen/server.js` → http://localhost:PORT (env PORT, default 4173)
-4. Danach einfach im YOLO-Modus weiterbauen. Keine Dateien löschen, nur ergänzen.
+## Was NOCH offen (Priorität)
+1. **Supabase-Backend** — Netlify Functions haben KEIN persistentes FS. `lib/db.js` muss auf Supabase umgestellt werden (Migration `migrations/001_init.sql` bereit). Sonst gehen auf Netlify alle Daten nach Cold-Start verloren.
+2. **Domain:** Platzhalter `kast.example` in index.html (canonical, og:url, sitemap) → echte Domain ersetzen.
+3. **Social-Links:** `instagram.com/kast` / `linkedin.com/company/kast` sind Platzhalter.
+4. **PAT rotieren** — GitHub-Token stand im Chat im Klartext (in Memory gespeichert, aber rotieren!).
 
-## Hard Rules (nicht verletzen)
-- KEIN Lila, KEIN "KI-Slop" im Design (keine Verläufe/glows). Apple-Neutral: #f5f5f7 / #1d1d1f / Akzent #0071e3.
-- Keine laufenden Kosten jetzt → lokale JSON-DB, kein npm install notwendig.
-- Selfie = biometrische Daten (DSGVO Art. 9) → nur mit Opt-in, nur Live-Capture.
-- Passwörter nie im Klartext, nie Secrets im Frontend.
-- Fortschritt nie verlieren → regelmäßig `docs/todo_state.md` + `state.md` updaten, Backup nach `backups/`.
+## Wie weiterarbeiten (im neuen Chat)
+- Sag "weiter an KAST" oder referenziere diese Datei.
+- Lokaler Test: `cd /opt/data/projects/komparsen && PORT=4202 node server.js` → Browser `http://localhost:4202`.
+- E2E: `BASE=http://localhost:4202 node tests/e2e.js` (muss vor jedem Commit grün sein).
+- Deploy: Netlify importiert `projects`-Repo, Base dir = `komparsen`, sonst liest `netlify.toml` alles (publish=`public`, functions=`netlify/functions`).
 
-## Tech
-- server.js (null-dep Node http), lib/db.js (JSON jetzt), migrations/001_init.sql (Supabase später),
-  public/ (HTML/CSS/JS, keine Build-Tools).
+## Wichtige Konventionen (vom User)
+- KEINE Emojis im Code, nur inline-SVG-Icons.
+- KEINE lila Farben, KEIN "KI-Slop" (Glows/Gradients).
+- Apple-simple Design, "seriös aber jung".
+- DSGVO ist kritisch.
+- Alles lokal-first, zero-dependency (reines Node, kein npm install).
+- Fortschritt NIEMALS löschen, lieber appenden. Zip-Backup bei größeren Schritten.
