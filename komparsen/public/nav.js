@@ -1,10 +1,25 @@
 'use strict';
 // Nav-Status: zeigt je nach Login Admin-Link + Logout statt "Anmelden".
+// Logo -> rollenspezifische Startseite (eingeloggt) bzw. Landing (gast).
 // Wird von öffentlichen Seiten geladen (nach app.js).
 (function () {
   const slot = document.getElementById('navAuth');
   if (!slot) return;
+
+  // Logo-Ziel je nach Rolle setzen
+  function setBrandTarget(me) {
+    const brand = document.querySelector('a.brand');
+    if (!brand) return;
+    let target = '/';
+    if (me) {
+      if (me.role === 'admin') target = '/dashboard.html';
+      else target = '/search.html'; // Komparse & Produktion -> Suche als Hub
+    }
+    brand.setAttribute('href', target);
+  }
+
   fetch('/api/auth/me').then(r => r.ok ? r.json() : null).then(me => {
+    setBrandTarget(me);
     if (me) {
       const delLink = me.role !== 'admin'
         ? '<a href="#" id="navDel">Account löschen</a>' : '';

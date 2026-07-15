@@ -44,7 +44,7 @@ a:hover { text-decoration: underline; }
   max-width: var(--maxw); margin: 0 auto; padding: 0 22px;
   height: 52px; display: flex; align-items: center; gap: 22px;
 }
-.brand { font-weight: 600; letter-spacing: -.01em; font-size: 19px; }
+.brand { display: inline-block; font-weight: 600; letter-spacing: -.01em; font-size: 19px; color: var(--ink); text-decoration: none; }
 .nav a { color: var(--ink); font-size: 14px; opacity: .9; }
 .nav a:hover { opacity: 1; text-decoration: none; }
 .nav .spacer { flex: 1; }
@@ -139,6 +139,19 @@ textarea { resize: vertical; min-height: 90px; }
 .notice { padding: 12px 14px; border-radius: var(--radius-sm); margin: 14px 0; font-size: 14px; }
 .notice.err { background: rgba(201,52,52,.1); color: var(--danger); }
 .notice.ok { background: rgba(47,168,79,.12); color: var(--ok); }
+
+/* Rollen-Wahl (Onboarding) */
+.role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.role-card {
+  display: flex; flex-direction: column; gap: 4px;
+  border: 1.5px solid var(--line); border-radius: var(--radius);
+  padding: 16px; cursor: pointer; transition: border-color .15s, background .15s;
+}
+.role-card:hover { border-color: var(--accent); }
+.role-card:has(input:checked) { border-color: var(--accent); background: rgba(0,113,227,.05); }
+.role-card input { position: absolute; opacity: 0; }
+.role-title { font-weight: 600; font-size: 16px; }
+.role-sub { font-size: 13px; color: var(--ink-2); }
 
 /* Table */
 table { width: 100%; border-collapse: collapse; font-size: 14px; }

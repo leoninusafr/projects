@@ -1,5 +1,5 @@
 'use strict';
-// Onboarding-Flow: 4 Schritte + Foto-Upload (Kompression) + Selfie + Consent.
+// Onboarding-Flow: Rolle wählen -> 4 Schritte + Foto-Upload + Selfie + Consent.
 (function () {
   const $ = (id) => document.getElementById(id);
   const photos = { portrait: null, full: null };
@@ -12,7 +12,7 @@
     });
     [1,2,3,4].forEach(i => {
       const d = $('s' + i);
-      if (d) d.classList.toggle('done', i <= step - 1);
+      if (d) d.classList.toggle('done', i <= Math.max(0, step - 1));
     });
     window.scrollTo(0, 0);
   }
@@ -20,17 +20,31 @@
     $('msg').innerHTML = '<div class="notice err">' + esc(err.message || err) + '</div>';
   }
 
+  // Rolle aus der Auswahl lesen + ggf. Firmenfeld zeigen
+  function currentRole() {
+    const sel = document.querySelector('input[name="role"]:checked');
+    return sel ? sel.value : 'extra';
+  }
+  function syncRoleUI() {
+    const isProd = currentRole() === 'production';
+    $('companyWrap').style.display = isProd ? 'block' : 'none';
+    $('roleHint').textContent = isProd
+      ? 'Sie erhalten nach Bestätigung Zugang zur Caster-Suche und können Komparsen anfragen.'
+      : 'Nach Bestätigung richten Sie Ihr Profil und Fotos ein.';
+  }
+  document.querySelectorAll('input[name="role"]').forEach(r => r.addEventListener('change', syncRoleUI));
+
   // Schritt 1 -> Register (Double-Opt-In)
   $('next1').addEventListener('click', async () => {
     try {
-      const r = await api('/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({ email: $('email').value, password: $('pw').value, role: 'extra' })
-      });
+      const role = currentRole();
+      const body = { email: $('email').value, password: $('pw').value, role };
+      if (role === 'production') body.extra = { company: $('company').value || '' };
+      const r = await api('/api/auth/register', { method: 'POST', body: JSON.stringify(body) });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || 'Registrierung fehlgeschlagen');
-      $('msg').innerHTML = '<div class="notice ok">Bestätigungslink wurde (simuliert) gesendet. ' +
-        'Für Demo hier klicken: <a href="' + j.verifyLink + '&redirect=1">E-Mail bestätigen</a></div>';
+      $('msg').innerHTML = '<div class="notice ok">Bitte bestätigen Sie Ihre E-Mail über den erhaltenen Link. ' +
+        'Für die Demo hier klicken: <a href="' + j.verifyLink + '&redirect=1">E-Mail bestätigen</a></div>';
       state.userId = j.userId;
       show(2);
     } catch (e) { fail(e); }
@@ -45,9 +59,7 @@
         const r = await api('/api/auth/verify?token=' + encodeURIComponent(params.get('token')) +
           '&email=' + encodeURIComponent(params.get('email')));
         if (r.ok) {
-          $('msg').innerHTML = '<div class="notice ok">E-Mail bestätigt! Du kannst jetzt Profil & Fotos anlegen.</div>';
-          // Schritt 2 freischalten (Login passiert in next1-Kontext nicht mehr nötig,
-          // da verify->login direkt möglich wäre; hier reicht Bestätigung + manueller Login-Link)
+          $('msg').innerHTML = '<div class="notice ok">E-Mail bestätigt. Sie können jetzt Profil & Fotos anlegen.</div>';
           show(2);
         }
       } catch (e) { fail(e); }
@@ -66,9 +78,7 @@
     };
     try {
       const r = await api('/api/profile/me', { method: 'PUT', body: JSON.stringify(profile) });
-      // Profil-Update braucht Auth; falls nicht eingeloggt, temporär speichern
       if (r.ok) { show(3); return; }
-      // Fallback: im lokalen Draft puffern
       state.draftProfile = profile;
       show(3);
     } catch (e) { fail(e); }
@@ -88,7 +98,7 @@
         const { dataUrl, width, height } = await compressImage(file, { maxDim: 1280, quality: 0.8 });
         photos[kind] = { dataUrl, width, height, kind };
         zone.innerHTML = '<img src="' + dataUrl + '">' + file.name +
-          ' <span class="badge ok">komprimiert ' + width + '×' + height + '</span>';
+          ' <span class="badge ok">hochgeladen</span>';
       } catch (e) { fail(e); }
     }
   }
@@ -130,20 +140,25 @@
 
   $('finish').addEventListener('click', async () => {
     try {
-      // Selfie speichern
       await api('/api/photos', { method: 'POST',
         body: JSON.stringify({ kind: 'selfie', dataUrl: selfie, width: 480, height: 640 }) });
-      // Consents echt aus den Checkboxen auslesen (kein Hardcode!)
       await api('/api/profile/consents', { method: 'POST', body: JSON.stringify({
         image_rights: $('cImg').checked,
         data_share: $('cShare').checked,
         biometric: $('cBio').checked,
         accepted_version: '1.0'
       }) });
-      $('msg').innerHTML = '<div class="notice ok">Profil aktiviert! Du kannst dich jetzt anmelden.</div>';
+      $('msg').innerHTML = '<div class="notice ok">Profil aktiviert. Sie können sich jetzt anmelden.</div>';
       setTimeout(() => location.href = '/login.html', 1200);
     } catch (e) { fail(e); }
   });
 
-  show(1);
+  syncRoleUI();
+  // Vorauswahl der Rolle per URL (?role=production)
+  const pre = new URLSearchParams(location.search).get('role');
+  if (pre === 'production') {
+    const rb = document.querySelector('input[name="role"][value="production"]');
+    if (rb) { rb.checked = true; syncRoleUI(); }
+  }
+  show(0);
 })();

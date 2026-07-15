@@ -2,7 +2,7 @@
 // E2E-Test für KAST — fährt den ganzen Flow mit echtem HTTP.
 const http = require('http');
 
-const BASE = 'http://localhost:4173';
+const BASE = process.env.BASE || 'http://localhost:4173';
 let cookie = '';
 
 function req(method, path, body) {

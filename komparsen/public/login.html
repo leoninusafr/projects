@@ -8,13 +8,13 @@
 </head>
 <body>
   <nav class="nav"><div class="nav-inner">
-    <span class="brand">Kast</span><span class="spacer"></span>
+    <a class="brand" href="/">Kast</a><span class="spacer"></span>
     <a href="/onboarding.html">Komparse werden</a>
   </div></nav>
 
   <div class="container narrow">
     <h1>Anmelden</h1>
-    <p class="lead">Bleib angemeldet — wie bei Gmail.</p>
+    <p class="lead">Willkommen zurück. Bitte melden Sie sich mit Ihren Zugangsdaten an.</p>
     <div id="msg"></div>
     <form id="form">
       <label for="email">E-Mail</label>
@@ -26,9 +26,8 @@
       <button class="btn block" type="submit" style="margin-top:18px">Anmelden</button>
     </form>
     <p class="muted" style="margin-top:18px">
-      Noch kein Account?
-      <a href="/onboarding.html">Als Komparse registrieren</a> ·
-      <a href="#" id="prod">Produktion werden</a>
+      Noch kein Konto?
+      <a href="/onboarding.html">Registrieren</a>
     </p>
   </div>
 
@@ -44,27 +43,17 @@
             email: email.value, password: pw.value, remember: remember.checked
           })
         });
-        if (!r.ok) throw new Error((await r.json()).error || 'Login fehlgeschlagen');
-        location.href = (new URLSearchParams(location.search).get('next')) || '/dashboard.html';
+        if (!r.ok) throw new Error((await r.json()).error || 'Anmeldung fehlgeschlagen');
+        // Rolle automatisch ermitteln (keine Rollen-Abfrage nötig)
+        const me = await (await api('/api/auth/me')).json();
+        let next = new URLSearchParams(location.search).get('next');
+        if (!next) {
+          next = me && me.role === 'admin' ? '/dashboard.html' : '/search.html';
+        }
+        location.href = next;
       } catch (err) {
         msg.innerHTML = '<div class="notice err">' + esc(err.message) + '</div>';
       }
-    });
-    document.getElementById('prod').addEventListener('click', async (e) => {
-      e.preventDefault();
-      // Produktion: gleiche Registrierung, Rolle production (vereinfacht)
-      const email = prompt('Firmen-E-Mail für Produktions-Zugang:');
-      const pw = prompt('Passwort (min. 8 Zeichen):');
-      const company = prompt('Firmenname:');
-      if (!email || !pw || !company) return;
-      const r = await api('/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({ email, password: pw, role: 'production',
-          extra: { company } })
-      });
-      const j = await r.json();
-      if (!r.ok) { alert(j.error); return; }
-      alert('Produktions-Account angelegt. Bitte E-Mail bestätigen (Double-Opt-In).');
     });
   </script>
 </body>

@@ -17,10 +17,28 @@
       <div class="dot" id="s1"></div><div class="dot" id="s2"></div>
       <div class="dot" id="s3"></div><div class="dot" id="s4"></div>
     </div>
-    <h1>Komparse werden</h1>
-    <p class="lead">Vier Schritte. Zwei Minuten. Fertig.</p>
+    <h1>Werde Teil von Kast</h1>
+    <p class="lead">Zwei Minuten, vier Schritte. Fertig.</p>
 
     <div id="msg"></div>
+
+    <!-- Rollentyp (einmalige Wahl) -->
+    <section class="card" data-step="0">
+      <h3>Wer sind Sie?</h3>
+      <p id="roleHint" class="muted">Wählen Sie Ihre Rolle. Sie können diese nach der Anmeldung nicht mehr ändern.</p>
+      <div class="role-grid">
+        <label class="role-card">
+          <input type="radio" name="role" value="extra" checked>
+          <span class="role-title">Komparse</span>
+          <span class="role-sub">Ich möchte als Nebendarsteller gebucht werden.</span>
+        </label>
+        <label class="role-card">
+          <input type="radio" name="role" value="production">
+          <span class="role-title">Produktion</span>
+          <span class="role-sub">Ich suche Komparsen für ein Projekt (Caster / Casting-Partner).</span>
+        </label>
+      </div>
+    </section>
 
     <!-- Schritt 1: Account -->
     <section class="card" data-step="1">
@@ -29,6 +47,10 @@
       <input id="email" type="email" autocomplete="email" required>
       <label for="pw">Passwort (min. 8 Zeichen)</label>
       <input id="pw" type="password" autocomplete="new-password" required>
+      <div id="companyWrap" style="display:none">
+        <label for="company">Firma / Produktion <span class="muted">(optional)</span></label>
+        <input id="company" placeholder="z.B. Bavaria Film, XX Casting">
+      </div>
       <button class="btn block" id="next1" style="margin-top:16px">Weiter</button>
     </section>
 
@@ -66,7 +88,7 @@
     <!-- Schritt 3: Fotos -->
     <section class="card hidden" data-step="3">
       <h3>3 · Fotos</h3>
-      <p class="muted">Bilder werden automatisch komprimiert — schnell &amp; platzsparend.</p>
+      <p class="muted">Lade ein Portrait und ein Ganzkörperbild hoch. Je besser das Bild, desto eher wirst du gebucht.</p>
       <label>Portrait</label>
       <div class="drop" id="dropPortrait">Bild hierher ziehen oder klicken<input type="file" accept="image/*" hidden id="filePortrait"></div>
       <label>Ganzkörper</label>
