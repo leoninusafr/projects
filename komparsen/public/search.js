@@ -38,7 +38,17 @@
     if ($('mina').value) params.set('min_age', $('mina').value);
     if ($('maxa').value) params.set('max_age', $('maxa').value);
 
-    api('/api/search?' + params.toString()).then(r => r.json()).then(res => {
+    api('/api/search?' + params.toString()).then(r => {
+      if (r.status === 401 || r.status === 403) {
+        $('results').innerHTML = '<div class="notice">' +
+          'Die Komparsen-Kartei ist nur für eingeloggte Produktionen einsehbar. ' +
+          'Bitte <a href="/onboarding.html?role=production">als Produktion anmelden</a>, ' +
+          'um Profile, Fotos und Attribute zu sehen.</div>';
+        return;
+      }
+      return r.json();
+    }).then(res => {
+      if (!res) return;
       const box = $('results');
       if (!res.length) { box.innerHTML = '<p class="muted">Keine Treffer. Suchbegriff anpassen?</p>'; return; }
       box.innerHTML = res.map(card).join('');
@@ -67,6 +77,7 @@
     if (!cart.length) { alert('Warenkorb ist leer.'); return; }
     if (confirm('Auswahl als Liste exportieren? (' + cart.length + ' Komparsen)')) {
       const r = await api('/api/shortlist/export', { method: 'POST', body: JSON.stringify({ ids: cart }) });
+      if (r.status === 401 || r.status === 403) { alert('Bitte als Produktion anmelden, um zu exportieren.'); return; }
       if (r.ok) {
         const blob = await r.blob();
         const a = document.createElement('a');

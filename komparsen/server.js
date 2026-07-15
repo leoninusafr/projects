@@ -113,11 +113,13 @@ async function handleApi(req, res, parsed) {
   // --- Zentrale Auth-Guard ---
   // Öffentlich ohne Login: nur diese Routen. ALLES andere braucht eine gültige Session.
   // (Die einzelnen admin-Routen prüfen zusätzlich die Rolle via need().)
+  // WICHTIG (DSGVO): Suche, Fotos und Export sind NICHT öffentlich — nur für
+  // eingeloggte Produktion/Admin. Gäste sehen keine Profile, Fotos oder Attribute.
   const publicRoutes = [
     '/api/auth/register', '/api/auth/verify', '/api/auth/login', '/api/auth/logout',
-    '/api/search', '/api/settings', '/api/impressum'
+    '/api/settings', '/api/impressum', '/api/stats/public'
   ];
-  if (!me && !publicRoutes.includes(p) && !p.startsWith('/api/photo/')) {
+  if (!me && !publicRoutes.includes(p)) {
     return json(res, 401, { error: 'login erforderlich' });
   }
   const need = (roles) => { if (!me) return false; if (roles && !roles.includes(me.role)) return false; return true; };
@@ -160,8 +162,9 @@ async function handleApi(req, res, parsed) {
     return json(res, 200, { ok: true });
   }
 
-  // Suche (öffentlich, nur sichtbare)
+  // Suche (NUR für eingeloggte Produktion/Admin — DSGVO: keine öffentliche DB)
   if (p === '/api/search' && method === 'GET') {
+    if (!need(['production', 'admin'])) return json(res, 403, { error: 'nur für eingeloggte Produktionen' });
     const q = parsed.query;
     const skills = q.skills ? q.skills.split(',').filter(Boolean) : undefined;
     const res2 = await db.searchExtras({
@@ -177,20 +180,22 @@ async function handleApi(req, res, parsed) {
     }));
   }
 
-  // Foto eines Extras (öffentlich, nur portrait/full sichtbarer Extras)
+  // Foto eines Extras (NUR für eingeloggte Produktion/Admin — DSGVO: keine öffentlichen Fotos)
   if (/^\/api\/photo\/[^/]+$/.test(p) && method === 'GET') {
+    if (!need(['production', 'admin'])) return json(res, 403, { error: 'nur für eingeloggte Produktionen' });
     const id = p.split('/')[3];
     const d = await db.ensure();
     const ph = d.photos.find(x => x.id === id && (x.kind === 'portrait' || x.kind === 'full'));
     if (!ph) return json(res, 404, { error: 'nicht gefunden' });
-    // Nur zeigen, wenn zugehöriges Profil sichtbar ist (DSGVO)
+    // Nur zeigen, wenn zugehöriges Profil sichtbar ist
     const pr = d.profiles.find(x => x.user_id === ph.user_id);
     if (!pr || !pr.visible) return json(res, 404, { error: 'nicht gefunden' });
     return json(res, 200, { id: ph.id, data: ph.data, kind: ph.kind, width: ph.width, height: ph.height });
   }
 
-  // Shortlist-Export
+  // Shortlist-Export (NUR für eingeloggte Produktion/Admin)
   if (p === '/api/shortlist/export' && method === 'POST') {
+    if (!need(['production', 'admin'])) return json(res, 403, { error: 'nur für eingeloggte Produktionen' });
     const b = await parseBody(req);
     const ids = b.ids || [];
     const all = await db.all('profiles');
@@ -219,6 +224,21 @@ async function handleApi(req, res, parsed) {
   if (p === '/api/impressum' && method === 'GET') {
     const imp = await db.getSetting('impressum');
     return json(res, 200, { impressum: imp || '' });
+  }
+  // Öffentliche, anonymisierte Statistik (DSGVO: KEINE Einzelprofile, nur Aggregate)
+  if (p === '/api/stats/public' && method === 'GET') {
+    const d = await db.ensure();
+    const visible = d.profiles.filter(x => x.visible);
+    const heights = visible.map(x => Number(x.height_cm)).filter(h => h > 0);
+    const hair = new Set(visible.map(x => x.hair_color).filter(Boolean));
+    const cities = new Set(visible.map(x => x.city).filter(Boolean));
+    return json(res, 200, {
+      count: visible.length,
+      min_height: heights.length ? Math.min(...heights) : null,
+      max_height: heights.length ? Math.max(...heights) : null,
+      hair_colors: [...hair],
+      city_count: cities.size
+    });
   }
   if (p === '/api/settings' && method === 'PUT') {
     if (!need(['admin'])) return json(res, 403, { error: 'admin' });

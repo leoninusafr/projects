@@ -5,6 +5,30 @@ const http = require('http');
 const BASE = process.env.BASE || 'http://localhost:4173';
 let cookie = '';
 
+function reqAnon(method, path, body) {
+  return new Promise((resolve, reject) => {
+    const data = body ? JSON.stringify(body) : null;
+    const u = new URL(BASE + path);
+    const r = http.request({
+      hostname: u.hostname, port: u.port, path: u.pathname + u.search,
+      method, headers: {
+        'Content-Type': 'application/json',
+        ...(data ? { 'Content-Length': Buffer.byteLength(data) } : {})
+      }
+    }, (res) => {
+      let buf = '';
+      res.on('data', c => buf += c);
+      res.on('end', () => {
+        let json; try { json = JSON.parse(buf); } catch { json = buf; }
+        resolve({ status: res.statusCode, body: json, raw: buf });
+      });
+    });
+    r.on('error', reject);
+    if (data) r.write(data);
+    r.end();
+  });
+}
+
 function req(method, path, body) {
   return new Promise((resolve, reject) => {
     const data = body ? JSON.stringify(body) : null;
@@ -85,14 +109,38 @@ const assert = (cond, msg) => { if (!cond) { console.error('  ✗ FAIL: ' + msg)
   r = await req('POST', '/api/photos', { kind: 'selfie', dataUrl: png, width: 1, height: 1 });
   assert(r.status === 200, 'POST /api/photos selfie -> 200');
 
-  log('\n=== 6. SUCHE (öffentlich, KEINE E-MAIL, FOTO-ID da) ===');
+  log('\n=== 6. SUCHE & FOTOS nur für PRODUKTION/ADMIN (Gast = 401) ===');
+  // Gast darf Suche/Foto nicht (DSGVO + Caster-Zugang)
+  r = await reqAnon('GET', '/api/search?q=' + encodeURIComponent('blond Köln'));
+  assert(r.status === 401, 'Gast Suche -> 401 (nicht öffentlich)');
+  // Produktions-Account anlegen + verifizieren + login
+  const pemail = 'prod' + Date.now() + '@test.de';
+  r = await req('POST', '/api/auth/register', { email: pemail, password: 'geheim123', role: 'production', extra: { company: 'TestFilm' } });
+  assert(r.status === 200, 'Register Produktion -> 200');
+  // Verify aus Mailbox (letzte Mail)
+  let pfiles = fs.readdirSync(mdir).sort(); let plast = pfiles[pfiles.length - 1];
+  let ptxt = fs.readFileSync(mdir + '/' + plast, 'utf8');
+  let pm = ptxt.match(/token=([^&]+)&email=([^\s]+)/);
+  r = await req('GET', '/api/auth/verify?token=' + decodeURIComponent(pm[1]) + '&email=' + decodeURIComponent(pm[2]));
+  assert(r.status === 200, 'Verify Produktion -> 200');
+  // Cookie für Produktion
+  let pcookie = '';
+  const oldReq = req;
+  // eigene Request-Funktion mit capture
+  async function reqP(method, path, body) {
+    const res = await oldReq(method, path, body);
+    return res;
+  }
+  r = await req('POST', '/api/auth/login', { email: pemail, password: 'geheim123' });
+  assert(r.status === 200 && r.body.ok && cookie, 'Login Produktion -> 200 + Cookie');
+  // jetzt Suche als Produktion
   r = await req('GET', '/api/search?q=' + encodeURIComponent('blond Köln'));
-  assert(r.status === 200 && Array.isArray(r.body) && r.body.length >= 1, 'Suche "blond Köln" -> Treffer');
+  assert(r.status === 200 && Array.isArray(r.body) && r.body.length >= 1, 'Suche als Produktion "blond Köln" -> Treffer');
   const hit = r.body[0];
   assert(hit.email === undefined, 'Suchergebnis enthält KEINE E-Mail (DSGVO)');
   assert(hit.photo_id, 'Suchergebnis enthält photo_id für Bild-Rendering');
   assert(!hit.consents, 'Suchergebnis enthält KEINE consents (Biometrie)');
-  // Foto abrufen
+  // Foto abrufen (Produktion)
   r = await req('GET', '/api/photo/' + hit.photo_id);
   assert(r.status === 200 && r.body.data && /^data:image/.test(r.body.data), 'GET /api/photo/:id -> Bild base64');
 
@@ -160,10 +208,13 @@ const assert = (cond, msg) => { if (!cond) { console.error('  ✗ FAIL: ' + msg)
   assert(r.status === 200 && r.body.ok, 'DELETE /api/profile/me -> 200 ok');
   r = await req('GET', '/api/profile/me');
   assert(r.status === 401, 'Nach Löschung ist Session weg -> 401');
-  // Suche darf den gelöschten nicht mehr zeigen (nur sichtbare)
+  // Suche ALS PRODUKTION: gelöschter Extra darf nicht mehr auftauchen
+  cookie = '';
+  await req('POST', '/api/auth/login', { email: pemail, password: 'geheim123' });
   r = await req('GET', '/api/search?q=' + encodeURIComponent('blond Köln'));
-  // der erste Treffer (Anna) bleibt; Auto-Login-Extra ist jetzt gelöscht -> trotzdem >=1 (Anna)
-  assert(r.status === 200 && r.body.length >= 1, 'Suche zeigt gelöschten Account nicht mehr als neuen');
+  assert(r.status === 200, 'Suche als Produktion nach Löschung -> 200');
+  const stillThere = r.body.some(p => p.email === email2 || (p.first_name === 'Auto' && p.last_name === 'Login'));
+  assert(!stillThere, 'Gelöschter Account erscheint NICHT mehr in der Suche');
 
   log('\n=== FERTIG ===');
   if (process.exitCode) log('\nES GAB FEHLER ❌'); else log('\nALLE TESTS GRÜN ✅');

@@ -163,5 +163,28 @@ th { color: var(--ink-2); font-weight: 500; }
 .hidden { display: none !important; }
 .ico { width: 16px; height: 16px; vertical-align: -3px; display: inline-block; }
 
+/* Hero (Apple-simple, großzügig) */
+.hero { text-align: center; padding: 80px 0 40px; }
+.hero-eyebrow { color: var(--accent); font-weight: 600; font-size: 15px; letter-spacing: .01em; margin: 0 0 10px; }
+.hero h1 { font-size: 64px; line-height: 1.05; }
+.hero .lead { max-width: 620px; margin: 18px auto 30px; font-size: 21px; }
+.hero-cta { max-width: 420px; margin: 0 auto; }
+.hero-stat { margin-top: 26px; font-size: 14px; color: var(--ink-2); }
+@media (max-width: 720px) { .hero { padding: 48px 0 28px; } .hero h1 { font-size: 42px; } .hero .lead { font-size: 18px; } }
+
+/* Zitat */
+.quote {
+  max-width: 720px; margin: 8px auto; padding: 32px 36px;
+  font-size: 24px; line-height: 1.4; font-weight: 500; letter-spacing: -.01em;
+  text-align: center; color: var(--ink);
+  border-left: none; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+}
+.quote-sub { display: block; margin-top: 16px; font-size: 15px; font-weight: 400; color: var(--ink-2); letter-spacing: 0; }
+
+/* Footer-Socials */
+.footer-social { margin-left: 14px; }
+.footer-social a { margin-left: 12px; color: var(--ink-2); }
+.footer-social a:hover { color: var(--accent); }
+
 /* Footer */
 footer { border-top: 1px solid var(--line); padding: 22px; text-align: center; color: var(--ink-2); font-size: 13px; }

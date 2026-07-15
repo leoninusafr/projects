@@ -3,52 +3,99 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Kast — Komparsen Agentur</title>
+  <title>Kast — Komparsen-Agentur | Kostenlos Komparse werden</title>
+  <meta name="description" content="Kast ist die Komparsen-Agentur für Nebendarsteller. Mitgliedschaft kostenlos. Werde in zwei Minuten Komparse und werde von Produktionen in Sekunden gefunden — deutschlandweit.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://kast.example/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Kast — Komparsen-Agentur">
+  <meta property="og:description" content="Kostenlos Komparse werden. Von Produktionen in Sekunden gefunden.">
+  <meta property="og:locale" content="de_DE">
   <link rel="stylesheet" href="/styles.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Kast",
+    "description": "Komparsen-Agentur für Nebendarsteller. Mitgliedschaft kostenlos.",
+    "url": "https://kast.example/",
+    "areaServed": "DE",
+    "sameAs": ["https://instagram.com/kast", "https://www.linkedin.com/company/kast"]
+  }
+  </script>
 </head>
 <body>
   <nav class="nav"><div class="nav-inner">
     <a class="brand" href="/">Kast</a>
-    <a href="/search.html">Suche</a>
-    <a href="/onboarding.html">Komparse werden</a>
     <span class="spacer"></span>
+    <a href="/onboarding.html">Komparse werden</a>
+    <a href="/onboarding.html?role=production">Produktion anmelden</a>
     <span id="navAuth"></span>
   </div></nav>
   <script src="/app.js"></script>
   <script src="/nav.js"></script>
 
-  <div class="container">
-    <div class="hero">
-      <h1>Komparsen. Einfach.</h1>
-      <p class="lead">Die Agentur für Nebendarsteller. In zwei Minuten registriert —
-        von Produktionen in Sekunden gefunden.</p>
-      <div class="row" style="max-width:420px;margin:0 auto;">
+  <!-- HERO -->
+  <header class="hero">
+    <div class="container">
+      <p class="hero-eyebrow">Mitgliedschaft kostenlos</p>
+      <h1>Komparsen.<br>Einfach.</h1>
+      <p class="lead">Werde in zwei Minuten Komparse — und werde von Produktionen
+        in Sekunden gefunden. Ob jung oder alt, groß oder klein: bei uns bist du richtig.</p>
+      <div class="row hero-cta">
         <a class="btn block" href="/onboarding.html">Komparse werden</a>
-        <a class="btn secondary block" href="/onboarding.html?role=production">Ich suche Komparsen</a>
+        <a class="btn secondary block" href="/onboarding.html?role=production">Produktion anmelden</a>
       </div>
+      <p class="hero-stat" id="stat">Lade Statistik…</p>
     </div>
+  </header>
 
+  <!-- PITCH -->
+  <section class="container">
     <div class="grid cols-3">
       <div class="card">
         <h3>Für Komparsen</h3>
         <p class="muted">Profil in 2 Minuten, Foto per Upload, Selfie alle 6 Monate für aktuelle Sichtbarkeit.
-          DSGVO-konform, Sie behalten die Kontrolle über Ihre Daten.</p>
+          DSGVO-konform — du behältst die Kontrolle über deine Daten und kannst sie jederzeit löschen.</p>
       </div>
       <div class="card">
         <h3>Für Produktionen</h3>
-        <p class="muted">Filtern oder frei suchen — "braune Haare, groß, Köln". Komparsen in den
-          Warenkorb, Anfrage mit einem Klick, Export auf Knopfdruck.</p>
+        <p class="muted">Filtern oder frei suchen — „braune Haare, groß, Köln". Komparsen in den
+          Warenkorb, Anfrage mit einem Klick, Export auf Knopfdruck. Zeitnahe Vorschläge, keine Umwege.</p>
       </div>
       <div class="card">
         <h3>Für die Agentur</h3>
         <p class="muted">Dashboard mit offenen Aufgaben, editierbare Rechtstexte, Kalender
-          und ADAG-Abrechnungs-Export. Maximal automatisiert.</p>
+          und ADAG-Abrechnungs-Export. Maximal automatisiert, minimal Aufwand.</p>
       </div>
     </div>
-  </div>
+  </section>
+
+  <!-- ZITAT -->
+  <section class="container">
+    <blockquote class="quote">
+      „Es gibt keine kleinen Rollen — nur kleine Schauspieler."
+      <span class="quote-sub">Unsere Komparsen und Kunden schätzen die Flexibilität, Zuverlässigkeit und Schnelligkeit.</span>
+    </blockquote>
+  </section>
 
   <footer>
     <a href="/impressum.html">Impressum</a> · <a href="/admin.html">Admin</a> · © Kast
+    <span class="footer-social">
+      <a href="https://instagram.com/kast" rel="noopener">Instagram</a>
+      <a href="https://www.linkedin.com/company/kast" rel="noopener">LinkedIn</a>
+    </span>
   </footer>
+
+  <script>
+    // Aggregierte, anonyme Teaser-Statistik (DSGVO-konform)
+    fetch('/api/stats/public').then(r => r.ok ? r.json() : null).then(s => {
+      if (!s || !s.count) { document.getElementById('stat').style.display = 'none'; return; }
+      const h = (s.min_height && s.max_height) ? `Größen von ${s.min_height} bis ${s.max_height} cm` : '';
+      const hair = s.hair_colors && s.hair_colors.length ? `, alle Haarfarben` : '';
+      document.getElementById('stat').textContent =
+        `Über ${s.count} Komparsen verfügbar${h ? ' · ' + h : ''}${hair} · deutschlandweit.`;
+    }).catch(() => { document.getElementById('stat').style.display = 'none'; });
+  </script>
 </body>
 </html>
