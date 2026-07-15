@@ -315,13 +315,20 @@ function nameOf(userId, d) {
 }
 function stripPhoto(p) { const { consents, ...rest } = p; return rest; }
 
-// --- Statische Dateien ---
+// Statische Dateien — mit 404-Abfang
 function serveStatic(req, res, pathname) {
   let rel = pathname === '/' ? '/index.html' : pathname;
   const fp = path.join(PUBLIC, path.normalize(rel));
   if (!fp.startsWith(PUBLIC)) return send(res, 403, 'forbidden'); // path traversal
   fs.readFile(fp, (err, buf) => {
-    if (err) return send(res, 404, 'not found');
+    if (err) {
+      // 404-Seite statt leerem Body
+      fs.readFile(path.join(PUBLIC, '404.html'), (e2, buf404) => {
+        if (e2) return send(res, 404, 'not found');
+        send(res, 404, buf404, { 'Content-Type': 'text/html; charset=utf-8' });
+      });
+      return;
+    }
     const ext = path.extname(fp);
     send(res, 200, buf, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
   });

@@ -64,9 +64,9 @@
           Warenkorb, Anfrage mit einem Klick, Export auf Knopfdruck. Zeitnahe Vorschläge, keine Umwege.</p>
       </div>
       <div class="card">
-        <h3>Für die Agentur</h3>
-        <p class="muted">Dashboard mit offenen Aufgaben, editierbare Rechtstexte, Kalender
-          und ADAG-Abrechnungs-Export. Maximal automatisiert, minimal Aufwand.</p>
+        <h3>Vertrauen & Sicherheit</h3>
+        <p class="muted">DSGVO-konform von Grund auf. Deine Daten gehören dir — Fotos und
+          Profil löschst du jederzeit selbst. Keine Weitergabe an Dritte ohne deine Einwilligung.</p>
       </div>
     </div>
   </section>
@@ -90,12 +90,18 @@
   <script>
     // Aggregierte, anonyme Teaser-Statistik (DSGVO-konform)
     fetch('/api/stats/public').then(r => r.ok ? r.json() : null).then(s => {
-      if (!s || !s.count) { document.getElementById('stat').style.display = 'none'; return; }
+      const el = document.getElementById('stat');
+      if (!s || !s.count) {
+        el.textContent = 'Deutschlandweit verfügbar — werde jetzt Teil der Kartei.';
+        return;
+      }
       const h = (s.min_height && s.max_height) ? `Größen von ${s.min_height} bis ${s.max_height} cm` : '';
       const hair = s.hair_colors && s.hair_colors.length ? `, alle Haarfarben` : '';
-      document.getElementById('stat').textContent =
+      el.textContent =
         `Über ${s.count} Komparsen verfügbar${h ? ' · ' + h : ''}${hair} · deutschlandweit.`;
-    }).catch(() => { document.getElementById('stat').style.display = 'none'; });
+    }).catch(() => {
+      document.getElementById('stat').textContent = 'Deutschlandweit verfügbar — werde jetzt Teil der Kartei.';
+    });
   </script>
 </body>
 </html>

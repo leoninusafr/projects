@@ -10,9 +10,9 @@
     document.querySelectorAll('[data-step]').forEach(el => {
       el.classList.toggle('hidden', Number(el.dataset.step) !== step);
     });
-    [1,2,3,4].forEach(i => {
+    [0,1,2,3,4].forEach(i => {
       const d = $('s' + i);
-      if (d) d.classList.toggle('done', i <= Math.max(0, step - 1));
+      if (d) d.classList.toggle('done', step >= i);
     });
     window.scrollTo(0, 0);
   }
