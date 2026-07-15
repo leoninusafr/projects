@@ -1,0 +1,334 @@
+'use strict';
+// KAST — Null-Dependency Node-Server (HTTP + API + statische Dateien).
+// Datenschicht: lokale JSON (lib/db.js). Supabase-ready: nur db.js tauschen.
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const url = require('url');
+
+const db = require('./lib/db');
+const auth = require('./lib/auth');
+const { exportBookings } = require('./lib/export');
+const { newId, esc, plusMonths, ageFromDob, isEmail } = require('./lib/util');
+
+const PORT = process.env.PORT || 4173;
+const PUBLIC = path.join(__dirname, 'public');
+const MIME = {
+  '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon'
+};
+
+function send(res, code, body, headers) {
+  res.writeHead(code, Object.assign({ 'Cache-Control': 'no-store' }, headers || {}));
+  res.end(body);
+}
+function json(res, code, obj) { send(res, code, JSON.stringify(obj), { 'Content-Type': 'application/json' }); }
+function parseBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', c => { data += c; if (data.length > 12e6) req.destroy(); });
+    req.on('end', () => {
+      try { resolve(data ? JSON.parse(data) : {}); }
+      catch (e) { reject(e); }
+    });
+    req.on('error', reject);
+  });
+}
+function getCookie(req, name) {
+  const c = req.headers.cookie || '';
+  const m = c.match(new RegExp('(?:^|; )' + name + '=([^;]+)'));
+  return m ? decodeURIComponent(m[1]) : null;
+}
+function setCookie(res, name, val, opts) {
+  opts = opts || {};
+  let s = name + '=' + encodeURIComponent(val) + '; Path=/; SameSite=Lax';
+  if (opts.maxAge) s += '; Max-Age=' + opts.maxAge;
+  if (opts.httpOnly !== false) s += '; HttpOnly';
+  return s;
+}
+
+// --- Routen ---
+async function handleApi(req, res, parsed) {
+  const p = parsed.pathname;
+  const method = req.method;
+  const sess = getCookie(req, 'sid');
+  const me = await auth.currentUser(sess);
+
+  // Auth
+  if (p === '/api/auth/register' && method === 'POST') {
+    const b = await parseBody(req);
+    const role = b.role === 'production' || b.role === 'admin' ? b.role : 'extra';
+    // Produktion: zusätzlich production-Datensatz
+    const extra = role === 'production' ? { company: b.extra && b.extra.company } : (b.extra || {});
+    try {
+      const { userId, verifyLink } = await auth.register({ email: b.email, password: b.password, role, extra });
+      if (role === 'production') {
+        await db.insert('productions', { user_id: userId, company: extra.company || '', contact_name: '', created_at: new Date().toISOString() });
+      }
+      return json(res, 200, { userId, verifyLink });
+    } catch (e) { return json(res, 400, { error: e.message }); }
+  }
+
+  if (p === '/api/auth/verify' && method === 'GET') {
+    const t = parsed.query.token, e = parsed.query.email;
+    const redirect = parsed.query.redirect === '1'; // 1 = Browser-Login nach Verify
+    try {
+      const user = await auth.verifyEmail(t, e);
+      // Nach erfolgreichem Opt-In direkt einloggen (Token = ausreichender Besitznachweis),
+      // damit Onboarding-Schritte 2–4 mit gültiger Session laufen.
+      const sid = auth.signSession(user.id);
+      const cookie = setCookie(res, 'sid', sid, { maxAge: 30 * 24 * 3600 });
+      if (redirect) {
+        res.writeHead(302, { 'Location': '/onboarding.html?done=1', 'Set-Cookie': cookie });
+        return res.end();
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Set-Cookie': cookie });
+      return res.end(JSON.stringify({ ok: true }));
+    } catch (err) { return json(res, 400, { error: err.message }); }
+  }
+
+  if (p === '/api/auth/login' && method === 'POST') {
+    const b = await parseBody(req);
+    try {
+      const sid = await auth.login({ email: b.email, password: b.password });
+      const cookie = setCookie(res, 'sid', sid, { maxAge: 30 * 24 * 3600 });
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Set-Cookie': cookie });
+      return res.end(JSON.stringify({ ok: true }));
+    } catch (e) { return json(res, 401, { error: e.message }); }
+  }
+
+  if (p === '/api/auth/logout' && method === 'POST') {
+    auth.destroySession(sess);
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Set-Cookie': setCookie(res, 'sid', '', { maxAge: 0 }) });
+    return res.end(JSON.stringify({ ok: true }));
+  }
+
+  if (p === '/api/auth/me' && method === 'GET') {
+    if (!me) return json(res, 401, { error: 'nicht angemeldet' });
+    return json(res, 200, { id: me.id, email: me.email, role: me.role });
+  }
+
+  // --- Zentrale Auth-Guard ---
+  // Öffentlich ohne Login: nur diese Routen. ALLES andere braucht eine gültige Session.
+  // (Die einzelnen admin-Routen prüfen zusätzlich die Rolle via need().)
+  const publicRoutes = [
+    '/api/auth/register', '/api/auth/verify', '/api/auth/login', '/api/auth/logout',
+    '/api/search', '/api/settings', '/api/impressum'
+  ];
+  if (!me && !publicRoutes.includes(p) && !p.startsWith('/api/photo/')) {
+    return json(res, 401, { error: 'login erforderlich' });
+  }
+  const need = (roles) => { if (!me) return false; if (roles && !roles.includes(me.role)) return false; return true; };
+
+  // Profil
+  if (p === '/api/profile/me' && method === 'PUT') {
+    if (!me) return json(res, 401, { error: 'login' });
+    const b = await parseBody(req);
+    await db.ensureProfile(me.id, Object.assign(b, { updated_at: new Date().toISOString() }));
+    return json(res, 200, { ok: true });
+  }
+  if (p === '/api/profile/consents' && method === 'POST') {
+    if (!me) return json(res, 401, { error: 'login' });
+    const b = await parseBody(req);
+    const due = plusMonths(new Date().toISOString(), 6);
+    await db.ensureProfile(me.id, {
+      consents: b, selfie_due_at: due, selfie_verified_at: new Date().toISOString(),
+      visible: true, updated_at: new Date().toISOString()
+    });
+    return json(res, 200, { ok: true });
+  }
+  // Account-Löschung (DSGVO Art. 17 — Recht auf Vergessenwerden). Nur eigener Account.
+  if (p === '/api/profile/me' && method === 'DELETE') {
+    if (!me) return json(res, 401, { error: 'login' });
+    await db.deleteUserCascade(me.id);
+    auth.destroySession(getCookie(req, 'sid'));
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Set-Cookie': setCookie(res, 'sid', '', { maxAge: 0 }) });
+    return res.end(JSON.stringify({ ok: true }));
+  }
+
+  // Fotos
+  if (p === '/api/photos' && method === 'POST') {
+    if (!me) return json(res, 401, { error: 'login' });
+    const b = await parseBody(req);
+    if (!b.dataUrl || !b.kind) return json(res, 400, { error: 'fehlend' });
+    // Größe begrenzen (Base64-JPEG komprimiert erwartet)
+    if (b.dataUrl.length > 3_000_000) return json(res, 413, { error: 'Bild zu groß (komprimieren!)' });
+    await db.insert('photos', { user_id: me.id, kind: b.kind, data: b.dataUrl,
+      width: b.width || null, height: b.height || null, created_at: new Date().toISOString() });
+    return json(res, 200, { ok: true });
+  }
+
+  // Suche (öffentlich, nur sichtbare)
+  if (p === '/api/search' && method === 'GET') {
+    const q = parsed.query;
+    const skills = q.skills ? q.skills.split(',').filter(Boolean) : undefined;
+    const res2 = await db.searchExtras({
+      gender: q.gender, hair_color: q.hair, eye_color: q.eye, city: q.city,
+      min_height: q.min_height, max_height: q.max_height, min_age: q.min_age,
+      min_age: q.min_age, max_age: q.max_age, skills, q: q.q
+    });
+    const d = await db.ensure();
+    return json(res, 200, res2.map(stripPhoto).map(p => {
+      // Portrait-Foto-ID mitliefern, damit Frontend das Bild rendern kann (ohne base64 im Suchergebnis)
+      const ph = d.photos.find(x => x.user_id === p.user_id && x.kind === 'portrait');
+      return Object.assign({}, p, { photo_id: ph ? ph.id : null });
+    }));
+  }
+
+  // Foto eines Extras (öffentlich, nur portrait/full sichtbarer Extras)
+  if (/^\/api\/photo\/[^/]+$/.test(p) && method === 'GET') {
+    const id = p.split('/')[3];
+    const d = await db.ensure();
+    const ph = d.photos.find(x => x.id === id && (x.kind === 'portrait' || x.kind === 'full'));
+    if (!ph) return json(res, 404, { error: 'nicht gefunden' });
+    // Nur zeigen, wenn zugehöriges Profil sichtbar ist (DSGVO)
+    const pr = d.profiles.find(x => x.user_id === ph.user_id);
+    if (!pr || !pr.visible) return json(res, 404, { error: 'nicht gefunden' });
+    return json(res, 200, { id: ph.id, data: ph.data, kind: ph.kind, width: ph.width, height: ph.height });
+  }
+
+  // Shortlist-Export
+  if (p === '/api/shortlist/export' && method === 'POST') {
+    const b = await parseBody(req);
+    const ids = b.ids || [];
+    const all = await db.all('profiles');
+    const users = await db.all('users');
+    const rows = [['id', 'name', 'alter', 'stadt', 'groesse', 'haare', 'augen']];
+    ids.forEach(id => {
+      const pr = all.find(x => x.id === id);
+      if (!pr) return;
+      const u = users.find(x => x.id === pr.user_id);
+      rows.push([pr.id, (pr.first_name || '') + ' ' + (pr.last_name || ''),
+        ageFromDob(pr.dob) || '', pr.city || '', pr.height_cm || '', pr.hair_color || '', pr.eye_color || '']);
+    });
+    const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n');
+    send(res, 200, csv, { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': 'attachment; filename=kast_auswahl.csv' });
+    return;
+  }
+
+  // Settings (öffentliches Lesen)
+  if (p === '/api/settings' && method === 'GET') {
+    const d = await db.ensure();
+    const out = {};
+    d.site_settings.forEach(s => out[s.key] = s.value);
+    return json(res, 200, out);
+  }
+  // Impressum (Einzelwert, öffentlich)
+  if (p === '/api/impressum' && method === 'GET') {
+    const imp = await db.getSetting('impressum');
+    return json(res, 200, { impressum: imp || '' });
+  }
+  if (p === '/api/settings' && method === 'PUT') {
+    if (!need(['admin'])) return json(res, 403, { error: 'admin' });
+    const b = await parseBody(req);
+    for (const k of Object.keys(b)) await db.setSetting(k, b[k]);
+    return json(res, 200, { ok: true });
+  }
+
+  // Buchungen (Kalender)
+  if (p === '/api/bookings' && method === 'GET') {
+    const d = await db.ensure();
+    const bookings = d.bookings.map(b => Object.assign({}, b, { extra_name: nameOf(b.extra_id, d) }));
+    return json(res, 200, bookings);
+  }
+  if (p === '/api/bookings' && method === 'POST') {
+    if (!need(['admin'])) return json(res, 403, { error: 'admin' });
+    const b = await parseBody(req);
+    if (!b.extra_id || !b.title || !b.date_start) return json(res, 400, { error: 'Pflichtfelder' });
+    const rec = await db.insert('bookings', Object.assign({
+      id: newId(), extra_id: b.extra_id, production_id: b.production_id || null,
+      title: b.title, location: b.location || '', date_start: b.date_start,
+      date_end: b.date_end || b.date_start, day_rate: Number(b.day_rate) || 0,
+      status: 'angefragt', created_at: new Date().toISOString()
+    }));
+    return json(res, 200, rec);
+  }
+
+  // Admin
+  if (p === '/api/admin/stats' && method === 'GET') {
+    if (!need(['admin'])) return json(res, 403, { error: 'admin' });
+    const d = await db.ensure();
+    const now = Date.now();
+    return json(res, 200, {
+      extras: d.profiles.length,
+      visible: d.profiles.filter(x => x.visible).length,
+      productions: d.productions.length,
+      unverified: d.users.filter(u => !u.email_verified).length,
+      pending_bookings: d.bookings.filter(b => b.status === 'angefragt').length,
+      flag_selfie_due: d.profiles.filter(x => x.selfie_due_at && new Date(x.selfie_due_at).getTime() < now).length
+    });
+  }
+  if (p === '/api/admin/bookings' && method === 'GET') {
+    if (!need(['admin'])) return json(res, 403, { error: 'admin' });
+    const d = await db.ensure();
+    return json(res, 200, d.bookings.map(b => Object.assign({}, b, { extra_name: nameOf(b.extra_id, d) })));
+  }
+  if (/^\/api\/admin\/bookings\/[^\/]+\/confirm$/.test(p) && method === 'POST') {
+    if (!need(['admin'])) return json(res, 403, { error: 'admin' });
+    const id = p.split('/')[4];
+    await db.update('bookings', id, { status: 'bestaetigt' });
+    return json(res, 200, { ok: true });
+  }
+  if (p === '/api/admin/selfie-due' && method === 'GET') {
+    if (!need(['admin'])) return json(res, 403, { error: 'admin' });
+    const d = await db.ensure();
+    const now = Date.now();
+    const due = d.profiles.filter(x => x.selfie_due_at && new Date(x.selfie_due_at).getTime() < now);
+    return json(res, 200, due.map(stripPhoto));
+  }
+  if (p === '/api/admin/export-adag' && method === 'GET') {
+    if (!need(['admin'])) return json(res, 403, { error: 'admin' });
+    const { csv, total, count } = await exportBookings({ status: undefined });
+    send(res, 200, csv, { 'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': 'attachment; filename=adag_export.csv' });
+    return;
+  }
+
+  return json(res, 404, { error: 'unknown endpoint' });
+}
+
+function nameOf(userId, d) {
+  const pr = d.profiles.find(x => x.user_id === userId);
+  return pr ? ((pr.first_name || '') + ' ' + (pr.last_name || '')) : userId;
+}
+function stripPhoto(p) { const { consents, ...rest } = p; return rest; }
+
+// --- Statische Dateien ---
+function serveStatic(req, res, pathname) {
+  let rel = pathname === '/' ? '/index.html' : pathname;
+  const fp = path.join(PUBLIC, path.normalize(rel));
+  if (!fp.startsWith(PUBLIC)) return send(res, 403, 'forbidden'); // path traversal
+  fs.readFile(fp, (err, buf) => {
+    if (err) return send(res, 404, 'not found');
+    const ext = path.extname(fp);
+    send(res, 200, buf, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
+  });
+}
+
+const server = http.createServer(async (req, res) => {
+  try {
+    const parsed = url.parse(req.url, true);
+    if (parsed.pathname.startsWith('/api/')) {
+      await handleApi(req, res, parsed);
+    } else {
+      serveStatic(req, res, parsed.pathname);
+    }
+  } catch (e) {
+    console.error('ERR', e);
+    json(res, 500, { error: 'server error' });
+  }
+});
+
+// Export-Modus für Serverless (Netlify Functions, Vercel, etc.):
+// wenn als Modul eingebunden (nicht direkt ausgeführt) oder NETLIFY=1,
+// nicht selbst listenen — nur handleApi exportieren.
+const isMain = require.main === module;
+if (process.env.NETLIFY === '1' || !isMain) {
+  module.exports = { handleApi, url };
+} else {
+  server.listen(PORT, () => {
+    console.log('KAST läuft auf http://localhost:' + PORT);
+  });
+}

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Anmelden — Kast</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <nav class="nav"><div class="nav-inner">
+    <span class="brand">Kast</span><span class="spacer"></span>
+    <a href="/onboarding.html">Komparse werden</a>
+  </div></nav>
+
+  <div class="container narrow">
+    <h1>Anmelden</h1>
+    <p class="lead">Bleib angemeldet — wie bei Gmail.</p>
+    <div id="msg"></div>
+    <form id="form">
+      <label for="email">E-Mail</label>
+      <input id="email" type="email" autocomplete="username" required>
+      <label for="pw">Passwort</label>
+      <input id="pw" type="password" autocomplete="current-password" required>
+      <label class="check"><input type="checkbox" id="remember" checked>
+        <span>Angemeldet bleiben</span></label>
+      <button class="btn block" type="submit" style="margin-top:18px">Anmelden</button>
+    </form>
+    <p class="muted" style="margin-top:18px">
+      Noch kein Account?
+      <a href="/onboarding.html">Als Komparse registrieren</a> ·
+      <a href="#" id="prod">Produktion werden</a>
+    </p>
+  </div>
+
+  <script src="/app.js"></script>
+  <script>
+    document.getElementById('form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('msg'); msg.innerHTML = '';
+      try {
+        const r = await api('/api/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: email.value, password: pw.value, remember: remember.checked
+          })
+        });
+        if (!r.ok) throw new Error((await r.json()).error || 'Login fehlgeschlagen');
+        location.href = (new URLSearchParams(location.search).get('next')) || '/dashboard.html';
+      } catch (err) {
+        msg.innerHTML = '<div class="notice err">' + esc(err.message) + '</div>';
+      }
+    });
+    document.getElementById('prod').addEventListener('click', async (e) => {
+      e.preventDefault();
+      // Produktion: gleiche Registrierung, Rolle production (vereinfacht)
+      const email = prompt('Firmen-E-Mail für Produktions-Zugang:');
+      const pw = prompt('Passwort (min. 8 Zeichen):');
+      const company = prompt('Firmenname:');
+      if (!email || !pw || !company) return;
+      const r = await api('/api/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ email, password: pw, role: 'production',
+          extra: { company } })
+      });
+      const j = await r.json();
+      if (!r.ok) { alert(j.error); return; }
+      alert('Produktions-Account angelegt. Bitte E-Mail bestätigen (Double-Opt-In).');
+    });
+  </script>
+</body>
+</html>

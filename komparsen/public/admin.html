@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Einstellungen — Kast</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <nav class="nav"><div class="nav-inner">
+    <a class="brand" href="/">Kast</a>
+    <a href="/dashboard.html">Dashboard</a>
+    <a href="/admin.html">Einstellungen</a>
+    <span class="spacer"></span>
+    <span id="navAuth"></span>
+  </div></nav>
+
+  <div class="container">
+    <h1>Website-Einstellungen</h1>
+    <p class="lead">Rechtstexte &amp; Impressum direkt hier ändern — ohne HTML anzufassen.</p>
+
+    <div class="card">
+      <label for="company_name">Firmenname</label>
+      <input id="company_name">
+      <label for="impressum">Impressum (Markdown)</label>
+      <textarea id="impressum" style="min-height:160px"></textarea>
+      <label class="check"><input type="checkbox" id="useSeparate">
+        <span>Abweichende Adresse nur fürs Impressum verwenden</span></label>
+      <div id="sepBox" class="hidden">
+        <label for="separate_imprint_address">Impressum-Adresse (eigene Zeile)</label>
+        <input id="separate_imprint_address">
+      </div>
+      <label for="agb">AGB (Markdown)</label>
+      <textarea id="agb" style="min-height:140px"></textarea>
+      <label for="privacy">Datenschutz (Markdown)</label>
+      <textarea id="privacy" style="min-height:140px"></textarea>
+      <button class="btn" id="save" style="margin-top:16px">Speichern</button>
+    </div>
+
+    <div class="card">
+      <h3>ADAG-Abrechnungs-Export</h3>
+      <p class="muted">Erzeugt eine CSV für die Abrechnung über ADAG (Zeitarbeit).</p>
+      <button class="btn secondary" id="exportAdag">CSV exportieren</button>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+  <script src="/nav.js"></script>
+  <script src="/admin.js"></script>
+</body>
+</html>

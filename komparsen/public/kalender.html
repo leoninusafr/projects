@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kalender — Kast</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <nav class="nav"><div class="nav-inner">
+    <a class="brand" href="/">Kast</a>
+    <a href="/dashboard.html">Dashboard</a>
+    <a href="/kalender.html">Kalender</a>
+    <span class="spacer"></span>
+    <span id="navAuth"></span>
+  </div></nav>
+
+  <div class="container">
+    <h1>Kalender &amp; Buchungen</h1>
+    <p class="lead">Einsätze der Komparsen und fällige Selfie-Auffrischungen.</p>
+
+    <div class="card">
+      <h3>Neuer Einsatz</h3>
+      <div class="row">
+        <div><label>Extra-ID</label><input id="extra_id" placeholder="Profil-ID"></div>
+        <div><label>Produktion-ID</label><input id="production_id" placeholder="optional"></div>
+      </div>
+      <div class="row">
+        <div><label>Titel</label><input id="title"></div>
+        <div><label>Ort</label><input id="loc"></div>
+      </div>
+      <div class="row">
+        <div><label>Von</label><input id="start" type="date"></div>
+        <div><label>Bis</label><input id="end" type="date"></div>
+        <div><label>Tagessatz €</label><input id="rate" type="number"></div>
+      </div>
+      <button class="btn" id="add" style="margin-top:14px">Einsatz anlegen</button>
+    </div>
+
+    <h2 style="margin-top:30px">Einsätze</h2>
+    <div id="list"></div>
+    <h2 style="margin-top:30px">Selfie-Auffrischung fällig</h2>
+    <div id="selfies"></div>
+  </div>
+
+  <script src="/app.js"></script>
+  <script src="/nav.js"></script>
+  <script src="/kalender.js"></script>
+</body>
+</html>

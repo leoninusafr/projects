@@ -1,0 +1,27 @@
+# Netlify-Konfiguration für KAST (Komparsen-Agentur)
+# Build: keiner nötig (reines Node, keine Dependencies).
+# Liegt im Monorepo-Ordner "komparsen/" — Pfade relativ dazu.
+# Statische Seiten aus komparsen/public/, API aus komparsen/netlify/functions/api.js.
+
+[build]
+  base = "komparsen"
+  command = "echo 'no build'"
+  publish = "komparsen/public"
+  functions = "komparsen/netlify/functions"
+
+[dev]
+  command = "cd komparsen && node server.js"
+  port = 4173
+  targetPort = 4173
+
+# Alle /api/*-Requests an die Function, der Rest an statische Dateien.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+# SPA-like Fallback (optional): unbekannte Routen auf index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

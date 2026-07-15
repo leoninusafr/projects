@@ -1,0 +1,15 @@
+# Parent-Repo "projects" — Monorepo für mehrere Projekte.
+# Unterordner pro Projekt (komparsen/, ...), damit nichts kollidiert.
+
+# Laufzeitdaten nicht committen (enthalten Test-User + gemockte Mails)
+**/data/db.json
+**/data/mailbox/
+node_modules/
+*.log
+.DS_Store
+# Backups sind Artefakte, kein Quellcode
+**/backups/
+# Secret-Tokens nie committen
+**/.env
+**/*.pem
+**/*token*

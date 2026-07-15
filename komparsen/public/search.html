@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Suche — Kast</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <nav class="nav"><div class="nav-inner">
+    <a class="brand" href="/">Kast</a>
+    <a href="/search.html">Suche</a>
+    <a href="/kalender.html">Kalender</a>
+    <span class="spacer"></span>
+    <a href="#" id="cartLink">Warenkorb (0)</a>
+    <span id="navAuth"></span>
+  </div></nav>
+  <script src="/app.js"></script>
+  <script src="/nav.js"></script>
+
+  <div class="container">
+    <h1>Komparsen finden</h1>
+    <p class="lead">Filter oder einfach tippen: <i>„braune Haare, groß, Köln, Reiten"</i></p>
+
+    <div class="card">
+      <label for="q">Freitext-Suche</label>
+      <input id="q" placeholder="z.B. blonde Haare, Berlin, Englisch">
+      <div class="row" style="margin-top:14px">
+        <div><label>Geschlecht</label>
+          <select id="gender"><option value="">alle</option><option>weiblich</option><option>männlich</option><option>divers</option></select></div>
+        <div><label>Haarfarbe</label>
+          <select id="hair"><option value="">alle</option><option>braun</option><option>blond</option><option>schwarz</option><option>rot</option><option>grau</option><option>gefärbt</option></select></div>
+        <div><label>Augenfarbe</label>
+          <select id="eye"><option value="">alle</option><option>blau</option><option>braun</option><option>grün</option><option>grau</option><option>sonstige</option></select></div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <div><label>Min. Größe (cm)</label><input id="minh" type="number" placeholder="–"></div>
+        <div><label>Max. Größe (cm)</label><input id="maxh" type="number" placeholder="–"></div>
+        <div><label>Min. Alter</label><input id="mina" type="number" placeholder="–"></div>
+        <div><label>Max. Alter</label><input id="maxa" type="number" placeholder="–"></div>
+      </div>
+      <button class="btn" id="searchBtn" style="margin-top:16px">Suchen</button>
+      <button class="btn ghost sm" id="resetBtn">Zurücksetzen</button>
+    </div>
+
+    <div id="results" class="grid cols-3"></div>
+  </div>
+
+  <script src="/app.js"></script>
+  <script src="/search.js"></script>
+</body>
+</html>
