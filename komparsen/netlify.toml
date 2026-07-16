@@ -5,13 +5,24 @@
 #
 # PERSISTENZ (DSGVO-sicher, produktionsreif):
 # Netlify Functions haben KEIN persistentes Dateisystem -> JSON-DB geht nach
-# Cold-Start verloren. Lösung: Supabase (kostenloser Tier) als DB.
-# Env-Variablen in Netlify setzen (Site settings -> Environment variables):
+# Cold-Start verloren. Deshalb: Frontend bei Netlify (auto-deploy per Git-Push),
+# aber /api/* an einen persistenten Node-Server durchreichen.
+#
+# EMPFOHLENE SETUP (Admin/Register/Login laufen so auf BEIDEN Domains):
+#   1) Node-Server dauerhaft starten (z. B. auf deinem ZimaOS-Container):
+#         cd komparsen && PORT=4173 node server.js
+#   2) Diesen Port per ZimaOS Port-Forwarding nach außen öffnen
+#      (ZimaOS App -> Container -> Port freigeben -> ggf. DynDNS/Subdomain).
+#   3) In Netlify (Site settings -> Environment variables) setzen:
+#         KAST_API_PROXY = https://deine-domain-oder-ip:4173
+#      -> alle /api/* gehen an deinen Server. Fertig, Admin/Register gehen.
+#
+# ALTERNATIVE (reine Cloud-DB, kein eigener Server nötig):
 #   SUPABASE_URL=https://xxxx.supabase.co
 #   SUPABASE_ANON_KEY=eyJ... (public anon key)
 #   SUPABASE_SERVICE_KEY=eyJ... (SERVICE ROLE key — NUR serverseitig!)
-# Sobald alle 3 gesetzt sind, schaltet lib/db.js automatisch auf Supabase um
-# (siehe server.js). Migration: supabase db push (migrations/001_init.sql).
+#   Sobald alle 3 gesetzt sind, schaltet server.js automatisch auf Supabase um.
+#   Migration: supabase db push (migrations/001_init.sql).
 [build]
   base = "komparsen"
   command = "echo 'no build'"
