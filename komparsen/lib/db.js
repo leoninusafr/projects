@@ -25,6 +25,11 @@ async function ensure() {
     cache = JSON.parse(raw);
     // Felder auffüllen, falls Schema wächst
     cache = Object.assign(emptyDb(), cache);
+    // site_settings: fehlende Keys aus defaultSettings ergänzen (Migration)
+    const def = defaultSettings();
+    def.forEach(d => {
+      if (!cache.site_settings.find(x => x.key === d.key)) cache.site_settings.push(d);
+    });
   }
   return cache;
 }
@@ -46,7 +51,8 @@ function emptyDb() {
 function defaultSettings() {
   return [
     { key: 'company_name', value: 'KAST — Komparsen Agentur' },
-    { key: 'impressum', value: '##_ Impressum\n\nAngaben gemäß § 5 TMG / § 18 Abs. 2 MStV\n\n**Firma:** KAST — Komparsen Agentur\n**Vertreten durch:** Leon [Nachname im Admin-Panel ergänzen]\n**Adresse:** [Straße & Hausnummer], [PLZ Ort]\n**Kontakt:** [E-Mail]\n**Umsatzsteuer-ID:** [falls vorhanden, sonst entfernen]\n**Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV:** Leon [Nachname]\n\n_*Alle Angaben im Admin-Panel unter „Website" erfassen — sie erscheinen automatisch hier._' },
+    { key: 'impressum_extra', value: '' },
+    { key: 'owner_ustid', value: '' },
     { key: 'agb', value: '##_ AGB (Teilnahme als Komparse)\n\n1. **Kein Vertragszwang:** Die Registrierung ist kostenlos und jederzeit kündbar.\n2. **Bildnutzung:** Mit der Registrierung räumst du KAST das einfache Nutzungsrecht an deinen Profilfotos für Vermittlungszwecke (Casting, Auswahl durch Produktionen) ein.\n3. **Kein Arbeitsverhältnis:** KAST vermittelt nur; ein Arbeitsverhältnis entsteht nicht.\n4. **Löschung:** Du kannst dein Profil und alle Daten jederzeit selbst löschen.\n5. **DSGVO:** Deine Daten werden ausschließlich zur Vermittlung verarbeitet.' },
     { key: 'privacy', value: '##_ Datenschutzerklärung (zusammenfassend)\n\n- **Verantwortlich:** KAST — Komparsen Agentur (Kontakt s. Impressum).\n- **Zweck:** Vermittlung von Komparsen an Produktionen.\n- **Rechtsgrundlage:** Art. 6 Abs. 1 lit. b DSGVO (Vertragsanbahnung), Art. 9 DSGVO (biometrische Daten/Fotos) nur mit deiner **ausdrücklichen Einwilligung**.\n- **Selfie-Re-Verify:** Alle 6 Monate (Live-Kamera, kein Upload) zur Aktualität.\n- **Deine Rechte:** Auskunft, Berichtigung, Löschung, Widerspruch — jederzeit über das Profil.\n- **Keine Weitergabe** an Dritte ohne Einwilligung.\n- **Cookie:** Nur technisch notwendige, lokal gespeichert (Opt-in).' },
     { key: 'separate_imprint_address', value: '' },
@@ -78,11 +84,18 @@ const REQUIRED_SETUP_FIELDS = [
 ];
 
 // Liefert den aktuellen Setup-Status: welche Pflichtfelder fehlen.
+// Platzhalter ([..]) und leere Werte zählen als fehlend.
+function isFilled(v) {
+  const s = String(v || '').trim();
+  if (!s) return false;
+  if (s.startsWith('[') && s.endsWith(']')) return false; // Platzhalter
+  return true;
+}
 async function getSetupStatus() {
   const db = await ensure();
   const get = (k) => { const s = db.site_settings.find(x => x.key === k); return s ? s.value : ''; };
   const missing = REQUIRED_SETUP_FIELDS
-    .filter(f => !String(get(f.key)).trim())
+    .filter(f => !isFilled(get(f.key)))
     .map(f => ({ key: f.key, label: f.label, section: f.section }));
   const done = missing.length === 0;
   if (done && get('setup_done') !== '1') await setSetting('setup_done', '1');
@@ -162,6 +175,49 @@ async function setSetting(key, value) {
   if (s) s.value = value; else db.site_settings.push({ key, value });
   scheduleSave();
   return value;
+}
+
+// Baut das IMPRESSUM automatisch aus den strukturierten Admin-Feldern
+// (§ 5 TMG / § 18 Abs. 2 MStV). Klammern-Platzhalter ([..]) und
+// leere Felder werden NICHT ausgegeben — fehlende Pflichtfelder bleiben
+// leer und werden vom Setup-Check ("!") im Admin-Panel eingefordert.
+// Ein freier Zusatzblock (impressum_extra) wird angehängt.
+// val(): echter Wert nur, wenn nicht leer und kein [..]-Platzhalter.
+function impVal(v) {
+  const s = String(v || '').trim();
+  if (!s) return '';
+  if (s.startsWith('[') && s.endsWith(']')) return ''; // Platzhalter
+  return s;
+}
+async function getImpressum() {
+  const db = await ensure();
+  const raw = (k) => { const s = db.site_settings.find(x => x.key === k); return s ? String(s.value || '') : ''; };
+  const company = impVal(raw('company_name')) || 'KAST — Komparsen Agentur';
+  const owner = impVal(raw('owner_name'));
+  const addr = impVal(raw('owner_address'));
+  const city = impVal(raw('owner_city'));
+  const email = impVal(raw('owner_email'));
+  const phone = impVal(raw('owner_phone'));
+  const ustId = impVal(raw('owner_ustid'));
+  const sep = impVal(raw('separate_imprint_address'));
+  const extra = impVal(raw('impressum_extra'));
+
+  let out = '## Impressum\n\n';
+  out += 'Angaben gemäß § 5 TMG / § 18 Abs. 2 MStV\n\n';
+  out += '**Firma:** ' + company + '\n';
+  if (owner) out += '**Vertreten durch:** ' + owner + '\n';
+  if (sep) {
+    out += '**Adresse:** ' + sep + '\n';
+  } else {
+    const place = [addr, city].filter(Boolean).join(', ');
+    if (place) out += '**Adresse:** ' + place + '\n';
+  }
+  if (email) out += '**Kontakt:** ' + email + '\n';
+  if (phone) out += '**Telefon:** ' + phone + '\n';
+  if (ustId) out += '**Umsatzsteuer-ID:** ' + ustId + ' (gem. § 27a UStG)\n';
+  if (owner) out += '**Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV:** ' + owner + '\n';
+  if (extra) out += '\n' + extra + '\n';
+  return out.trim() + '\n';
 }
 
 async function getUserByEmail(email) {
@@ -290,6 +346,6 @@ module.exports = {
   ensure, persist, all, find, filter, insert, update, remove,
   getSetting, setSetting, getUserByEmail, getUserById, createUser,
   ensureProfile, searchExtras, defaultSettings, deleteUserCascade,
-  getSetupStatus, REQUIRED_SETUP_FIELDS,
+  getSetupStatus, REQUIRED_SETUP_FIELDS, getImpressum,
   inviteAdmin, listAdmins, getAdminByToken, revokeAdmin, setAdminScope
 };

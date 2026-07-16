@@ -6,7 +6,6 @@
   <title>Einstellungen — Kast</title>
   <link rel="icon" href="/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles.css">
-  <link rel="stylesheet" href="/styles-alt.css">
 </head>
 <body class="guard">
   <nav class="nav"><div class="nav-inner">
@@ -97,9 +96,11 @@
         <label for="siteTheme">Design / Theme</label>
         <select id="siteTheme">
           <option value="block">Block (eckig, Navy) — Default</option>
-          <option value="editorial">Editorial (ruhig, seriös)</option>
           <option value="studio">Studio (kantig, Branche)</option>
-          <option value="intro">Intro (Startbildschirm, warm)</option>
+          <option value="editorial">Editorial (Magazin, ruhig)</option>
+          <option value="kartei">Kartei (Gesichter-Grid als Startseite)</option>
+          <option value="manifest">Manifest (großer Statement)</option>
+          <option value="intro">Intro (warmer Startbildschirm)</option>
         </select>
         <p class="muted">Das Design wirkt sofort auf der öffentlichen Seite. Im Admin-Panel bleibt es neutral.</p>
 
@@ -133,8 +134,17 @@
     <section class="tabpanel hidden" data-panel="legal">
       <h2 style="margin-top:24px">Rechtstexte</h2>
       <div class="card">
-        <label for="impressum">Impressum (Markdown — Du kannst hier direkt Text ergänzen)</label>
-        <textarea id="impressum" style="min-height:160px"></textarea>
+        <h3>Impressum</h3>
+        <p class="muted">Das Impressum wird <b>automatisch aus deinen Stammdaten</b> erzeugt (§ 5 TMG).
+          Fehlende Pflichtfelder sind oben bei „Website" mit <span class="reqflag">!</span> markiert —
+          sobald du sie ausfüllst, aktualisiert sich das Impressum überall von selbst.</p>
+        <button class="btn secondary sm" id="gotoWebsite" type="button">Pflichtdaten ergänzen (Website)</button>
+        <label for="impressum_extra" style="margin-top:14px">Zusätzliche Angaben (Freitext, optional)</label>
+        <textarea id="impressum_extra" style="min-height:120px" placeholder="z.B. Handelsregisternummer, Inhaltlich Verantwortliche(r), EU-Streitschlichtung …"></textarea>
+        <button class="btn" id="saveImpressumExtra" style="margin-top:8px">Zusatz speichern</button>
+        <hr style="margin:18px 0; border:none; border-top:1px solid var(--line)">
+        <label for="impressum">Impressum (Vorschau, automatisch)</label>
+        <textarea id="impressum" style="min-height:160px" readonly></textarea>
         <button class="btn" id="saveImpressum" style="margin-top:8px">Impressum speichern</button>
 
         <label for="agb">AGB (Markdown)</label>

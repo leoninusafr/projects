@@ -72,9 +72,28 @@ requireRole(['admin'], '/admin.html').then(async (me) => {
   async function loadLegal() {
     const r = await api('/api/settings');
     const s = await r.json();
-    ['impressum', 'agb', 'privacy'].forEach(k => { if ($(k)) $(k).value = s[k] || ''; });
+    ['impressum', 'agb', 'privacy', 'impressum_extra'].forEach(k => { if ($(k)) $(k).value = s[k] || ''; });
     await renderSetup();
+    // Impressum-Vorschau aus der generierten API laden
+    const imp = await api('/api/impressum');
+    if (imp.ok) { const j = await imp.json(); if ($('impressum')) $('impressum').value = j.impressum || ''; }
   }
+
+  // "Pflichtdaten ergänzen" → Website-Tab öffnen + zu den Impressum-Feldern scrollen
+  $('gotoWebsite') && $('gotoWebsite').addEventListener('click', () => {
+    const t = document.querySelector('.tab[data-tab="website"]');
+    if (t) t.click();
+    setTimeout(() => { const el = $('owner_name'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); if (el) el.focus({ preventScroll: true }); }, 120);
+  });
+
+  $('saveImpressumExtra') && $('saveImpressumExtra').addEventListener('click', async () => {
+    const r = await api('/api/settings', { method: 'PUT', body: JSON.stringify({ impressum_extra: $('impressum_extra').value }) });
+    if (r.ok) {
+      const imp = await api('/api/impressum');
+      if (imp.ok) { const j = await imp.json(); if ($('impressum')) $('impressum').value = j.impressum || ''; }
+      alert('Zusatz gespeichert — Impressum aktualisiert.');
+    } else alert('Fehler.');
+  });
 
   function payloadSite() {
     const p = {};

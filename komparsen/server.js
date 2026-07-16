@@ -274,9 +274,9 @@ async function handleApi(req, res, parsed) {
     if (!need(['admin'])) return json(res, 403, { error: 'admin' });
     return json(res, 200, await db.getSetupStatus());
   }
-  // Impressum (Einzelwert, öffentlich)
+  // Impressum (automatisch aus Admin-Feldern generiert, öffentlich)
   if (p === '/api/impressum' && method === 'GET') {
-    const imp = await db.getSetting('impressum');
+    const imp = await db.getImpressum();
     return json(res, 200, { impressum: imp || '' });
   }
   // Öffentliche, anonymisierte Statistik (DSGVO: KEINE Einzelprofile, nur Aggregate)
