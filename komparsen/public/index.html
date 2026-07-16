@@ -101,19 +101,19 @@
   <script src="/theme.js"></script>
   <script>
     // Aggregierte, anonyme Teaser-Statistik (DSGVO-konform)
-    fetch('/api/stats/public').then(r => r.ok ? r.json() : null).then(s => {
+    (function () {
       const el = document.getElementById('stat');
-      if (!s || !s.count) {
-        el.textContent = 'Deutschlandweit verfügbar — werde jetzt Teil der Kartei.';
-        return;
-      }
-      const h = (s.min_height && s.max_height) ? `Größen von ${s.min_height} bis ${s.max_height} cm` : '';
-      const hair = s.hair_colors && s.hair_colors.length ? `, alle Haarfarben` : '';
-      el.textContent =
-        `Über ${s.count} Komparsen verfügbar${h ? ' · ' + h : ''}${hair} · deutschlandweit.`;
-    }).catch(() => {
-      document.getElementById('stat').textContent = 'Deutschlandweit verfügbar — werde jetzt Teil der Kartei.';
-      });
-      </script>
-      <script src="/consent.js"></script>
-      </body>
+      const FALLBACK = 'Deutschlandweit verfügbar — werde jetzt Teil der Kartei.';
+      function set(t) { if (el) el.textContent = t; }
+      try {
+        fetch('/api/stats/public').then(function (r) { return r.ok ? r.json() : null; }).then(function (s) {
+          if (!s || !s.count) { set(FALLBACK); return; }
+          var h = (s.min_height && s.max_height) ? ('Größen von ' + s.min_height + ' bis ' + s.max_height + ' cm') : '';
+          var hair = (s.hair_colors && s.hair_colors.length) ? ', alle Haarfarben' : '';
+          set('Über ' + s.count + ' Komparsen verfügbar' + (h ? ' · ' + h : '') + hair + ' · deutschlandweit.');
+        }).catch(function () { set(FALLBACK); });
+      } catch (e) { set(FALLBACK); }
+    })();
+  </script>
+  <script src="/consent.js"></script>
+  </body>
