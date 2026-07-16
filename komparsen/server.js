@@ -13,6 +13,7 @@ const db = (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY)
   : require('./lib/db');
 const auth = require('./lib/auth');
 const { exportBookings } = require('./lib/export');
+const notify = require('./lib/notify');
 const { newId, esc, plusMonths, ageFromDob, isEmail, hashPassword, verifyPassword } = require('./lib/util');
 
 const PORT = process.env.PORT || 4173;
@@ -307,15 +308,32 @@ async function handleApi(req, res, parsed) {
     return json(res, 200, bookings);
   }
   if (p === '/api/bookings' && method === 'POST') {
-    if (!need(['admin'])) return json(res, 403, { error: 'admin' });
+    // Produktion (und Admin) dürfen Anfragen stellen; Komparse nicht.
+    if (!need(['production', 'admin'])) return json(res, 403, { error: 'nur für Produktionen' });
     const b = await parseBody(req);
     if (!b.extra_id || !b.title || !b.date_start) return json(res, 400, { error: 'Pflichtfelder' });
     const rec = await db.insert('bookings', Object.assign({
-      id: newId(), extra_id: b.extra_id, production_id: b.production_id || null,
+      id: newId(), extra_id: b.extra_id, production_id: me.role === 'production' ? me.id : (b.production_id || null),
       title: b.title, location: b.location || '', date_start: b.date_start,
       date_end: b.date_end || b.date_start, day_rate: Number(b.day_rate) || 0,
       status: 'angefragt', created_at: new Date().toISOString()
     }));
+    // Benachrichtigung (Email + WhatsApp-Stub) — DSGVO-konform: nur an Betroffene.
+    try {
+      const d = await db.ensure();
+      const extra = d.users.find(u => u.id === b.extra_id);
+      const prod = d.users.find(u => u.id === rec.production_id);
+      const extraName = extra ? extra.email : 'Komparse';
+      const prodName = prod ? (prod.email) : 'Produktion';
+      const msg = 'Hallo! Du wurdest für "' + b.title + '" (' + (b.date_start || '') +
+        (b.location ? ' in ' + b.location : '') + ') angefragt. Melde dich im Dashboard.';
+      if (extra) await auth.mockSendMail(extra.email, 'Neue Casting-Anfrage: ' + b.title, msg);
+      // Admin informieren
+      const admins = d.users.filter(u => u.role === 'admin');
+      for (const a of admins) await auth.mockSendMail(a.email, 'Neue Anfrage: ' + b.title, prodName + ' fragt ' + extraName + ' an.');
+      // WhatsApp (Stub / später echte API)
+      await notify.notifyWhatsApp(extra, msg);
+    } catch (e) { /* Benachrichtigung darf Anfrage nicht blockieren */ console.error('notify fehler', e.message); }
     return json(res, 200, rec);
   }
 

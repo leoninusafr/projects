@@ -89,4 +89,46 @@
 
   renderCart();
   doSearch();
+
+  // ---- Anfrage aus Warenkorb stellen ----
+  const panel = document.createElement('div');
+  panel.className = 'card';
+  panel.style.marginTop = '30px';
+  panel.innerHTML = '<h3>Casting-Anfrage senden</h3>' +
+    '<p class="muted">Für alle ' + cart.length + ' Komparsen im Warenkorb eine Anfrage stellen. ' +
+    'Sie erhalten eine E-Mail (und später WhatsApp) und sehen die Anfrage im Dashboard.</p>' +
+    '<label for="projTitle">Projekt / Titel</label><input id="projTitle" placeholder="z.B. Werbespot \"Sonne\"">' +
+    '<div class="row"><div><label for="projDate">Datum</label><input id="projDate" type="date"></div>' +
+    '<div><label for="projLoc">Ort</label><input id="projLoc" placeholder="z.B. Hamburg"></div></div>' +
+    '<button class="btn block" id="sendReq" style="margin-top:12px">Anfrage senden (' + cart.length + ')</button>';
+  document.getElementById('results').after(panel);
+
+  function refreshReqBtn() {
+    const btn = document.getElementById('sendReq');
+    if (btn) btn.textContent = 'Anfrage senden (' + cart.length + ')';
+  }
+  // nach jedem doSearch den Counter aktualisieren
+  const origDoSearch = doSearch;
+  doSearch = function () { origDoSearch(); refreshReqBtn(); };
+
+  document.getElementById('sendReq').addEventListener('click', async () => {
+    if (!cart.length) { alert('Warenkorb ist leer.'); return; }
+    const title = document.getElementById('projTitle').value.trim();
+    const date = document.getElementById('projDate').value;
+    const loc = document.getElementById('projLoc').value.trim();
+    if (!title || !date) { alert('Bitte Projekttitel und Datum angeben.'); return; }
+    const btn = document.getElementById('sendReq');
+    btn.disabled = true; btn.textContent = 'Sende…';
+    let ok = 0, fail = 0;
+    for (const id of cart) {
+      const r = await api('/api/bookings', { method: 'POST', body: JSON.stringify({ extra_id: id, title, date_start: date, location: loc }) });
+      if (r.ok) ok++; else fail++;
+    }
+    btn.disabled = false; refreshReqBtn();
+    if (ok) {
+      cart = []; localStorage.setItem('kast_cart', '[]'); renderCart();
+      alert(ok + ' Anfrage(n) gesendet. ' + (fail ? fail + ' fehlgeschlagen.' : ''));
+      doSearch();
+    } else alert('Fehler beim Senden.');
+  });
 })();
