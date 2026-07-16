@@ -20,21 +20,35 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+// Eigenes Relay (Open-Source-Nachbau, DKIM-Signatur)
+const relay = require('./smtp-relay');
+
 // Lazy require, um Zirkularität zu vermeiden (db.js requiret mail nicht).
 let _db = null;
 function db() { if (!_db) _db = require('./db'); return _db; }
 
 const FROM = process.env.MAIL_FROM || 'KAST <noreply@kast.example>';
 const PUBLIC_URL = (process.env.APP_PUBLIC_URL || '').replace(/\/+$/, '');
-const MODE = (process.env.MAIL_MODE || (process.env.MAIL_PROVIDER === 'brevo' && process.env.MAIL_API_KEY ? 'brevo' : 'mock')).toLowerCase();
+
+// MAIL_MODE: Env als Default, aber Admin-Panel-Override (db.site_settings 'mail_mode')
+// hat Vorrang, damit du im Panel umschalten kannst OHNE Server-Neustart.
+async function getMode() {
+  try {
+    const v = await db().getSetting('mail_mode');
+    if (['brevo', 'smtp', 'own', 'mock'].includes(v)) return v;
+  } catch (e) {}
+  return (process.env.MAIL_MODE || (process.env.MAIL_PROVIDER === 'brevo' && process.env.MAIL_API_KEY ? 'brevo' : 'mock')).toLowerCase();
+}
+
 const QUOTA_POLICY = (process.env.MAIL_QUOTA_POLICY || 'queue_next_day').toLowerCase();
 // Typ -> bevorzugter Provider (default: active MODE). Admin kann im Panel überschreiben
 // (db.site_settings: mail_route_optin / mail_route_booking / mail_route_admin).
 const TYPE_ROUTE = {
-  optin: (process.env.MAIL_ROUTE_OPTIN || '').toLowerCase() || MODE,
-  booking: (process.env.MAIL_ROUTE_BOOKING || '').toLowerCase() || MODE,
-  admin: (process.env.MAIL_ROUTE_ADMIN || '').toLowerCase() || MODE,
+  optin: (process.env.MAIL_ROUTE_OPTIN || '').toLowerCase() || MODE_FALLBACK(),
+  booking: (process.env.MAIL_ROUTE_BOOKING || '').toLowerCase() || MODE_FALLBACK(),
+  admin: (process.env.MAIL_ROUTE_ADMIN || '').toLowerCase() || MODE_FALLBACK(),
 };
+function MODE_FALLBACK() { return (process.env.MAIL_MODE || 'brevo').toLowerCase(); }
 
 // Holt Admin-Override für Typ-Routing aus der DB (falls gesetzt).
 async function typeRouteFromDb() {
@@ -77,16 +91,16 @@ async function dispatch(provider, msg) {
   if (provider === 'brevo' && process.env.MAIL_API_KEY) return brevoSend(msg);
   if (provider === 'smtp' && process.env.SMTP_HOST) return smtpSend(msg);
   if (provider === 'own') {
-    // EIGENES RELAY — vorbereitet, aktiv nur wenn MAIL_MODE=own + konfiguriert.
-    // Aktuell: falls kein eigener Host gesetzt, Fallback auf Mock (Panel zeigt "nicht konfiguriert").
-    if (process.env.OWN_SMTP_HOST) return smtpSend(Object.assign({ _own: true }, msg));
+    // EIGENES RELAY — vorbereitet, aktiv nur wenn MAIL_MODE=own + OWN_SMTP_HOST.
+    if (process.env.OWN_SMTP_HOST) return relay.sendViaOwnRelay(msg);
     return mockSend(msg);
   }
   return mockSend(msg);
 }
 
 async function sendMail({ to, subject, text, html }) {
-  return dispatch(MODE, { to, subject, text, html });
+  const mode = await getMode();
+  return dispatch(mode, { to, subject, text, html });
 }
 // --- Brevo REST (empfohlen: kostenlos, EU, 300/Tag) ---
 async function brevoSend({ to, subject, text, html }) {
@@ -205,16 +219,17 @@ async function mockSend({ to, subject, text }) {
 }
 
 // Status für Admin-Panel
-function isConfigured() {
+async function isConfigured() {
+  const mode = await getMode();
   const providers = {};
   if (process.env.MAIL_API_KEY) providers.brevo = true;
   if (process.env.SMTP_HOST) providers.smtp = true;
   if (process.env.OWN_SMTP_HOST) providers.own = true;
   // "configured" = aktiver MODE hat echte Credentials (mock zählt NICHT als konfiguriert)
-  const configured = MODE === 'mock' ? false : !!providers[MODE];
+  const configured = mode === 'mock' ? false : !!providers[mode];
   return {
     configured,
-    provider: MODE,
+    provider: mode,
     quotaPolicy: QUOTA_POLICY,
     typeRoutes: TYPE_ROUTE,
     availableProviders: providers,
@@ -247,6 +262,7 @@ function isQuotaError(r, e) {
 async function sendMailSafe(msg) {
   const type = msg.type || 'default';
   const target = await providerForType(type);
+  const mode = await getMode();
   // Versand über Ziel-Provider (Brevo/SMTP/own)
   try {
     const r = await dispatch(target, msg);

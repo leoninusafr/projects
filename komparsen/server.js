@@ -386,7 +386,7 @@ async function handleApi(req, res, parsed) {
   // Mail-Versand-Status (Admin: ist echter SMTP/Brevo konfiguriert?)
   if (p === '/api/admin/mail-status' && method === 'GET') {
     if (!need(['admin'])) return json(res, 403, { error: 'admin' });
-    return json(res, 200, mail.isConfigured());
+    return json(res, 200, await mail.isConfigured());
   }
 
   // Admin-Verwaltung: Einladung + Rechte (nur Haupt-Admin bzw. 'all'-Scope)

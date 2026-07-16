@@ -9,3 +9,6 @@ node_modules/
 .env
 # Backups sind Artefakte, kein Quellcode
 backups/
+
+# DKIM privater Schlüssel (nie committen!)
+data/dkim-private.pem

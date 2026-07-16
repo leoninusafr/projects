@@ -134,8 +134,9 @@
         <label for="mailMode">Aktiver Anbieter</label>
         <select id="mailMode">
           <option value="brevo">Brevo (empfohlen, kostenlos 300/Tag)</option>
+          <option value="own">Eigenes Relay (vorbereitet, braucht Domain+DNS)</option>
           <option value="smtp">Eigenes SMTP (z.B. Open-Source Postfix)</option>
-          <option value="own">Eigenes Relay (vorbereitet, noch nicht aktiv)</option>
+          <option value="mock">Nur lokal speichern (Mock/Test)</option>
         </select>
         <p class="muted">Hinweis: „Eigenes Relay" / „Eigenes SMTP" sind erst live, wenn auf dem Server
           die entsprechenden Host-Daten in <code>.env</code> stehen. Sonst greift automatisch der Mock.</p>

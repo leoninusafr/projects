@@ -33,12 +33,14 @@ requireRole(['admin'], '/admin.html').then(async (me) => {
   })();
   if ($('saveMail')) $('saveMail').addEventListener('click', async () => {
     const body = {
+      mail_mode: $('mailMode') ? $('mailMode').value : 'brevo',
+      mail_quota_policy: $('mailQuota') ? $('mailQuota').value : 'queue_next_day',
       mail_route_optin: $('routeOptin') ? $('routeOptin').value : '',
       mail_route_booking: $('routeBooking') ? $('routeBooking').value : '',
       mail_route_admin: $('routeAdmin') ? $('routeAdmin').value : ''
     };
-    // Hinweis: Provider-Wechsel (MAIL_MODE) + Quota-Policy sind Env-basiert,
-    // Typ-Routing wird hier live in db.site_settings gespeichert.
+    // Provider-Wechsel (mail_mode) + Quota-Policy werden live in db.site_settings
+    // gespeichert. lib/mail.js liest mail_mode aus DB (Override > Env).
     const r = await api('/api/settings', { method: 'PUT', body: JSON.stringify(body) });
     const ok = $('mailSaved');
     if (ok) { ok.style.display = r.ok ? 'block' : 'none'; }
