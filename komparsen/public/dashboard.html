@@ -25,13 +25,19 @@
   </div></nav>
 
   <div class="container">
-    <h1>Übersicht</h1>
+    <h1>Übersicht <span class="badge" id="roleTitle"></span></h1>
     <p class="lead">Nur das, was du wirklich erledigen musst.</p>
     <div id="todos" class="grid cols-3"></div>
     <h2 style="margin-top:30px">Übersicht</h2>
     <div id="stats" class="grid cols-3"></div>
     <h2 style="margin-top:30px">Offene Anfragen</h2>
     <div id="bookings"></div>
+
+    <div id="adminLinks" class="card" style="display:none; margin-top:30px">
+      <h3>Admin-Bereich</h3>
+      <p class="muted">Als Admin hast du erweiterte Rechte.</p>
+      <a class="btn" href="/admin.html">Admin-Panel öffnen</a>
+    </div>
   </div>
 
   <script src="/app.js"></script>

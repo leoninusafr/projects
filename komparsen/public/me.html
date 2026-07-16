@@ -43,7 +43,7 @@
       </div>
       <div class="row">
         <div><label for="hair">Haarfarbe</label>
-          <select id="hair"><option value="">–</option><option>braun</option><option>blond</option><option>schwarz</option><option>rot</option><option>grau</option><option>gefärbt</option></select></div>
+          <select id="hair"><option value="">–</option><option value="braun">braun</option><option value="blond">blond</option><option value="schwarz">schwarz</option><option value="rot">rot (Natur)</option><option value="grau">grau</option><option value="gefärbt">gefärbt (andere Farbe)</option></select></div>
         <div><label for="eye">Augenfarbe</label>
           <select id="eye"><option value="">–</option><option>blau</option><option>braun</option><option>grün</option><option>grau</option><option>sonstige</option></select></div>
       </div>
@@ -118,10 +118,11 @@
       });
 
       $('del').addEventListener('click', async () => {
-        if (!confirm('Konto unwiderruflich löschen? Alle deine Daten (Profil, Fotos, Selfie) werden gelöscht (DSGVO Art. 17).')) return;
-        const res = await api('/api/profile/me', { method: 'DELETE' });
-        if (res.ok) location.href = '/';
-        else alert('Löschen fehlgeschlagen.');
+        const c = prompt('Konto unwiderruflich löschen? Alle Daten (Profil, Fotos, Selfie, Buchungen) werden gelöscht (DSGVO Art. 17).\nZum Bestätigen tippe: LOSCHEN');
+        if (c !== 'LOSCHEN') return;
+        const res = await api('/api/account/delete', { method: 'POST', body: JSON.stringify({ confirm: 'LOSCHEN' }) });
+        if (res.ok) { alert('Konto gelöscht.'); location.href = '/'; }
+        else { const e = await res.json().catch(()=>({})); alert('Fehler: ' + (e.error || 'unbekannt')); }
       });
     })();
   </script>

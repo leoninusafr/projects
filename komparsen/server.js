@@ -174,6 +174,11 @@ async function handleApi(req, res, parsed) {
     await db.ensureProfile(me.id, Object.assign(b, { updated_at: new Date().toISOString() }));
     return json(res, 200, { ok: true });
   }
+  if (p === '/api/profile/me' && method === 'GET') {
+    if (!me) return json(res, 401, { error: 'login' });
+    const prof = await db.find('profiles', x => x.user_id === me.id);
+    return json(res, 200, prof || {});
+  }
   if (p === '/api/profile/consents' && method === 'POST') {
     if (!me) return json(res, 401, { error: 'login' });
     const b = await parseBody(req);
@@ -332,6 +337,12 @@ async function handleApi(req, res, parsed) {
     if (!need(['admin'])) return json(res, 403, { error: 'admin' });
     const d = await db.ensure();
     return json(res, 200, d.bookings.map(b => Object.assign({}, b, { extra_name: nameOf(b.extra_id, d) })));
+  }
+  if (p === '/api/bookings/me' && method === 'GET') {
+    if (!me) return json(res, 401, { error: 'login' });
+    const d = await db.ensure();
+    const mine = d.bookings.filter(b => b.extra_id === me.id || b.production_id === me.id);
+    return json(res, 200, { bookings: mine });
   }
   if (/^\/api\/admin\/bookings\/[^\/]+\/confirm$/.test(p) && method === 'POST') {
     if (!need(['admin'])) return json(res, 403, { error: 'admin' });

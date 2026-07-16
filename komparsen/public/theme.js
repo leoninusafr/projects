@@ -55,12 +55,22 @@
   }
 
   function init() {
-    var fromUrl = new URLSearchParams(location.search).get('theme');
-    var saved = null;
-    try { saved = localStorage.getItem(KEY); } catch (e) {}
-    var start = (fromUrl && THEMES[fromUrl]) ? fromUrl : (saved && THEMES[saved]) ? saved : 'studio';
-    apply(start);
-    buildSwitcher();
+    // 1) Server-Setting (Admin-Wahl) hat Vorrang, falls gesetzt
+    // 2) sonst localStorage
+    // 3) sonst Default = studio
+    fetch('/api/settings').then(r => r.ok ? r.json() : null).then(s => {
+      const serverTheme = s && s.site_theme && THEMES[s.site_theme] ? s.site_theme : null;
+      const fromUrl = new URLSearchParams(location.search).get('theme');
+      const saved = (() => { try { return localStorage.getItem(KEY); } catch (e) { return null; } })();
+      const start = (fromUrl && THEMES[fromUrl]) ? fromUrl : (serverTheme || (saved && THEMES[saved] ? saved : 'studio'));
+      apply(start);
+      buildSwitcher();
+    }).catch(() => {
+      const fromUrl = new URLSearchParams(location.search).get('theme');
+      const saved = (() => { try { return localStorage.getItem(KEY); } catch (e) { return null; } })();
+      apply((fromUrl && THEMES[fromUrl]) ? fromUrl : (saved && THEMES[saved] ? saved : 'studio'));
+      buildSwitcher();
+    });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
