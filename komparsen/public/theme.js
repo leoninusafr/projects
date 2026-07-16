@@ -1,20 +1,22 @@
 'use strict';
 /* KAST — Design-Switcher.
-   DEFAULT = „Block" (eckig/strukturiert, dein Favorit).
-   Editorial / Studio / Intro = eigene CSS-Dateien mit eigenem Aufbau.
-   Auswahl in localStorage; ?theme= im URL überschreibt. */
+   Default = Studio (dein Favorit, 90%).
+   Gleichwertige Alternativen: Editorial (Magazin), Kartei (Gesichter-Grid),
+   Manifest (großer Statement). Jedes mit eigenem Aufbau + Texten.
+   Layout-Sektionen (Kartei/Manifest) werden je nach Theme ein/ausgeblendet.
+   Wahl in localStorage; ?theme= überschreibt. */
 (function () {
   var THEMES = {
-    block:     { label: 'Block',     css: null,                    body: '' },
-    editorial: { label: 'Editorial', css: '/theme-editorial.css',  body: 'theme-editorial' },
-    studio:    { label: 'Studio',    css: '/theme-studio.css',     body: 'theme-studio' },
-    intro:     { label: 'Intro',     css: '/theme-intro.css',      body: 'theme-intro' }
+    studio:   { label: 'Studio',   css: '/theme-studio.css',   body: 'theme-studio',   layouts: [] },
+    editorial:{ label: 'Editorial', css: '/theme-editorial.css', body: 'theme-editorial', layouts: [] },
+    kartei:   { label: 'Kartei',   css: '/theme-kartei.css',   body: 'theme-kartei',   layouts: ['kartei'] },
+    manifest: { label: 'Manifest', css: '/theme-manifest.css', body: 'theme-manifest', layouts: ['manifest'] }
   };
   var KEY = 'kast_theme';
-  var current = 'block';
+  var current = 'studio';
 
   function apply(name) {
-    var t = THEMES[name]; if (!t) name = 'block', t = THEMES.block;
+    var t = THEMES[name]; if (!t) name = 'studio', t = THEMES.studio;
     current = name;
     var old = document.getElementById('kast-theme-css');
     if (old) old.remove();
@@ -25,30 +27,14 @@
       document.head.appendChild(link);
     }
     if (t.body) document.body.classList.add(t.body);
-    if (t.body === 'theme-intro') setupIntro();
+    // optionale Layout-Sektionen zeigen/verstecken
+    document.querySelectorAll('[data-layout-section]').forEach(function () {});
+    document.querySelector('.layout-kartei') && document.querySelector('.layout-kartei').classList.toggle('hidden', t.layouts.indexOf('kartei') < 0);
+    document.querySelector('.layout-manifest') && document.querySelector('.layout-manifest').classList.toggle('hidden', t.layouts.indexOf('manifest') < 0);
     try { localStorage.setItem(KEY, name); } catch (e) {}
     document.querySelectorAll('[data-theme-btn]').forEach(function (b) {
       b.classList.toggle('active', b.getAttribute('data-theme-btn') === name);
     });
-  }
-
-  function setupIntro() {
-    if (document.querySelector('.intro')) return;
-    var intro = document.createElement('div');
-    intro.className = 'intro';
-    intro.innerHTML =
-      '<div class="intro-kicker">Kast — Komparsen-Agentur</div>' +
-      '<h1 class="intro-title">Menschen. Vor der Kamera.</h1>' +
-      '<p class="intro-sub">Kostenlos Komparse werden. Von Produktionen in Sekunden gefunden.</p>' +
-      '<div class="intro-go">Los geht\'s</div>' +
-      '<div class="intro-foot">Tippen oder scrollen zum Start</div>';
-    document.body.appendChild(intro);
-    function close() { document.body.classList.add('intro-closed'); }
-    intro.addEventListener('click', close);
-    window.addEventListener('scroll', function once() {
-      if (window.scrollY > 10) { close(); window.removeEventListener('scroll', once); }
-    }, { passive: true });
-    setTimeout(close, 6000);
   }
 
   function buildSwitcher() {
@@ -72,7 +58,7 @@
     var fromUrl = new URLSearchParams(location.search).get('theme');
     var saved = null;
     try { saved = localStorage.getItem(KEY); } catch (e) {}
-    var start = (fromUrl && THEMES[fromUrl]) ? fromUrl : (saved && THEMES[saved]) ? saved : 'block';
+    var start = (fromUrl && THEMES[fromUrl]) ? fromUrl : (saved && THEMES[saved]) ? saved : 'studio';
     apply(start);
     buildSwitcher();
   }

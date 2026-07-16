@@ -1,0 +1,45 @@
+/* ============================================================
+   THEME: MANIFEST — ein Statement, eine Aktion
+   Massive Typo, viel negativer Raum, ein CTA. Kein Grid, kein
+   Karten-Wust. Für Mutige. Wirkt wie ein Manifest, nicht wie
+   ein SaaS-Landing. Schrift: großes, fett kontrastierendes Paar.
+   ============================================================ */
+.theme-manifest {
+  --bg: #0d0d0f;
+  --bg-elev: #161618;
+  --ink: #f4f4f2;
+  --ink-2: #a9a9b0;
+  --line: #2a2a2e;
+  --accent: #e8e2d0;        /* warmes Elfenbein als Akzent auf Schwarz */
+  --accent-press: #fff;
+  --radius: 0px;
+  --radius-sm: 0px;
+  --maxw: 920px;
+  --font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+.theme-manifest body { background: var(--bg); color: var(--ink); }
+.theme-manifest .nav { background: var(--bg); border-bottom: 1px solid var(--line); }
+.theme-manifest .nav a, .theme-manifest .brand { color: var(--ink); }
+.theme-manifest .hero { display: none; }  /* Hero durch Manifest-Block ersetzt */
+.theme-manifest .layout-manifest { display: block; min-height: 78vh; display: flex; align-items: center; padding: 60px 0; }
+.theme-manifest .manifest-inner { text-align: left; }
+.theme-manifest .manifest-kicker {
+  text-transform: uppercase; letter-spacing: .22em; font-size: 12px;
+  color: var(--accent); font-weight: 600; margin: 0 0 22px;
+}
+.theme-manifest .manifest-head {
+  font-size: clamp(40px, 8vw, 92px); line-height: .98; letter-spacing: -.03em;
+  font-weight: 800; margin: 0 0 26px;
+}
+.theme-manifest .manifest-sub {
+  font-size: clamp(17px, 2.4vw, 21px); color: var(--ink-2); max-width: 540px; margin: 0 0 34px;
+}
+.theme-manifest .manifest-cta {
+  background: var(--accent); color: #0d0d0f; border-radius: 999px; padding: 15px 32px; font-weight: 700;
+}
+.theme-manifest .manifest-cta:hover { background: var(--accent-press); }
+.theme-manifest .card { background: var(--bg-elev); border: 1px solid var(--line); border-radius: 0; }
+.theme-manifest .container { max-width: var(--maxw); }
+.theme-manifest .quote { background: var(--bg-elev); border-left: 3px solid var(--accent); border-radius: 0; font-size: clamp(22px, 4vw, 34px); }
+.theme-manifest footer { border-top: 1px solid var(--line); background: var(--bg); color: var(--ink-2); }
+.theme-manifest footer a { color: var(--ink-2); }

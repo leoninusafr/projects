@@ -44,6 +44,9 @@
   <script src="/app.js"></script>
   <script src="/nav.js"></script>
 
+  <!-- MARQUEE (nur im Studio-Theme sichtbar) -->
+  <div class="marquee" aria-hidden="true"><span>KAST — KOMPARSENAGENTUR · HAMBURG &amp; DEUTSCHLANDWEIT · KOSTENLOS WERDEN · PRODUKTIONEN ANFRAGEN <b>·</b> VOM PROFIL ZUM SET <b>·</b> DSGVO-KONFORM <b>·</b> JEDER MENSCH HAT EIN GESICHT <b>·</b> </span></div>
+
   <!-- HERO -->
   <header class="hero">
     <div class="container">
@@ -58,6 +61,27 @@
       <p class="hero-stat" id="stat">Lade Statistik…</p>
     </div>
   </header>
+
+  <!-- LAYOUT: KARTEI (Gesichter-Grid) — nur im Kartei-Theme sichtbar -->
+  <section class="layout-kartei hidden">
+    <div class="container">
+      <h2 class="kartei-title">Die Kartei. Live.</h2>
+      <p class="muted">Echte Gesichter, die gerade verfügbar sind. Produktionen blättern, filtern, anfragen.</p>
+      <div class="kartei-grid" id="karteiGrid"></div>
+      <p class="muted kartei-foot">Neue Gesichter kommen täglich dazu. Werde selbst Teil der Kartei →</p>
+    </div>
+  </section>
+
+  <!-- LAYOUT: MANIFEST (großer Statement-Block) — nur im Manifest-Theme sichtbar -->
+  <section class="layout-manifest hidden">
+    <div class="container manifest-inner">
+      <p class="manifest-kicker">KAST — Komparsen-Agentur</p>
+      <h1 class="manifest-head">Jeder Mensch<br>hat ein Gesicht.<br>Wir bringen es vors Licht.</h1>
+      <p class="manifest-sub">Kostenlos Komparse werden. Von Produktionen in Sekunden gefunden.
+        DSGVO-konform. Du behältst die Kontrolle.</p>
+      <a class="btn manifest-cta" href="/onboarding.html?role=extra">Jetzt Profil anlegen</a>
+    </div>
+  </section>
 
   <!-- PITCH -->
   <section class="container">
@@ -100,6 +124,7 @@
   </footer>
 
   <script src="/consent.js"></script>
+  <script src="/home.js"></script>
   <script>
     // Aggregierte, anonyme Teaser-Statistik (DSGVO-konform)
     (function () {
