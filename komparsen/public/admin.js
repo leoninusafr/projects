@@ -5,6 +5,22 @@ requireRole(['admin'], '/admin.html').then(async (me) => {
   if (!me) return;
   const $ = (id) => document.getElementById(id);
 
+  // ---- Mail-Status (Brevo/SMTP konfiguriert?) ----
+  (async () => {
+    const el = $('mailStatus');
+    if (!el) return;
+    try {
+      const r = await api('/api/admin/mail-status');
+      if (!r.ok) { el.textContent = 'Status nicht abrufbar.'; return; }
+      const j = await r.json();
+      if (j.configured) {
+        el.innerHTML = '<span class="badge ok">AKTIV</span> Versand über: ' + esc(j.provider);
+      } else {
+        el.innerHTML = '<span class="badge warn">MOCK</span> Kein Anbieter konfiguriert — Mails werden nur lokal gespeichert.';
+      }
+    } catch (e) { el.textContent = 'Status nicht abrufbar.'; }
+  })();
+
   // ---- Tabs ----
   document.querySelectorAll('.tab').forEach(t => {
     t.addEventListener('click', () => {

@@ -12,6 +12,7 @@ const db = (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY)
   ? require('./lib/db-supabase')
   : require('./lib/db');
 const auth = require('./lib/auth');
+const mail = require('./lib/mail');
 const { exportBookings } = require('./lib/export');
 const notify = require('./lib/notify');
 const { newId, esc, plusMonths, ageFromDob, isEmail, hashPassword, verifyPassword } = require('./lib/util');
@@ -327,10 +328,10 @@ async function handleApi(req, res, parsed) {
       const prodName = prod ? (prod.email) : 'Produktion';
       const msg = 'Hallo! Du wurdest für "' + b.title + '" (' + (b.date_start || '') +
         (b.location ? ' in ' + b.location : '') + ') angefragt. Melde dich im Dashboard.';
-      if (extra) await auth.mockSendMail(extra.email, 'Neue Casting-Anfrage: ' + b.title, msg);
+      if (extra) await mail.sendMail({ to: extra.email, subject: 'Neue Casting-Anfrage: ' + b.title, text: msg });
       // Admin informieren
       const admins = d.users.filter(u => u.role === 'admin');
-      for (const a of admins) await auth.mockSendMail(a.email, 'Neue Anfrage: ' + b.title, prodName + ' fragt ' + extraName + ' an.');
+      for (const a of admins) await mail.sendMail({ to: a.email, subject: 'Neue Anfrage: ' + b.title, text: prodName + ' fragt ' + extraName + ' an.' });
       // WhatsApp (Stub / später echte API)
       await notify.notifyWhatsApp(extra, msg);
     } catch (e) { /* Benachrichtigung darf Anfrage nicht blockieren */ console.error('notify fehler', e.message); }
@@ -381,6 +382,11 @@ async function handleApi(req, res, parsed) {
     send(res, 200, csv, { 'Content-Type': 'text/csv; charset=utf-8',
       'Content-Disposition': 'attachment; filename=adag_export.csv' });
     return;
+  }
+  // Mail-Versand-Status (Admin: ist echter SMTP/Brevo konfiguriert?)
+  if (p === '/api/admin/mail-status' && method === 'GET') {
+    if (!need(['admin'])) return json(res, 403, { error: 'admin' });
+    return json(res, 200, mail.isConfigured());
   }
 
   // Admin-Verwaltung: Einladung + Rechte (nur Haupt-Admin bzw. 'all'-Scope)

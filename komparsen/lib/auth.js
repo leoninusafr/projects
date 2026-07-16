@@ -3,6 +3,7 @@
 const crypto = require('crypto');
 const db = require('./db');
 const { hashPassword, verifyPassword, newId } = require('./util');
+const mail = require('./mail');
 
 const SESSION_TTL = 30 * 24 * 3600 * 1000; // 30 Tage ("angemeldet bleiben")
 const sessions = new Map(); // sessionId -> { userId, expires }
@@ -36,20 +37,19 @@ async function register({ email, password, role, extra }) {
 
   // Double-Opt-In-Token bereits in user.verification_token
   const verifyLink = `/api/auth/verify?token=${encodeURIComponent(user.verification_token)}&email=${encodeURIComponent(email)}`;
-  // In Realität: Mail versenden. Hier: Log + zurückgeben (Dev).
-  console.log(`[OPT-IN] Bestätigungslink für ${email}: ${verifyLink}`);
-  // Mock-Versand
-  await mockSendMail(email, 'Bitte bestätige deine Registrierung',
-    `Klicke zum Bestätigen: ${verifyLink}`);
-  return { userId: user.id, verifyLink };
+  // Opt-In-Mail versenden (Brevo/SMTP/Mock je nach Env)
+  const link = mail.publicUrl(verifyLink);
+  await mail.sendMail({
+    to: email,
+    subject: 'Bitte bestätige deine Registrierung bei KAST',
+    text: `Hallo,\n\ndu bist fast dabei. Bitte bestätige deine E-Mail, damit dein KAST-Konto aktiv wird:\n\n${link}\n\nLiebe Grüße\nDein KAST-Team`
+  });
+  return { userId: user.id, verifyLink: link };
 }
 
 async function mockSendMail(to, subject, body) {
-  // Platzhalter für echten SMTP/Supabase-Mail später
-  const dir = require('path').join(__dirname, '..', 'data', 'mailbox');
-  require('fs').mkdirSync(dir, { recursive: true });
-  const f = require('path').join(dir, Date.now() + '_' + crypto.randomBytes(3).toString('hex') + '.txt');
-  require('fs').writeFileSync(f, `To: ${to}\nSubject: ${subject}\n\n${body}\n`);
+  // Rückwärtskompatibilität: leitet auf das zentrale Mail-Modul weiter.
+  return mail.sendMail({ to, subject, text: body });
 }
 
 async function verifyEmail(token, email) {
