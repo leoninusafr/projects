@@ -1,21 +1,52 @@
 'use strict';
 // lib/mail.js — Null-Dependency E-Mail-Versand für KAST.
 //
-// Strategie (DSGVO / kostenfrei / skalierbar):
-//   1) MAIL_PROVIDER=brevo + MAIL_API_KEY  -> Brevo REST-API (Node22 fetch, EU/Schrems-II-sicher)
-//   2) SMTP_HOST + SMTP_USER + SMTP_PASS     -> minimaler SMTP+STARTTLS-Client (eigene Domain)
-//   3) Fallback: Datei-Mock (data/mailbox/*.txt) — NUR Entwicklung, wenn kein Provider konfiguriert
+// PROVIDER (MAIL_MODE, Env):
+//   brevo  -> Brevo REST-API (EU/Schrems-II, Free 300/Tag, 0€)
+//   smtp   -> eigenes SMTP (z.B. Open-Source Postfix/OpenDKIM auf eigenem Server)
+//   own    -> eigenes Relay (VORBEREITET, noch NICHT aktiv — MAIL_MODE=own schaltet es ein)
+//   mock   -> Datei-Mock (Entwicklung, wenn nichts konfiguriert)
 //
-// Credentials kommen IMMER aus Env-Variablen (nie db.json / Code).
-// PII (E-Mail, Opt-In-Token) wird im Mock nur in Entwicklung geschrieben.
-// Im Produktivbetrieb loggen wir bewusst KEINE Mail-Inhalte.
+// SKALIERUNG (Quota-Policy, Env MAIL_QUOTA_POLICY):
+//   queue_next_day -> bei Brevo-Tageslimit: Mail in Pending-Queue, nächster Tag
+//   failover_own   -> bei Brevo-Tageslimit: eigenes Relay übernimmt
+//
+// TYP-ROUTING: sendMail({type:'optin'|'booking'|'admin'}) -> Policy kann pro Typ
+//               den Ziel-Provider überschreiben (z.B. booking immer brevo=Garantie).
+//
+// Credentials KOMMEN IMMER aus Env (nie db.json/Code). Secrets niemals ins Panel.
 
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+// Lazy require, um Zirkularität zu vermeiden (db.js requiret mail nicht).
+let _db = null;
+function db() { if (!_db) _db = require('./db'); return _db; }
+
 const FROM = process.env.MAIL_FROM || 'KAST <noreply@kast.example>';
 const PUBLIC_URL = (process.env.APP_PUBLIC_URL || '').replace(/\/+$/, '');
+const MODE = (process.env.MAIL_MODE || (process.env.MAIL_PROVIDER === 'brevo' && process.env.MAIL_API_KEY ? 'brevo' : 'mock')).toLowerCase();
+const QUOTA_POLICY = (process.env.MAIL_QUOTA_POLICY || 'queue_next_day').toLowerCase();
+// Typ -> bevorzugter Provider (default: active MODE). Admin kann im Panel überschreiben
+// (db.site_settings: mail_route_optin / mail_route_booking / mail_route_admin).
+const TYPE_ROUTE = {
+  optin: (process.env.MAIL_ROUTE_OPTIN || '').toLowerCase() || MODE,
+  booking: (process.env.MAIL_ROUTE_BOOKING || '').toLowerCase() || MODE,
+  admin: (process.env.MAIL_ROUTE_ADMIN || '').toLowerCase() || MODE,
+};
+
+// Holt Admin-Override für Typ-Routing aus der DB (falls gesetzt).
+async function typeRouteFromDb() {
+  try {
+    const r = {};
+    for (const t of ['optin', 'booking', 'admin']) {
+      const v = await db().getSetting('mail_route_' + t);
+      if (v && ['brevo', 'own', 'smtp'].includes(v)) r[t] = v;
+    }
+    return r;
+  } catch (e) { return {}; }
+}
 
 // Baut aus einer (relativen) Pfad-URL eine absolute URL, sofern APP_PUBLIC_URL gesetzt ist.
 // Opt-In-Links MÜSSEN absolut sein (Mails werden woanders geöffnet).
@@ -32,17 +63,31 @@ function parseFrom() {
   return { name: 'KAST', email: String(FROM).trim() };
 }
 
-async function sendMail({ to, subject, text, html }) {
-  const provider = (process.env.MAIL_PROVIDER || '').toLowerCase();
-  if (provider === 'brevo' && process.env.MAIL_API_KEY) {
-    return brevoSend({ to, subject, text, html });
-  }
-  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-    return smtpSend({ to, subject, text, html });
-  }
-  return mockSend({ to, subject, text });
+// Welcher Provider für diesen Typ (Typ-Routing, Fallback auf MODE)?
+// Admin-Override aus DB (mail_route_*) hat Vorrang vor Env.
+async function providerForType(type) {
+  const overrides = await typeRouteFromDb();
+  if (type && overrides[type]) return overrides[type];
+  if (type && TYPE_ROUTE[type]) return TYPE_ROUTE[type];
+  return MODE;
 }
 
+// Liefert den aktiven Sende-Fn für einen Provider-String
+async function dispatch(provider, msg) {
+  if (provider === 'brevo' && process.env.MAIL_API_KEY) return brevoSend(msg);
+  if (provider === 'smtp' && process.env.SMTP_HOST) return smtpSend(msg);
+  if (provider === 'own') {
+    // EIGENES RELAY — vorbereitet, aktiv nur wenn MAIL_MODE=own + konfiguriert.
+    // Aktuell: falls kein eigener Host gesetzt, Fallback auf Mock (Panel zeigt "nicht konfiguriert").
+    if (process.env.OWN_SMTP_HOST) return smtpSend(Object.assign({ _own: true }, msg));
+    return mockSend(msg);
+  }
+  return mockSend(msg);
+}
+
+async function sendMail({ to, subject, text, html }) {
+  return dispatch(MODE, { to, subject, text, html });
+}
 // --- Brevo REST (empfohlen: kostenlos, EU, 300/Tag) ---
 async function brevoSend({ to, subject, text, html }) {
   const from = parseFrom();
@@ -159,12 +204,87 @@ async function mockSend({ to, subject, text }) {
   return { ok: true, provider: 'mock' };
 }
 
-// Status für Admin-Panel: ist echter Versand konfiguriert?
+// Status für Admin-Panel
 function isConfigured() {
-  const p = (process.env.MAIL_PROVIDER || '').toLowerCase();
-  if (p === 'brevo' && process.env.MAIL_API_KEY) return { configured: true, provider: 'brevo' };
-  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) return { configured: true, provider: 'smtp' };
-  return { configured: false, provider: null };
+  const providers = {};
+  if (process.env.MAIL_API_KEY) providers.brevo = true;
+  if (process.env.SMTP_HOST) providers.smtp = true;
+  if (process.env.OWN_SMTP_HOST) providers.own = true;
+  // "configured" = aktiver MODE hat echte Credentials (mock zählt NICHT als konfiguriert)
+  const configured = MODE === 'mock' ? false : !!providers[MODE];
+  return {
+    configured,
+    provider: MODE,
+    quotaPolicy: QUOTA_POLICY,
+    typeRoutes: TYPE_ROUTE,
+    availableProviders: providers,
+    brevoDailyLimit: 300 // Free-Tier; bei Bezahlplan anpassen (Env MAIL_BREVO_DAILY_LIMIT)
+  };
 }
 
-module.exports = { sendMail, publicUrl, isConfigured, parseFrom };
+// --- Pending-Queue (Skalierung): Brevo Free = 300/Tag.
+// Wenn ein Versand fehlschlägt (z.B. quota exceeded), landet die Mail
+// in data/mailbox/pending/ und wird vom nexten Flush nachgeholt.
+// So geht KEINE Opt-In/Buchung verloren, wenn das Business >300/Tag wächst.
+const PENDING_DIR = path.join(__dirname, '..', 'data', 'mailbox', 'pending');
+function queuePending(msg) {
+  try {
+    fs.mkdirSync(PENDING_DIR, { recursive: true });
+    const f = path.join(PENDING_DIR, Date.now() + '_' + crypto.randomBytes(3).toString('hex') + '.json');
+    fs.writeFileSync(f, JSON.stringify(Object.assign({ queued_at: new Date().toISOString() }, msg)));
+    return true;
+  } catch (e) { console.error('[mail-queue] fehler', e.message); return false; }
+}
+
+// Tageslimit-Verstoß erkennen (Brevo-Response enthält "quota" / 429 / 402)
+function isQuotaError(r, e) {
+  if (e && /quota|429|402|limit/i.test(e.message || '')) return true;
+  if (r && (r.status === 429 || r.status === 402 || r.status === 400) &&
+      r.body && /quota|limit|exceeded/i.test(String(r.body))) return true;
+  return false;
+}
+
+async function sendMailSafe(msg) {
+  const type = msg.type || 'default';
+  const target = await providerForType(type);
+  // Versand über Ziel-Provider (Brevo/SMTP/own)
+  try {
+    const r = await dispatch(target, msg);
+    if (r && r.ok) return r;
+    // Fehler -> Quota-Policy prüfen
+    if (target === 'brevo' && isQuotaError(r, null)) {
+      if (QUOTA_POLICY === 'failover_own' && process.env.OWN_SMTP_HOST) {
+        const f = await dispatch('own', msg); // eigenes Relay übernimmt
+        if (f.ok) return Object.assign({ failover: true }, f);
+      }
+      queuePending(msg); // nächster Tag (queue_next_day default)
+      return Object.assign({ ok: false, queued: true, reason: 'quota' }, r || {});
+    }
+    if (target !== 'mock') { queuePending(msg); return Object.assign({ ok: false, queued: true }, r || {}); }
+    return r || { ok: false };
+  } catch (e) {
+    if (target === 'brevo' && QUOTA_POLICY === 'failover_own' && process.env.OWN_SMTP_HOST) {
+      try { const f = await dispatch('own', msg); if (f.ok) return Object.assign({ failover: true }, f); } catch (_) {}
+    }
+    if (target !== 'mock') { queuePending(msg); return { ok: false, queued: true, error: e.message }; }
+    return { ok: false, error: e.message };
+  }
+}
+
+// Flusht gemanagte Pending-Mails (z.B. per Cron alle 24h).
+// Gibt Anzahl erfolgreich zugestellter zurück.
+async function flushPending() {
+  if (!fs.existsSync(PENDING_DIR)) return 0;
+  const files = fs.readdirSync(PENDING_DIR).filter(f => f.endsWith('.json'));
+  let done = 0;
+  for (const f of files) {
+    try {
+      const msg = JSON.parse(fs.readFileSync(path.join(PENDING_DIR, f), 'utf8'));
+      const r = await sendMail(msg);
+      if (r.ok) { fs.unlinkSync(path.join(PENDING_DIR, f)); done++; }
+    } catch (e) { /* bleibt pending für nächsten Versuch */ }
+  }
+  return done;
+}
+
+module.exports = { sendMail, sendMailSafe, flushPending, publicUrl, isConfigured, parseFrom, providerForType };

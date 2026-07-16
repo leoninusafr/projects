@@ -328,10 +328,10 @@ async function handleApi(req, res, parsed) {
       const prodName = prod ? (prod.email) : 'Produktion';
       const msg = 'Hallo! Du wurdest für "' + b.title + '" (' + (b.date_start || '') +
         (b.location ? ' in ' + b.location : '') + ') angefragt. Melde dich im Dashboard.';
-      if (extra) await mail.sendMail({ to: extra.email, subject: 'Neue Casting-Anfrage: ' + b.title, text: msg });
+      if (extra) await mail.sendMailSafe({ type: 'booking', to: extra.email, subject: 'Neue Casting-Anfrage: ' + b.title, text: msg });
       // Admin informieren
       const admins = d.users.filter(u => u.role === 'admin');
-      for (const a of admins) await mail.sendMail({ to: a.email, subject: 'Neue Anfrage: ' + b.title, text: prodName + ' fragt ' + extraName + ' an.' });
+      for (const a of admins) await mail.sendMailSafe({ type: 'admin', to: a.email, subject: 'Neue Anfrage: ' + b.title, text: prodName + ' fragt ' + extraName + ' an.' });
       // WhatsApp (Stub / später echte API)
       await notify.notifyWhatsApp(extra, msg);
     } catch (e) { /* Benachrichtigung darf Anfrage nicht blockieren */ console.error('notify fehler', e.message); }

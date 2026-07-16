@@ -5,5 +5,7 @@ data/mailbox/
 node_modules/
 *.log
 .DS_Store
+# Secrets niemals committen (DSGVO + Sicherheit)
+.env
 # Backups sind Artefakte, kein Quellcode
 backups/

@@ -27,9 +27,9 @@ async function notifyWhatsApp(user, text) {
   return { ok: true, sent: true };
 }
 
-async function notifyEmail(to, subject, body) {
+async function notifyEmail(to, subject, body, type) {
   try {
-    return await mail.sendMail({ to, subject, text: body });
+    return await mail.sendMailSafe({ type: type || 'admin', to, subject, text: body });
   } catch (e) {
     console.error('[email-fehler]', e.message);
     return { ok: false, error: e.message };

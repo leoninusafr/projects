@@ -37,13 +37,15 @@ async function register({ email, password, role, extra }) {
 
   // Double-Opt-In-Token bereits in user.verification_token
   const verifyLink = `/api/auth/verify?token=${encodeURIComponent(user.verification_token)}&email=${encodeURIComponent(email)}`;
-  // Opt-In-Mail versenden (Brevo/SMTP/Mock je nach Env)
+  // Opt-In-Mail versenden (Brevo/SMTP/Mock je nach Env; Quota-Fehler -> Pending)
   const link = mail.publicUrl(verifyLink);
-  await mail.sendMail({
+  const r = await mail.sendMailSafe({
+    type: 'optin',
     to: email,
     subject: 'Bitte bestätige deine Registrierung bei KAST',
     text: `Hallo,\n\ndu bist fast dabei. Bitte bestätige deine E-Mail, damit dein KAST-Konto aktiv wird:\n\n${link}\n\nLiebe Grüße\nDein KAST-Team`
   });
+  if (!r.ok && !r.queued) console.error('[opt-in-mail] fehler', r.error || '');
   return { userId: user.id, verifyLink: link };
 }
 

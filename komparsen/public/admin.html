@@ -126,9 +126,40 @@
       </div>
       <div class="card">
         <h3>E-Mail-Versand</h3>
-        <p class="muted">Opt-In, Buchungs- und Admin-Mails gehen über einen konfigurierten Anbieter
-          (Brevo/SMTP) raus. Solange keiner konfiguriert ist, werden Mails nur lokal gespeichert (Mock).</p>
-        <p id="mailStatus" class="muted">Prüfe Status …</p>
+        <p class="muted">Opt-In, Buchungs- und Admin-Mails gehen über einen konfigurierten Anbieter.
+          Aktiv ist aktuell <strong id="mailActive">—</strong>. Parameter (Brevo-Key, eigene Domain) werden
+          auf dem Server via <code>.env</code> gesetzt — hier stellst du das Verhalten ein.</p>
+        <div id="mailStatus" class="muted">Prüfe Status …</div>
+        <hr>
+        <label for="mailMode">Aktiver Anbieter</label>
+        <select id="mailMode">
+          <option value="brevo">Brevo (empfohlen, kostenlos 300/Tag)</option>
+          <option value="smtp">Eigenes SMTP (z.B. Open-Source Postfix)</option>
+          <option value="own">Eigenes Relay (vorbereitet, noch nicht aktiv)</option>
+        </select>
+        <p class="muted">Hinweis: „Eigenes Relay" / „Eigenes SMTP" sind erst live, wenn auf dem Server
+          die entsprechenden Host-Daten in <code>.env</code> stehen. Sonst greift automatisch der Mock.</p>
+        <hr>
+        <label for="mailQuota">Was nach 300 Mails/Tag passiert (nur Brevo Free)?</label>
+        <select id="mailQuota">
+          <option value="queue_next_day">Nächsten Tag weiterschicken (Queue)</option>
+          <option value="failover_own">Eigenes Relay übernimmt (falls konfiguriert)</option>
+        </select>
+        <hr>
+        <label>Typ-Routing (welche Mail wohin?)</label>
+        <div class="row">
+          <div><span class="muted">Opt-In</span><br><select id="routeOptin">
+            <option value="">(Standard)</option><option value="brevo">Brevo</option><option value="own">Eigenes Relay</option>
+          </select></div>
+          <div><span class="muted">Buchung</span><br><select id="routeBooking">
+            <option value="">(Standard)</option><option value="brevo">Brevo</option><option value="own">Eigenes Relay</option>
+          </select></div>
+          <div><span class="muted">Admin</span><br><select id="routeAdmin">
+            <option value="">(Standard)</option><option value="brevo">Brevo</option><option value="own">Eigenes Relay</option>
+          </select></div>
+        </div>
+        <button class="btn" id="saveMail">Mail-Einstellungen speichern</button>
+        <p class="muted" id="mailSaved" style="display:none;color:var(--ok,#2a9)">Gespeichert. Server-Neustart für Provider-Wechsel nötig (Env-basiert).</p>
       </div>
       <div class="card">
         <h3>Selfie-Zyklus</h3>

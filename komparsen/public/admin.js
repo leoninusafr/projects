@@ -5,21 +5,44 @@ requireRole(['admin'], '/admin.html').then(async (me) => {
   if (!me) return;
   const $ = (id) => document.getElementById(id);
 
-  // ---- Mail-Status (Brevo/SMTP konfiguriert?) ----
+  // ---- Mail-Status + Einstellungen ----
   (async () => {
     const el = $('mailStatus');
+    const active = $('mailActive');
     if (!el) return;
     try {
       const r = await api('/api/admin/mail-status');
       if (!r.ok) { el.textContent = 'Status nicht abrufbar.'; return; }
       const j = await r.json();
+      active.textContent = j.provider || 'mock';
       if (j.configured) {
-        el.innerHTML = '<span class="badge ok">AKTIV</span> Versand über: ' + esc(j.provider);
+        el.innerHTML = '<span class="badge ok">AKTIV</span> Versand über: ' + esc(j.provider) +
+          ' · Quota-Policy: ' + esc(j.quotaPolicy) + ' · Brevo-Limit: ' + (j.brevoDailyLimit || 300) + '/Tag';
       } else {
-        el.innerHTML = '<span class="badge warn">MOCK</span> Kein Anbieter konfiguriert — Mails werden nur lokal gespeichert.';
+        el.innerHTML = '<span class="badge warn">MOCK</span> Kein Anbieter konfiguriert — Mails nur lokal gespeichert.';
+      }
+      // Werte in Selects setzen
+      if ($('mailMode')) $('mailMode').value = j.provider === 'mock' ? 'brevo' : j.provider;
+      if ($('mailQuota')) $('mailQuota').value = j.quotaPolicy || 'queue_next_day';
+      if (j.typeRoutes) {
+        if ($('routeOptin') && j.typeRoutes.optin) $('routeOptin').value = j.typeRoutes.optin;
+        if ($('routeBooking') && j.typeRoutes.booking) $('routeBooking').value = j.typeRoutes.booking;
+        if ($('routeAdmin') && j.typeRoutes.admin) $('routeAdmin').value = j.typeRoutes.admin;
       }
     } catch (e) { el.textContent = 'Status nicht abrufbar.'; }
   })();
+  if ($('saveMail')) $('saveMail').addEventListener('click', async () => {
+    const body = {
+      mail_route_optin: $('routeOptin') ? $('routeOptin').value : '',
+      mail_route_booking: $('routeBooking') ? $('routeBooking').value : '',
+      mail_route_admin: $('routeAdmin') ? $('routeAdmin').value : ''
+    };
+    // Hinweis: Provider-Wechsel (MAIL_MODE) + Quota-Policy sind Env-basiert,
+    // Typ-Routing wird hier live in db.site_settings gespeichert.
+    const r = await api('/api/settings', { method: 'PUT', body: JSON.stringify(body) });
+    const ok = $('mailSaved');
+    if (ok) { ok.style.display = r.ok ? 'block' : 'none'; }
+  });
 
   // ---- Tabs ----
   document.querySelectorAll('.tab').forEach(t => {
