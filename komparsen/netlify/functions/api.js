@@ -19,11 +19,10 @@
 
 const PROXY = (process.env.KAST_API_PROXY
   ? process.env.KAST_API_PROXY.replace(/\/+$/, '')
-  // Fallback-Default: aktuelle Cloudflare-Tunnel-URL des Node-Servers.
-  // HINWEIS: Quick-Tunnel-URLs rotieren bei Neustart. Bei Tunnel-Neustart
-  // hier aktualisieren ODER KAST_API_PROXY im Netlify-Dashboard setzen
-  // (empfohlen: feste Cloudflare-Domain via Cloudflare-Account).
-  : 'https://slight-reflection-acid-leaf.trycloudflare.com');
+  // KEIN hartcodierter Fallback mehr: tote Cloudflare-URL verursachte
+  // „fetch failed"-Banner im Frontend. Wenn KAST_API_PROXY nicht gesetzt ist,
+  // wird direkt der lokale-Server-Fallback (unten) genutzt.
+  : '');
 
 exports.handler = async function (event, context) {
   if (PROXY) {
@@ -67,43 +66,15 @@ exports.handler = async function (event, context) {
     }
   }
 
-  // Fallback (2)/(3): lokale App. Achtung: nur mit Supabase persistent.
-  // Bei reiner JSON-DB auf Netlify -> keine Persistenz (siehe oben).
-  try {
-    const { handleApi } = require('../../../server.js');
-    const url = require('url');
-    const rawUrl = '/' + ((event.path || '').replace(/^\//, ''));
-    const query = event.queryStringParameters || {};
-    const search = Object.keys(query).map(k => k + '=' + encodeURIComponent(query[k])).join('&');
-    const full = rawUrl + (search ? '?' + search : '');
-    const parsed = url.parse(full, true);
-    const req = {
-      method: (event.httpMethod || 'GET').toUpperCase(),
-      url: full,
-      headers: event.headers || {},
-      on(type, cb) {
-        if (type === 'data' && event.body) cb(Buffer.from(event.body, event.isBase64Encoded ? 'base64' : 'utf8'));
-        if (type === 'end' && cb) cb();
-      },
-      destroy() {}
-    };
-    const res = {
-      _status: 200, _headers: {}, _body: '',
-      writeHead(code, headers) { this._status = code; if (headers) this._headers = headers; return this; },
-      setHeader(k, v) { this._headers[k] = v; return this; },
-      end(b) { if (b != null) this._body = b; }
-    };
-    await handleApi(req, res, parsed);
-    return {
-      statusCode: res._status,
-      headers: res._headers,
-      body: typeof res._body === 'string' ? res._body : String(res._body || '')
-    };
-  } catch (e) {
-    return {
-      statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'server.js konnte nicht geladen werden (Netlify bundleled parent-Files nicht). Setze KAST_API_PROXY auf deinen Node-Server. Details: ' + e.message })
-    };
-  }
+  // KEIN PROXY gesetzt: saubere Meldung statt Crash/Fallback.
+  // Netlify-Functions können server.js (Parent-Files) nicht laden -> keine lokale DB.
+  // Lösung: KAST_API_PROXY im Netlify-Dashboard auf deinen Node-Server setzen
+  // (z.B. Cloudflare-Tunnel-URL oder Port-Forwarding-Domain).
+  return {
+    statusCode: 503,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      error: 'KAST_API_PROXY nicht gesetzt. Setze im Netlify-Dashboard KAST_API_PROXY auf die URL deines Node-Servers (z.B. https://deine-domain:4173), damit /api/* funktioniert.'
+    })
+  };
 };
