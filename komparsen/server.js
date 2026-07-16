@@ -8,6 +8,22 @@ const path = require('path');
 const crypto = require('crypto');
 const url = require('url');
 
+// --- Minimaler .env-Loader (zero-dep) ---
+// Lädt .env nur, wenn die Var noch nicht in process.env steht (Shell-Vars gewinnen).
+(function loadEnv() {
+  const f = path.join(__dirname, '.env');
+  if (!fs.existsSync(f)) return;
+  try {
+    const lines = fs.readFileSync(f, 'utf8').split('\n');
+    for (const line of lines) {
+      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+      if (!m) continue;
+      const k = m[1], v = m[2].replace(/^["']|["']$/g, '');
+      if (process.env[k] === undefined) process.env[k] = v;
+    }
+  } catch (e) { console.error('[.env] laden fehlgeschlagen', e.message); }
+})();
+
 const db = (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY)
   ? require('./lib/db-supabase')
   : require('./lib/db');
@@ -387,6 +403,22 @@ async function handleApi(req, res, parsed) {
   if (p === '/api/admin/mail-status' && method === 'GET') {
     if (!need(['admin'])) return json(res, 403, { error: 'admin' });
     return json(res, 200, await mail.isConfigured());
+  }
+  // Test-Mail senden (an Admin, zur Verifikation der Konfig)
+  if (p === '/api/admin/mail-test' && method === 'POST') {
+    if (!need(['admin'])) return json(res, 403, { error: 'admin' });
+    try {
+      const r = await mail.sendMailSafe({
+        type: 'admin', to: me.email,
+        subject: 'KAST — Test-Mail (Versand funktioniert)',
+        text: 'Das ist eine Test-Mail von KAST. Wenn du diese Mail erhältst, ist der E-Mail-Versand korrekt konfiguriert.\n\nGesendet: ' + new Date().toISOString()
+      });
+      if (r.ok) return json(res, 200, { ok: true, provider: r.provider });
+      if (r.queued) return json(res, 200, { ok: false, queued: true, reason: r.reason, error: r.error || '' });
+      return json(res, 200, { ok: false, error: r.error || 'unbekannt' });
+    } catch (e) {
+      return json(res, 200, { ok: false, error: e.message });
+    }
   }
 
   // Admin-Verwaltung: Einladung + Rechte (nur Haupt-Admin bzw. 'all'-Scope)

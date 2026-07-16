@@ -5,7 +5,79 @@ requireRole(['admin'], '/admin.html').then(async (me) => {
   if (!me) return;
   const $ = (id) => document.getElementById(id);
 
-  // ---- Mail-Status + Einstellungen ----
+  // ---- Mail-Config-Sektion (API & Versand) ----
+  (async () => {
+    const view = $('mailConfigView'), edit = $('mailConfigEdit');
+    const msg = $('mailMsg');
+    function loadCfg() {
+      return api('/api/admin/mail-status').then(r => r.json());
+    }
+    async function refresh() {
+      try {
+        const cfg = await loadCfg();
+        const key = await (async () => {
+          // Key nie im Klartext anzeigen, nur ob gesetzt
+          const j = await api('/api/settings').then(r => r.json());
+          return j.mail_api_key ? '●●●●●●●● (gesetzt)' : (process.env ? 'nicht gesetzt' : 'nicht gesetzt');
+        })();
+        if ($('cfgMode')) $('cfgMode').textContent = cfg.provider || '—';
+        if ($('cfgKey')) $('cfgKey').textContent = key;
+        if ($('cfgFrom')) $('cfgFrom').textContent = (await api('/api/settings').then(r => r.json())).mail_from || '—';
+        if ($('cfgQuota')) $('cfgQuota').textContent = cfg.quotaPolicy || '—';
+        if ($('cfgUrl')) $('cfgUrl').textContent = (await api('/api/settings').then(r => r.json())).app_public_url || '—';
+        if ($('cfgRoutes')) $('cfgRoutes').textContent =
+          `optin→${cfg.typeRoutes.optin}, booking→${cfg.typeRoutes.booking}, admin→${cfg.typeRoutes.admin}`;
+      } catch (e) { if (msg) msg.textContent = 'Konnte Config nicht laden.'; }
+    }
+    await refresh();
+    const editBtn = $('mailEditBtn'), saveBtn = $('mailSaveBtn'), cancelBtn = $('mailCancelBtn'), testBtn = $('mailTestBtn');
+    if (editBtn) editBtn.addEventListener('click', async () => {
+      const cfg = await loadCfg();
+      const s = await api('/api/settings').then(r => r.json());
+      if ($('edMode')) $('edMode').value = cfg.provider === 'mock' ? 'brevo' : cfg.provider;
+      if ($('edFrom')) $('edFrom').value = s.mail_from || 'KAST <noreply@kast.example>';
+      if ($('edQuota')) $('edQuota').value = cfg.quotaPolicy || 'queue_next_day';
+      if ($('edUrl')) $('edUrl').value = s.app_public_url || '';
+      if ($('edKey')) $('edKey').value = '';
+      if ($('edConfirm')) $('edConfirm').checked = false;
+      view.style.display = 'none'; edit.style.display = 'block';
+      editBtn.style.display = 'none'; saveBtn.style.display = 'inline-block'; cancelBtn.style.display = 'inline-block';
+    });
+    if (cancelBtn) cancelBtn.addEventListener('click', () => {
+      view.style.display = 'block'; edit.style.display = 'none';
+      editBtn.style.display = 'inline-block'; saveBtn.style.display = 'none'; cancelBtn.style.display = 'none';
+      if (msg) msg.textContent = '';
+    });
+    if (saveBtn) saveBtn.addEventListener('click', async () => {
+      if (!($('edConfirm') && $('edConfirm').checked)) {
+        if (msg) msg.textContent = 'Bitte Bestätigung ankreuzen, bevor du speicherst.';
+        return;
+      }
+      const body = {
+        mail_mode: $('edMode').value,
+        mail_from: $('edFrom').value,
+        mail_quota_policy: $('edQuota').value,
+        app_public_url: $('edUrl').value
+      };
+      const k = $('edKey').value.trim();
+      if (k) body.mail_api_key = k; // nur wenn neu eingegeben (Rotation)
+      const r = await api('/api/settings', { method: 'PUT', body: JSON.stringify(body) });
+      if (r.ok) {
+        view.style.display = 'block'; edit.style.display = 'none';
+        editBtn.style.display = 'inline-block'; saveBtn.style.display = 'none'; cancelBtn.style.display = 'none';
+        if (msg) msg.textContent = 'Gespeichert — überall automatisch übernommen (kein Neustart).';
+        await refresh();
+      } else {
+        if (msg) msg.textContent = 'Speichern fehlgeschlagen.';
+      }
+    });
+    if (testBtn) testBtn.addEventListener('click', async () => {
+      const r = await api('/api/admin/mail-test', { method: 'POST' });
+      const j = await r.json().catch(() => ({}));
+      if (msg) msg.textContent = j.ok ? 'Test-Mail gesendet (' + (j.provider || '?') + ').' : 'Fehler: ' + (j.error || j.message || 'unbekannt');
+    });
+  })();
+
   (async () => {
     const el = $('mailStatus');
     const active = $('mailActive');

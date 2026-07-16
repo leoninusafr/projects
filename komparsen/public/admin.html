@@ -125,7 +125,48 @@
         <button class="btn secondary" id="exportCsv">Kartei-Export (CSV)</button>
       </div>
       <div class="card">
-        <h3>E-Mail-Versand</h3>
+        <h3>API &amp; Versand</h3>
+        <p class="muted">Alle Mail-Einstellungen an einem Ort. Zum Ändern auf
+          <strong>Bearbeiten</strong> klicken — Felder werden editierbar. Vor dem Speichern
+          <strong>musst du die Bestätigung ankreuzen</strong>, damit nichts versehentlich geändert wird.
+          Nach Speichern wird alles <strong>automatisch überall übernommen</strong> (kein Neustart nötig).</p>
+        <div id="mailConfigView">
+          <div class="row"><span class="muted">Anbieter (Mode):</span> <strong id="cfgMode">—</strong></div>
+          <div class="row"><span class="muted">Brevo-Key:</span> <strong id="cfgKey">—</strong></div>
+          <div class="row"><span class="muted">Absender (FROM):</span> <strong id="cfgFrom">—</strong></div>
+          <div class="row"><span class="muted">Quota-Policy:</span> <strong id="cfgQuota">—</strong></div>
+          <div class="row"><span class="muted">Öffentliche URL:</span> <strong id="cfgUrl">—</strong></div>
+          <div class="row"><span class="muted">Typ-Routing:</span> <strong id="cfgRoutes">—</strong></div>
+        </div>
+        <div id="mailConfigEdit" style="display:none">
+          <label>Anbieter (Mode)</label>
+          <select id="edMode">
+            <option value="brevo">Brevo (kostenlos 300/Tag)</option>
+            <option value="own">Eigenes Relay (braucht Domain+DNS)</option>
+            <option value="smtp">Eigenes SMTP</option>
+            <option value="mock">Nur lokal (Mock)</option>
+          </select>
+          <label>Brevo API-Key (nur ändern wenn rotiert)</label>
+          <input id="edKey" type="password" placeholder="xsmtpsib-... (leer lassen = unverändert)" />
+          <label>Absender (FROM)</label>
+          <input id="edFrom" type="text" placeholder="KAST <noreply@kast.example>" />
+          <label>Quota-Policy (nach 300/Tag)</label>
+          <select id="edQuota">
+            <option value="queue_next_day">Nächster Tag (Queue)</option>
+            <option value="failover_own">Eigenes Relay übernimmt</option>
+          </select>
+          <label>Öffentliche URL (für Opt-In-Links)</label>
+          <input id="edUrl" type="text" placeholder="https://kast.example" />
+          <label class="check"><input type="checkbox" id="edConfirm" /> Ich bestätige die Änderung (wird automatisch überall übernommen)</label>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn" id="mailEditBtn">Bearbeiten</button>
+          <button class="btn" id="mailSaveBtn" style="display:none">Speichern</button>
+          <button class="btn secondary" id="mailCancelBtn" style="display:none">Abbrechen</button>
+          <button class="btn secondary" id="mailTestBtn">Test-Mail senden</button>
+        </div>
+        <p id="mailMsg" class="muted"></p>
+      </div>
         <p class="muted">Opt-In, Buchungs- und Admin-Mails gehen über einen konfigurierten Anbieter.
           Aktiv ist aktuell <strong id="mailActive">—</strong>. Parameter (Brevo-Key, eigene Domain) werden
           auf dem Server via <code>.env</code> gesetzt — hier stellst du das Verhalten ein.</p>

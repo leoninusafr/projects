@@ -83,7 +83,7 @@ const assert = (cond, msg) => { if (!cond) { console.error('  ✗ FAIL: ' + msg)
   // Token aus mailbox lesen
   const fs = require('fs');
   const mdir = require('path').join(__dirname, '..', 'data', 'mailbox');
-  const files = fs.readdirSync(mdir).sort();
+  const files = fs.readdirSync(mdir).filter(f => f.endsWith('.txt') && fs.statSync(mdir + '/' + f).isFile()).sort();
   const last = files[files.length - 1];
   const txt = fs.readFileSync(mdir + '/' + last, 'utf8');
   const m = txt.match(/token=([^&]+)&email=([^\s]+)/);
@@ -118,7 +118,7 @@ const assert = (cond, msg) => { if (!cond) { console.error('  ✗ FAIL: ' + msg)
   r = await req('POST', '/api/auth/register', { email: pemail, password: 'geheim123', role: 'production', extra: { company: 'TestFilm' } });
   assert(r.status === 200, 'Register Produktion -> 200');
   // Verify aus Mailbox (letzte Mail)
-  let pfiles = fs.readdirSync(mdir).sort(); let plast = pfiles[pfiles.length - 1];
+  let pfiles = fs.readdirSync(mdir).filter(f => f.endsWith('.txt') && fs.statSync(mdir + '/' + f).isFile()).sort(); let plast = pfiles[pfiles.length - 1];
   let ptxt = fs.readFileSync(mdir + '/' + plast, 'utf8');
   let pm = ptxt.match(/token=([^&]+)&email=([^\s]+)/);
   r = await req('GET', '/api/auth/verify?token=' + decodeURIComponent(pm[1]) + '&email=' + decodeURIComponent(pm[2]));
@@ -154,7 +154,7 @@ const assert = (cond, msg) => { if (!cond) { console.error('  ✗ FAIL: ' + msg)
   cookie = '';
   r = await req('POST', '/api/auth/register', { email: 'admin@test.de', password: 'geheim123', role: 'admin' });
   // admin direkt verify via mailbox
-  const files2 = fs.readdirSync(mdir).sort();
+  const files2 = fs.readdirSync(mdir).filter(f => f.endsWith('.txt') && fs.statSync(mdir + '/' + f).isFile()).sort();
   const txt2 = fs.readFileSync(mdir + '/' + files2[files2.length - 1], 'utf8');
   const m2 = txt2.match(/token=([^&]+)&email=([^\s]+)/);
   await req('GET', '/api/auth/verify?token=' + decodeURIComponent(m2[1]) + '&email=' + decodeURIComponent(m2[2]));
@@ -184,7 +184,7 @@ const assert = (cond, msg) => { if (!cond) { console.error('  ✗ FAIL: ' + msg)
   cookie = '';
   const email2 = 'auto' + Date.now() + '@test.de';
   await req('POST', '/api/auth/register', { email: email2, password: 'geheim123', role: 'extra' });
-  const files3 = fs.readdirSync(mdir).sort();
+  const files3 = fs.readdirSync(mdir).filter(f => f.endsWith('.txt') && fs.statSync(mdir + '/' + f).isFile()).sort();
   const txt3 = fs.readFileSync(mdir + '/' + files3[files3.length - 1], 'utf8');
   const m3 = txt3.match(/token=([^&]+)&email=([^\s]+)/);
   const vres = await req('GET', '/api/auth/verify?token=' + decodeURIComponent(m3[1]) + '&email=' + decodeURIComponent(m3[2]) + '&redirect=1', null);

@@ -40,6 +40,16 @@ async function getMode() {
   return (process.env.MAIL_MODE || (process.env.MAIL_PROVIDER === 'brevo' && process.env.MAIL_API_KEY ? 'brevo' : 'mock')).toLowerCase();
 }
 
+// Brevo API-Key: Env als Default, Panel-Override (db.site_settings 'mail_api_key') gewinnt.
+// So kannst du den Key im Panel rotieren (easy), ohne .env/Neustart.
+async function getApiKey() {
+  try {
+    const v = await db().getSetting('mail_api_key');
+    if (v && typeof v === 'string' && v.length > 10) return v;
+  } catch (e) {}
+  return process.env.MAIL_API_KEY || '';
+}
+
 const QUOTA_POLICY = (process.env.MAIL_QUOTA_POLICY || 'queue_next_day').toLowerCase();
 // Typ -> bevorzugter Provider (default: active MODE). Admin kann im Panel überschreiben
 // (db.site_settings: mail_route_optin / mail_route_booking / mail_route_admin).
@@ -88,7 +98,11 @@ async function providerForType(type) {
 
 // Liefert den aktiven Sende-Fn für einen Provider-String
 async function dispatch(provider, msg) {
-  if (provider === 'brevo' && process.env.MAIL_API_KEY) return brevoSend(msg);
+  if (provider === 'brevo') {
+    const key = await getApiKey();
+    if (key) return brevoSend(msg, key);
+    return mockSend(msg); // kein Key -> Mock
+  }
   if (provider === 'smtp' && process.env.SMTP_HOST) return smtpSend(msg);
   if (provider === 'own') {
     // EIGENES RELAY — vorbereitet, aktiv nur wenn MAIL_MODE=own + OWN_SMTP_HOST.
@@ -103,12 +117,12 @@ async function sendMail({ to, subject, text, html }) {
   return dispatch(mode, { to, subject, text, html });
 }
 // --- Brevo REST (empfohlen: kostenlos, EU, 300/Tag) ---
-async function brevoSend({ to, subject, text, html }) {
+async function brevoSend({ to, subject, text, html }, apiKey) {
   const from = parseFrom();
   const res = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: {
-      'api-key': process.env.MAIL_API_KEY,
+      'api-key': apiKey,
       'Content-Type': 'application/json',
       'accept': 'application/json'
     },
@@ -273,16 +287,25 @@ async function sendMailSafe(msg) {
         const f = await dispatch('own', msg); // eigenes Relay übernimmt
         if (f.ok) return Object.assign({ failover: true }, f);
       }
+      // Opt-In darf NIEMALS verloren gehen (Double-Opt-In zwingend) -> lokal speichern,
+      // nicht in Remote-Queue (sonst kann sich niemand verifizieren).
+      if (type === 'optin') { await mockSend(msg); return { ok: true, provider: 'mock', fallback: true }; }
       queuePending(msg); // nächster Tag (queue_next_day default)
       return Object.assign({ ok: false, queued: true, reason: 'quota' }, r || {});
     }
-    if (target !== 'mock') { queuePending(msg); return Object.assign({ ok: false, queued: true }, r || {}); }
+    if (target !== 'mock') {
+      if (type === 'optin') { await mockSend(msg); return { ok: true, provider: 'mock', fallback: true }; }
+      queuePending(msg); return Object.assign({ ok: false, queued: true }, r || {});
+    }
     return r || { ok: false };
   } catch (e) {
     if (target === 'brevo' && QUOTA_POLICY === 'failover_own' && process.env.OWN_SMTP_HOST) {
       try { const f = await dispatch('own', msg); if (f.ok) return Object.assign({ failover: true }, f); } catch (_) {}
     }
-    if (target !== 'mock') { queuePending(msg); return { ok: false, queued: true, error: e.message }; }
+    if (target !== 'mock') {
+      if (type === 'optin') { await mockSend(msg); return { ok: true, provider: 'mock', fallback: true }; }
+      queuePending(msg); return { ok: false, queued: true, error: e.message };
+    }
     return { ok: false, error: e.message };
   }
 }
