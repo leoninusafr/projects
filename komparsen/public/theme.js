@@ -1,92 +1,82 @@
 'use strict';
-// Theme-Switcher: lädt das gewählte Theme-CSS zusätzlich zu styles.css.
-// Quelle: ?theme= (Vorschau-Link) > localStorage > Server-Setting (site_theme) > 'default'.
-// Live-Switcher unten rechts ist für ALLE Besucher sichtbar (zum Vergleich/Auswählen).
+/* KAST — Design-Switcher.
+   DEFAULT = „Block" (eckig/strukturiert, dein Favorit).
+   Editorial / Studio / Intro = eigene CSS-Dateien mit eigenem Aufbau.
+   Auswahl in localStorage; ?theme= im URL überschreibt. */
 (function () {
-  const THEMES = {
-    default:   { css: null,                  label: 'Apple',    swatch: '#0071e3' },
-    block:     { css: '/theme-block.css',     label: 'Block',    swatch: '#0a2540' },
-    editorial: { css: '/theme-editorial.css', label: 'Editorial',swatch: '#9b2226' },
-    warm:      { css: '/theme-warm.css',      label: 'Warm',     swatch: '#c2410c' },
-    serious:   { css: '/theme-serious.css',   label: 'Seriös',   swatch: '#b45309' },
-    fresh:     { css: '/theme-fresh.css',     label: 'Frisch',   swatch: '#0d9488' }
+  var THEMES = {
+    block:     { label: 'Block',     css: null,                    body: '' },
+    editorial: { label: 'Editorial', css: '/theme-editorial.css',  body: 'theme-editorial' },
+    studio:    { label: 'Studio',    css: '/theme-studio.css',     body: 'theme-studio' },
+    intro:     { label: 'Intro',     css: '/theme-intro.css',      body: 'theme-intro' }
   };
-  const ORDER = ['default', 'block', 'editorial', 'warm', 'serious', 'fresh'];
+  var KEY = 'kast_theme';
+  var current = 'block';
 
-  const params = new URLSearchParams(location.search);
-
-  function applyTheme(name, persist) {
-    if (!THEMES.hasOwnProperty(name)) name = 'default';
-    document.querySelectorAll('link[data-theme]').forEach(l => l.remove());
-    const t = THEMES[name];
+  function apply(name) {
+    var t = THEMES[name]; if (!t) name = 'block', t = THEMES.block;
+    current = name;
+    var old = document.getElementById('kast-theme-css');
+    if (old) old.remove();
+    document.body.className = document.body.className.replace(/theme-\S+/g, '').trim();
     if (t.css) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = t.css;
-      link.setAttribute('data-theme', '1');
+      var link = document.createElement('link');
+      link.id = 'kast-theme-css'; link.rel = 'stylesheet'; link.href = t.css;
       document.head.appendChild(link);
     }
-    document.body.setAttribute('data-theme', name);
-    if (persist) localStorage.setItem('kast_theme', name);
+    if (t.body) document.body.classList.add(t.body);
+    if (t.body === 'theme-intro') setupIntro();
+    try { localStorage.setItem(KEY, name); } catch (e) {}
+    document.querySelectorAll('[data-theme-btn]').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-theme-btn') === name);
+    });
   }
 
-  // 1) URL-Param (?theme=) — Vorschau/Live-Vergleich, persistiert
-  const fromUrl = params.get('theme');
-  if (fromUrl && THEMES.hasOwnProperty(fromUrl)) {
-    applyTheme(fromUrl, true);
-  } else {
-    const stored = localStorage.getItem('kast_theme');
-    if (stored && THEMES.hasOwnProperty(stored)) {
-      // 2) lokal gespeichert
-      applyTheme(stored, false);
-    } else {
-      // 3) Server-Default (site_theme) — asynchron, fällt auf 'default' zurück
-      applyTheme('default', false);
-      fetch('/api/settings').then(r => r.ok ? r.json() : null).then(s => {
-        const t = s && s.site_theme;
-        if (t && THEMES.hasOwnProperty(t) && t !== 'default') applyTheme(t, true);
-      }).catch(() => {});
-    }
+  function setupIntro() {
+    if (document.querySelector('.intro')) return;
+    var intro = document.createElement('div');
+    intro.className = 'intro';
+    intro.innerHTML =
+      '<div class="intro-kicker">Kast — Komparsen-Agentur</div>' +
+      '<h1 class="intro-title">Menschen. Vor der Kamera.</h1>' +
+      '<p class="intro-sub">Kostenlos Komparse werden. Von Produktionen in Sekunden gefunden.</p>' +
+      '<div class="intro-go">Los geht\'s</div>' +
+      '<div class="intro-foot">Tippen oder scrollen zum Start</div>';
+    document.body.appendChild(intro);
+    function close() { document.body.classList.add('intro-closed'); }
+    intro.addEventListener('click', close);
+    window.addEventListener('scroll', function once() {
+      if (window.scrollY > 10) { close(); window.removeEventListener('scroll', once); }
+    }, { passive: true });
+    setTimeout(close, 6000);
   }
 
-  // ---- Live-Switcher (unten rechts, für alle sichtbar) ----
-  const sw = document.createElement('div');
-  sw.id = 'themeSwitcher';
-  sw.innerHTML =
-    '<button class="ts-toggle" type="button" aria-label="Design wechseln">🎨 Design</button>' +
-    '<div class="ts-panel hidden">' +
-      ORDER.map(k =>
-        '<button class="ts-opt" type="button" data-t="' + k + '">' +
-        '<span class="ts-dot" style="background:' + THEMES[k].swatch + '"></span>' +
-        THEMES[k].label + '</button>').join('') +
-    '</div>';
-  document.body.appendChild(sw);
+  function buildSwitcher() {
+    var wrap = document.createElement('div');
+    wrap.id = 'kast-switcher';
+    wrap.setAttribute('role', 'group');
+    wrap.setAttribute('aria-label', 'Design wechseln');
+    var html = '<span class="kast-sw-label">Design</span>';
+    Object.keys(THEMES).forEach(function (k) {
+      html += '<button data-theme-btn="' + k + '" type="button">' + THEMES[k].label + '</button>';
+    });
+    wrap.innerHTML = html;
+    document.body.appendChild(wrap);
+    wrap.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-theme-btn]');
+      if (b) apply(b.getAttribute('data-theme-btn'));
+    });
+  }
 
-  sw.querySelector('.ts-toggle').addEventListener('click', () => {
-    sw.querySelector('.ts-panel').classList.toggle('hidden');
-  });
-  sw.querySelectorAll('.ts-opt').forEach(b => b.addEventListener('click', () => {
-    const k = b.dataset.t;
-    applyTheme(k, true);
-    const sep = location.search.includes('theme=') ? '?theme='
-      : (location.search ? location.search + '&theme=' : '?theme=');
-    history.replaceState(null, '', location.pathname + sep + k);
-    sw.querySelector('.ts-panel').classList.add('hidden');
-  }));
+  function init() {
+    var fromUrl = new URLSearchParams(location.search).get('theme');
+    var saved = null;
+    try { saved = localStorage.getItem(KEY); } catch (e) {}
+    var start = (fromUrl && THEMES[fromUrl]) ? fromUrl : (saved && THEMES[saved]) ? saved : 'block';
+    apply(start);
+    buildSwitcher();
+  }
 
-  // Switcher-CSS (inline, kein extra File nötig)
-  const st = document.createElement('style');
-  st.textContent =
-    '#themeSwitcher{position:fixed;right:14px;bottom:14px;z-index:300;font:inherit}' +
-    '#themeSwitcher .ts-toggle{background:var(--ink,#1d1d1f);color:#fff;border:none;' +
-    'border-radius:980px;padding:9px 14px;font-size:13px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.18)}' +
-    '#themeSwitcher .ts-panel{position:absolute;right:0;bottom:48px;background:#fff;' +
-    'border:1px solid var(--line,#d2d2d7);border-radius:14px;padding:8px;' +
-    'box-shadow:0 8px 30px rgba(0,0,0,.16);display:flex;flex-direction:column;gap:2px;min-width:148px}' +
-    '#themeSwitcher .ts-opt{display:flex;align-items:center;gap:8px;background:none;border:none;' +
-    'font:inherit;font-size:14px;color:var(--ink,#1d1d1f);padding:8px 10px;border-radius:8px;' +
-    'cursor:pointer;text-align:left;width:100%}' +
-    '#themeSwitcher .ts-opt:hover{background:rgba(0,0,0,.05)}' +
-    '#themeSwitcher .ts-dot{width:12px;height:12px;border-radius:50%;flex:none;border:1px solid rgba(0,0,0,.12)}';
-  document.head.appendChild(st);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();

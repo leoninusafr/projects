@@ -1,0 +1,30 @@
+/* KAST — Switcher-UI (unten rechts) */
+#kast-switcher {
+  position: fixed; right: 16px; bottom: 16px; z-index: 250;
+  display: flex; align-items: center; gap: 6px;
+  background: #fff; border: 2px solid #0a0a0a; border-radius: 4px;
+  padding: 6px 8px; box-shadow: 3px 3px 0 #0a0a0a;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+#kast-switcher .kast-sw-label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: #52525b; font-weight: 700; padding: 0 4px;
+}
+#kast-switcher button {
+  font: inherit; font-size: 13px; font-weight: 600;
+  background: #fff; color: #0a0a0a; border: 2px solid #0a0a0a;
+  border-radius: 3px; padding: 4px 10px; cursor: pointer;
+}
+#kast-switcher button:hover { background: #0a2540; color: #fff; }
+#kast-switcher button.active { background: #0a2540; color: #fff; border-color: #0a2540; }
+
+/* Intro-Text-Animation */
+@keyframes kast-intro-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.theme-intro .intro > * { animation: kast-intro-in .5s ease both; }
+.theme-intro .intro-kicker { animation-delay: .05s; }
+.theme-intro .intro-title { animation-delay: .12s; }
+.theme-intro .intro-sub { animation-delay: .2s; }
+.theme-intro .intro-go { animation-delay: .28s; }
+
+/* Marquee-Platzhalter im Studio-Theme (wird in index.html eingefügt, falls nicht vorhanden) */
+.marquee { display: none; }

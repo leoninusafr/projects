@@ -1,0 +1,65 @@
+/* ============================================================
+   THEME: INTRO — warm, einladend, mit Startbildschirm
+   Ein vollflächiger Intro-Screen (100vh) mit großem Statement,
+   der beim Klick/Scroll zur Seite übergeht. Warme Terrakotta,
+   weiche Rundungen, viel Luft. Simpler als SaaS, menschlicher.
+   ============================================================ */
+.theme-intro {
+  --bg: #fbf6f1;
+  --bg-elev: #ffffff;
+  --ink: #2b211c;
+  --ink-2: #8a7468;
+  --line: #e7d9cf;
+  --accent: #c2410c;        /* Terrakotta */
+  --accent-press: #9a3408;
+  --radius: 20px;
+  --radius-sm: 14px;
+  --maxw: 940px;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", sans-serif;
+}
+
+.theme-intro body { overflow: hidden; }  /* solange Intro steht */
+
+/* Startbildschirm */
+.theme-intro .intro {
+  position: fixed; inset: 0; z-index: 300;
+  background:
+    radial-gradient(120% 120% at 50% 0%, #fdeee2 0%, #f6e3d4 45%, #efd0bb 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 24px; cursor: pointer;
+  animation: kast-intro-in .5s ease both;
+}
+@keyframes kast-intro-in { from { opacity: 0; } to { opacity: 1; } }
+.theme-intro .intro-kicker {
+  font-size: 13px; text-transform: uppercase; letter-spacing: .18em;
+  color: var(--accent); font-weight: 600; margin-bottom: 22px;
+}
+.theme-intro .intro-title {
+  font-size: clamp(40px, 9vw, 92px); line-height: .98; letter-spacing: -.03em;
+  font-weight: 700; color: var(--ink); margin: 0 0 18px; max-width: 12ch;
+}
+.theme-intro .intro-sub { font-size: clamp(17px, 2.4vw, 21px); color: var(--ink-2); max-width: 30ch; margin: 0 0 36px; }
+.theme-intro .intro-go {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: var(--accent); color: #fff; border-radius: 999px;
+  padding: 16px 30px; font-size: 17px; font-weight: 600;
+  box-shadow: 0 10px 30px rgba(194,65,12,.28);
+}
+.theme-intro .intro-go::after { content: "→"; font-size: 20px; }
+.theme-intro .intro-foot { position: absolute; bottom: 26px; font-size: 12px; color: var(--ink-2); letter-spacing: .04em; }
+
+/* Sobald .intro-closed am body steht: Intro weg, Seite scrollbar */
+.theme-intro.intro-closed body { overflow: auto; }
+.theme-intro .intro { opacity: 1; transition: opacity .4s ease, visibility .4s; }
+.theme-intro.intro-closed .intro { opacity: 0; visibility: hidden; pointer-events: none; }
+
+/* Rest der Seite: warm, weich */
+.theme-intro .nav { background: rgba(251,246,241,.82); }
+.theme-intro .hero { padding: 96px 0 56px; }
+.theme-intro .hero h1 { font-size: clamp(44px, 8vw, 76px); }
+.theme-intro .hero-eyebrow { color: var(--accent); font-weight: 600; }
+.theme-intro .card { border-radius: var(--radius); }
+.theme-intro .btn { border-radius: 999px; }
+.theme-intro .btn.secondary { background: #f0e6dd; color: var(--ink); }
+.theme-intro .quote { border-radius: var(--radius); font-size: clamp(24px, 4vw, 38px); }
+.theme-intro .hero-stat { color: var(--ink-2); }

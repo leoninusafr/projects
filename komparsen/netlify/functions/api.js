@@ -17,7 +17,13 @@
 //   KAST_API_PROXY = https://deine-domain-oder-ip:PORT
 // (der Port, auf dem dein ZimaOS-portforwardter Node-Server lauscht)
 
-const PROXY = process.env.KAST_API_PROXY ? process.env.KAST_API_PROXY.replace(/\/+$/, '') : '';
+const PROXY = (process.env.KAST_API_PROXY
+  ? process.env.KAST_API_PROXY.replace(/\/+$/, '')
+  // Fallback-Default: aktuelle Cloudflare-Tunnel-URL des Node-Servers.
+  // HINWEIS: Quick-Tunnel-URLs rotieren bei Neustart. Bei Tunnel-Neustart
+  // hier aktualisieren ODER KAST_API_PROXY im Netlify-Dashboard setzen
+  // (empfohlen: feste Cloudflare-Domain via Cloudflare-Account).
+  : 'https://slight-reflection-acid-leaf.trycloudflare.com');
 
 exports.handler = async function (event, context) {
   if (PROXY) {

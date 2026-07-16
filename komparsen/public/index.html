@@ -14,7 +14,8 @@
   <link rel="icon" href="/logo.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/logo.svg">
   <link rel="stylesheet" href="/styles.css">
-  <link rel="stylesheet" href="/styles-alt.css">
+  <link rel="stylesheet" href="/theme-switcher.css">
+  <script src="/theme.js"></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -31,7 +32,7 @@
   <nav class="nav"><div class="nav-inner">
     <a class="brand" href="/" aria-label="Kast — Startseite">
       <span class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 32 32"><rect x="1.5" y="1.5" width="29" height="29" rx="8"/><path d="M11 8v16M11 16l8-8M12.8 16l8.2 8" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg viewBox="0 0 32 32"><rect x="1.5" y="1.5" width="29" height="29" rx="8"/><path d="M11 8v16M11 16l8-8M12.8 16l8.2 8" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </span>
       <span class="brand-word">Kast</span>
     </a>
@@ -98,22 +99,37 @@
     </span>
   </footer>
 
-  <script src="/theme.js"></script>
+  <script src="/consent.js"></script>
   <script>
     // Aggregierte, anonyme Teaser-Statistik (DSGVO-konform)
     (function () {
-      const el = document.getElementById('stat');
-      const FALLBACK = 'Deutschlandweit verfügbar — werde jetzt Teil der Kartei.';
-      function set(t) { if (el) el.textContent = t; }
-      try {
-        fetch('/api/stats/public').then(function (r) { return r.ok ? r.json() : null; }).then(function (s) {
-          if (!s || !s.count) { set(FALLBACK); return; }
-          var h = (s.min_height && s.max_height) ? ('Größen von ' + s.min_height + ' bis ' + s.max_height + ' cm') : '';
-          var hair = (s.hair_colors && s.hair_colors.length) ? ', alle Haarfarben' : '';
-          set('Über ' + s.count + ' Komparsen verfügbar' + (h ? ' · ' + h : '') + hair + ' · deutschlandweit.');
-        }).catch(function () { set(FALLBACK); });
-      } catch (e) { set(FALLBACK); }
+      var el = document.getElementById('stat');
+      var FALLBACK = 'Deutschlandweit verfügbar — werde jetzt Teil der Kartei.';
+      function set(t) { try { if (el) el.textContent = t; } catch (e) {} }
+      set(FALLBACK); // sofort sichern: nie "Lade Statistik…"
+      function go() {
+        var done = false;
+        var to = setTimeout(function () { if (!done) set(FALLBACK); }, 4000);
+        try {
+          var xhr = new XMLHttpRequest();
+          xhr.open('GET', '/api/stats/public', true);
+          xhr.onload = function () {
+            if (xhr.status !== 200) { clearTimeout(to); set(FALLBACK); return; }
+            try {
+              var s = JSON.parse(xhr.responseText);
+              if (!s || !s.count) { clearTimeout(to); set(FALLBACK); return; }
+              var h = (s.min_height && s.max_height) ? ('Größen von ' + s.min_height + ' bis ' + s.max_height + ' cm') : '';
+              var hair = (s.hair_colors && s.hair_colors.length) ? ', alle Haarfarben' : '';
+              clearTimeout(to); done = true;
+              set('Über ' + s.count + ' Komparsen verfügbar' + (h ? ' · ' + h : '') + hair + ' · deutschlandweit.');
+            } catch (e) { clearTimeout(to); set(FALLBACK); }
+          };
+          xhr.onerror = function () { clearTimeout(to); set(FALLBACK); };
+          xhr.send();
+        } catch (e) { clearTimeout(to); set(FALLBACK); }
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go);
+      else go();
     })();
   </script>
-  <script src="/consent.js"></script>
   </body>
