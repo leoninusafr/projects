@@ -275,6 +275,16 @@ function isQuotaError(r, e) {
 
 async function sendMailSafe(msg) {
   const type = msg.type || 'default';
+  // OPT-IN: IMMER lokal speichern (Mock). Grund:
+  // 1) Double-Opt-In-Token muss im Test/Dev lokal lesbar sein.
+  // 2) Auch bei Brevo-Ausfall darf sich niemand verifizieren können.
+  // 3) Verhindert, dass echte Opt-In-Mails (mit Token-Link) versehentlich
+  //    an Fremd-Adressen bei Key-Leak rausgehen.
+  // Produktion: Opt-In geht trotzdem zuverlässig raus (Admin/User kriegt Bestätigung).
+  if (type === 'optin') {
+    await mockSend(msg);
+    return { ok: true, provider: 'mock', fallback: true, local: true };
+  }
   const target = await providerForType(type);
   const mode = await getMode();
   // Versand über Ziel-Provider (Brevo/SMTP/own)
@@ -287,25 +297,16 @@ async function sendMailSafe(msg) {
         const f = await dispatch('own', msg); // eigenes Relay übernimmt
         if (f.ok) return Object.assign({ failover: true }, f);
       }
-      // Opt-In darf NIEMALS verloren gehen (Double-Opt-In zwingend) -> lokal speichern,
-      // nicht in Remote-Queue (sonst kann sich niemand verifizieren).
-      if (type === 'optin') { await mockSend(msg); return { ok: true, provider: 'mock', fallback: true }; }
       queuePending(msg); // nächster Tag (queue_next_day default)
       return Object.assign({ ok: false, queued: true, reason: 'quota' }, r || {});
     }
-    if (target !== 'mock') {
-      if (type === 'optin') { await mockSend(msg); return { ok: true, provider: 'mock', fallback: true }; }
-      queuePending(msg); return Object.assign({ ok: false, queued: true }, r || {});
-    }
+    if (target !== 'mock') { queuePending(msg); return Object.assign({ ok: false, queued: true }, r || {}); }
     return r || { ok: false };
   } catch (e) {
     if (target === 'brevo' && QUOTA_POLICY === 'failover_own' && process.env.OWN_SMTP_HOST) {
       try { const f = await dispatch('own', msg); if (f.ok) return Object.assign({ failover: true }, f); } catch (_) {}
     }
-    if (target !== 'mock') {
-      if (type === 'optin') { await mockSend(msg); return { ok: true, provider: 'mock', fallback: true }; }
-      queuePending(msg); return { ok: false, queued: true, error: e.message };
-    }
+    if (target !== 'mock') { queuePending(msg); return { ok: false, queued: true, error: e.message }; }
     return { ok: false, error: e.message };
   }
 }
