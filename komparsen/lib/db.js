@@ -45,10 +45,10 @@ function emptyDb() {
 
 function defaultSettings() {
   return [
-    { key: 'company_name', value: 'Kast — Komparsen Agentur' },
-    { key: 'impressum', value: '##_ Impressum\\n\\nAngaben gemäß § 5 TMG\\n\\n**Firma:** Kast Komparsen Agentur\\n**Vertreten durch:** Leon\\n**Adresse:** Musterstraße 1, 12345 Musterstadt\\n**Kontakt:** hallo@kast.example\\n\\n_Adresse im Admin-Panel änderbar._' },
-    { key: 'agb', value: '##_ AGB\\n\\n1. Mit der Registrierung überträgst du uns die Nutzungsrechte an von dir hochgeladenen Bildern für Casting-Zwecke.\\n2. Wir sind berechtigt, deinen Account jederzeit zu löschen.\\n3. Deine Daten werden DSGVO-konform verarbeitet.' },
-    { key: 'privacy', value: '##_ Datenschutz\\n\\nWir verarbeiten deine Daten ausschließlich zur Vermittlung als Komparse. Ein Selfie (biometrische Daten, Art. 9 DSGVO) wird nur mit deiner ausdrücklichen Einwilligung verarbeitet.' },
+    { key: 'company_name', value: 'KAST — Komparsen Agentur' },
+    { key: 'impressum', value: '##_ Impressum\n\nAngaben gemäß § 5 TMG / § 18 Abs. 2 MStV\n\n**Firma:** KAST — Komparsen Agentur\n**Vertreten durch:** Leon [Nachname im Admin-Panel ergänzen]\n**Adresse:** [Straße & Hausnummer], [PLZ Ort]\n**Kontakt:** [E-Mail]\n**Umsatzsteuer-ID:** [falls vorhanden, sonst entfernen]\n**Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV:** Leon [Nachname]\n\n_*Alle Angaben im Admin-Panel unter „Website" erfassen — sie erscheinen automatisch hier._' },
+    { key: 'agb', value: '##_ AGB (Teilnahme als Komparse)\n\n1. **Kein Vertragszwang:** Die Registrierung ist kostenlos und jederzeit kündbar.\n2. **Bildnutzung:** Mit der Registrierung räumst du KAST das einfache Nutzungsrecht an deinen Profilfotos für Vermittlungszwecke (Casting, Auswahl durch Produktionen) ein.\n3. **Kein Arbeitsverhältnis:** KAST vermittelt nur; ein Arbeitsverhältnis entsteht nicht.\n4. **Löschung:** Du kannst dein Profil und alle Daten jederzeit selbst löschen.\n5. **DSGVO:** Deine Daten werden ausschließlich zur Vermittlung verarbeitet.' },
+    { key: 'privacy', value: '##_ Datenschutzerklärung (zusammenfassend)\n\n- **Verantwortlich:** KAST — Komparsen Agentur (Kontakt s. Impressum).\n- **Zweck:** Vermittlung von Komparsen an Produktionen.\n- **Rechtsgrundlage:** Art. 6 Abs. 1 lit. b DSGVO (Vertragsanbahnung), Art. 9 DSGVO (biometrische Daten/Fotos) nur mit deiner **ausdrücklichen Einwilligung**.\n- **Selfie-Re-Verify:** Alle 6 Monate (Live-Kamera, kein Upload) zur Aktualität.\n- **Deine Rechte:** Auskunft, Berichtigung, Löschung, Widerspruch — jederzeit über das Profil.\n- **Keine Weitergabe** an Dritte ohne Einwilligung.\n- **Cookie:** Nur technisch notwendige, lokal gespeichert (Opt-in).' },
     { key: 'separate_imprint_address', value: '' },
     // --- Setup / Pflichtfelder für den "Publish"-Blocker ---
     // (leer = noch nicht ausgefüllt; im Admin-Panel mit "!" markiert)
