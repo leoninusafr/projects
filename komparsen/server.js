@@ -16,6 +16,9 @@ const { exportBookings } = require('./lib/export');
 const { newId, esc, plusMonths, ageFromDob, isEmail } = require('./lib/util');
 
 const PORT = process.env.PORT || 4173;
+// WICHTIG: an alle Interfaces binden (0.0.0.0), damit ein Reverse-Proxy /
+// Port-Forwarding des Hosts (z. B. ZimaOS) den Server von außen erreichbar macht.
+const HOST = process.env.HOST || '0.0.0.0';
 const PUBLIC = path.join(__dirname, 'public');
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -23,10 +26,30 @@ const MIME = {
   '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon'
 };
 
+// --- Brute-Force-Schutz: einfaches Rate-Limit auf Login/Register ---
+// (In-Memory pro Prozess; für Multi-Instanz später durch Redis ersetzen.)
+const RATE = { windowMs: 10 * 60 * 1000, max: 20, hits: new Map() };
+function rateLimited(key) {
+  const now = Date.now();
+  const e = RATE.hits.get(key) || { count: 0, first: now };
+  if (now - e.first > RATE.windowMs) { e.count = 0; e.first = now; }
+  e.count++;
+  RATE.hits.set(key, e);
+  return e.count > RATE.max;
+}
+
 function send(res, code, body, headers) {
-  res.writeHead(code, Object.assign({ 'Cache-Control': 'no-store' }, headers || {}));
+  res.writeHead(code, Object.assign({ 'Cache-Control': 'no-store' }, SECURITY_HEADERS, headers || {}));
   res.end(body);
 }
+// Security-Header (DSGVO/Sicherheit — Produktion)
+const SECURITY_HEADERS = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Content-Security-Policy':
+    "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+};
 function json(res, code, obj) { send(res, code, JSON.stringify(obj), { 'Content-Type': 'application/json' }); }
 function parseBody(req) {
   return new Promise((resolve, reject) => {
@@ -61,12 +84,27 @@ async function handleApi(req, res, parsed) {
 
   // Auth
   if (p === '/api/auth/register' && method === 'POST') {
+    if (rateLimited('reg:' + (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '?')))
+      return json(res, 429, { error: 'zu viele Versuche — bitte später erneut' });
     const b = await parseBody(req);
-    const role = b.role === 'production' || b.role === 'admin' ? b.role : 'extra';
+    let role = b.role === 'production' || b.role === 'admin' ? b.role : 'extra';
+    let adminScope = 'all';
+    // Admin-Einladung: Token prüfen -> Rolle 'admin' + Scope übernehmen
+    if (role === 'admin' && b.invite) {
+      const inv = await db.getAdminByToken(b.invite);
+      if (!inv) return json(res, 400, { error: 'Ungültige oder abgelaufene Einladung' });
+      if (inv.email !== String(b.email || '').toLowerCase().trim())
+        return json(res, 400, { error: 'E-Mail stimmt nicht mit der Einladung überein' });
+      adminScope = inv.role_scope || 'all';
+    }
     // Produktion: zusätzlich production-Datensatz
     const extra = role === 'production' ? { company: b.extra && b.extra.company } : (b.extra || {});
     try {
       const { userId, verifyLink } = await auth.register({ email: b.email, password: b.password, role, extra });
+      if (role === 'admin') {
+        // Admin-Account markieren (Scope für spätere Rechte-Prüfung)
+        await db.update('users', userId, { admin_scope: adminScope });
+      }
       if (role === 'production') {
         await db.insert('productions', { user_id: userId, company: extra.company || '', contact_name: '', created_at: new Date().toISOString() });
       }
@@ -93,6 +131,8 @@ async function handleApi(req, res, parsed) {
   }
 
   if (p === '/api/auth/login' && method === 'POST') {
+    if (rateLimited('login:' + (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '?')))
+      return json(res, 429, { error: 'zu viele Login-Versuche — bitte später erneut' });
     const b = await parseBody(req);
     try {
       const sid = await auth.login({ email: b.email, password: b.password });
@@ -173,7 +213,7 @@ async function handleApi(req, res, parsed) {
     const res2 = await db.searchExtras({
       gender: q.gender, hair_color: q.hair, eye_color: q.eye, city: q.city,
       min_height: q.min_height, max_height: q.max_height, min_age: q.min_age,
-      min_age: q.min_age, max_age: q.max_age, skills, q: q.q
+      max_age: q.max_age, skills, q: q.q
     });
     const d = await db.ensure();
     return json(res, 200, res2.map(stripPhoto).map(p => {
@@ -314,6 +354,32 @@ async function handleApi(req, res, parsed) {
     return;
   }
 
+  // Admin-Verwaltung: Einladung + Rechte (nur Haupt-Admin bzw. 'all'-Scope)
+  if (p === '/api/admin/invite' && method === 'POST') {
+    if (!need(['admin'])) return json(res, 403, { error: 'admin' });
+    const b = await parseBody(req);
+    try {
+      const rec = await db.inviteAdmin({ email: b.email, role_scope: b.scope, invited_by: me.id });
+      // Einladungs-Link zusammenbauen (Frontend schickt ihn z. B. per Mail/WhatsApp)
+      const link = '/onboarding.html?role=admin&invite=' + encodeURIComponent(rec.token);
+      return json(res, 200, { ok: true, id: rec.id, email: rec.email, scope: rec.role_scope, inviteLink: link });
+    } catch (e) { return json(res, 400, { error: e.message }); }
+  }
+  if (p === '/api/admin/admins' && method === 'GET') {
+    if (!need(['admin'])) return json(res, 403, { error: 'admin' });
+    return json(res, 200, await db.listAdmins());
+  }
+  if (p === '/api/admin/admins' && method === 'PATCH') {
+    if (!need(['admin'])) return json(res, 403, { error: 'admin' });
+    const b = await parseBody(req);
+    if (!b.id) return json(res, 400, { error: 'id fehlt' });
+    try {
+      if (b.scope) await db.setAdminScope(b.id, b.scope);
+      if (b.revoke) await db.revokeAdmin(b.id);
+      return json(res, 200, { ok: true });
+    } catch (e) { return json(res, 400, { error: e.message }); }
+  }
+
   return json(res, 404, { error: 'unknown endpoint' });
 }
 
@@ -363,7 +429,7 @@ const isMain = require.main === module;
 if (process.env.NETLIFY === '1' || !isMain) {
   module.exports = { handleApi, url };
 } else {
-  server.listen(PORT, () => {
-    console.log('KAST läuft auf http://localhost:' + PORT);
+  server.listen(PORT, HOST, () => {
+    console.log('KAST läuft auf http://' + HOST + ':' + PORT + ' (gebunden an alle Interfaces)');
   });
 }

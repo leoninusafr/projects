@@ -1,0 +1,31 @@
+/* ============================================================
+   KAST — Theme „Frisch-Minimal"
+   Helles Off-White, kräftiges Teal-Grün-Blau.
+   Jung, frisch, viel Luft. Kein Lila, kein KI-Slop.
+   ============================================================ */
+:root {
+  --bg: #fbfdfc;
+  --bg-elev: #ffffff;
+  --ink: #0b3d3c;          /* Deep Teal */
+  --ink-2: #4a6b69;
+  --line: #d4e8e4;
+  --accent: #0d9488;        /* Teal-600 */
+  --accent-press: #0f766e;
+  --danger: #be123c;
+  --ok: #16a34a;
+  --radius: 18px;
+  --radius-sm: 12px;
+  --shadow: 0 1px 2px rgba(13,148,136,.05), 0 12px 28px rgba(13,148,136,.07);
+  --maxw: 1000px;
+  --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+body { letter-spacing: .002em; }
+.hero { padding: 96px 0 48px; }
+.hero h1 { font-weight: 700; }
+.card { border: 1px solid var(--line); }
+.btn { background: var(--accent); border-radius: var(--radius-sm); }
+.btn:hover { background: var(--accent-press); }
+.btn.secondary { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+.btn.secondary:hover { border-color: var(--accent); color: var(--accent); }
+.tab.active { box-shadow: inset 0 -2px 0 var(--accent); }
+.quote { border-radius: var(--radius); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }

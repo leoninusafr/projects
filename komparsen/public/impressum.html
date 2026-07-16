@@ -27,9 +27,8 @@
   </div>
   <script src="/app.js"></script>
   <script>
-    api('/api/settings').then(r => r.json()).then(s => {
-      // Einfaches, sicheres Markdown (##, **fett**, Listen) -> HTML
-      const md = (s.impressum || '');
+    api('/api/impressum').then(r => r.ok ? r.json() : null).then(s => {
+      const md = (s && s.impressum) || 'Impressum folgt in Kürze.';
       const html = md
         .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
         .replace(/^## (.+)$/gm, '<h3>$1</h3>')
@@ -39,5 +38,6 @@
     });
   </script>
 <script src="/theme.js"></script>
+<script src="/consent.js"></script>
 </body>
 </html>

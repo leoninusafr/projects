@@ -17,7 +17,7 @@
       <span class="brand-word">Kast</span>
     </a>
     <a href="/dashboard.html">Dashboard</a>
-    <a href="/admin.html">Einstellungen</a>
+    <a href="/admin.html" class="active">Einstellungen</a>
     <a href="/kalender.html">Kalender</a>
     <a href="/team.html">Team</a>
     <span class="spacer"></span>
@@ -26,9 +26,9 @@
 
   <div class="container">
     <h1>Einstellungen</h1>
-    <p class="lead">Rechtstexte, Impressum &amp; Live-Schalter — alles an einem Ort, ohne HTML anzufassen.</p>
+    <p class="lead">Website, Datenbank, Rechtliches &amp; Team — an einem Ort, ohne Code.</p>
 
-    <!-- PUBLISH-STATUS (Setup-Checkliste) -->
+    <!-- LIVE-STATUS (Setup-Checkliste mit "!"-Markern) -->
     <div id="publishBox" class="card" style="border-color:var(--accent)">
       <div id="publishHead" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
         <span id="publishBadge" class="badge">…</span>
@@ -37,69 +37,148 @@
       <div id="publishBody" style="margin-top:12px"></div>
     </div>
 
-    <!-- KATEGORIE: Website / Rechtstexte -->
-    <h2 style="margin-top:30px">Website &amp; Rechtstexte</h2>
-    <div class="card">
-      <label for="company_name">Firmenname / Name der Agentur</label>
-      <input id="company_name" aria-describedby="req-company_name">
-      <span class="reqflag" id="req-company_name" aria-live="polite"></span>
-
-      <div class="grid cols-2" style="margin-top:8px">
-        <div>
-          <label for="owner_name">Inhaber („Vertreten durch")</label>
-          <input id="owner_name" aria-describedby="req-owner_name">
-          <span class="reqflag" id="req-owner_name" aria-live="polite"></span>
-        </div>
-        <div>
-          <label for="owner_email">Kontakt-E-Mail (Impressum)</label>
-          <input id="owner_email" type="email" aria-describedby="req-owner_email">
-          <span class="reqflag" id="req-owner_email" aria-live="polite"></span>
-        </div>
-        <div>
-          <label for="owner_address">Straße &amp; Hausnummer</label>
-          <input id="owner_address" aria-describedby="req-owner_address">
-          <span class="reqflag" id="req-owner_address" aria-live="polite"></span>
-        </div>
-        <div>
-          <label for="owner_city">PLZ &amp; Stadt</label>
-          <input id="owner_city" aria-describedby="req-owner_city">
-          <span class="reqflag" id="req-owner_city" aria-live="polite"></span>
-        </div>
-        <div>
-          <label for="owner_phone">Telefon (Impressum)</label>
-          <input id="owner_phone" type="tel" aria-describedby="req-owner_phone">
-          <span class="reqflag" id="req-owner_phone" aria-live="polite"></span>
-        </div>
-        <div>
-          <label for="domain">Eigene Domain (z. B. kast.de)</label>
-          <input id="domain" placeholder="kast.de" aria-describedby="req-domain">
-          <span class="reqflag" id="req-domain" aria-live="polite"></span>
-        </div>
-      </div>
-
-      <label class="check"><input type="checkbox" id="useSeparate">
-        <span>Abweichende Adresszeile nur fürs Impressum verwenden</span></label>
-      <div id="sepBox" class="hidden">
-        <label for="separate_imprint_address">Impressum-Adresse (eigene Zeile)</label>
-        <input id="separate_imprint_address">
-      </div>
-
-      <label for="impressum">Impressum (Markdown)</label>
-      <textarea id="impressum" style="min-height:160px"></textarea>
-      <label for="agb">AGB (Markdown)</label>
-      <textarea id="agb" style="min-height:140px"></textarea>
-      <span class="reqflag" id="req-agb" aria-live="polite"></span>
-      <label for="privacy">Datenschutz (Markdown)</label>
-      <textarea id="privacy" style="min-height:140px"></textarea>
-      <span class="reqflag" id="req-privacy" aria-live="polite"></span>
-      <button class="btn" id="save" style="margin-top:16px">Speichern</button>
+    <!-- KATEGORIE-TABS -->
+    <div class="tabs" role="tablist" style="margin-top:26px">
+      <button class="tab active" data-tab="website" role="tab" aria-selected="true">Website</button>
+      <button class="tab" data-tab="database" role="tab" aria-selected="false">Datenbank</button>
+      <button class="tab" data-tab="legal" role="tab" aria-selected="false">Rechtliches</button>
+      <button class="tab" data-tab="team" role="tab" aria-selected="false">Team</button>
     </div>
 
-    <div class="card">
-      <h3>ADAG-Abrechnungs-Export</h3>
-      <p class="muted">Erzeugt eine CSV für die Abrechnung über ADAG (Zeitarbeit).</p>
-      <button class="btn secondary" id="exportAdag">CSV exportieren</button>
-    </div>
+    <!-- TAB: WEBSITE -->
+    <section class="tabpanel" data-panel="website">
+      <h2 style="margin-top:24px">Website &amp; Impressum</h2>
+      <div class="card">
+        <label for="company_name">Firmenname / Name der Agentur</label>
+        <input id="company_name" aria-describedby="req-company_name">
+        <span class="reqflag" id="req-company_name" aria-live="polite"></span>
+
+        <div class="grid cols-2" style="margin-top:8px">
+          <div>
+            <label for="owner_name">Inhaber („Vertreten durch")</label>
+            <input id="owner_name" aria-describedby="req-owner_name">
+            <span class="reqflag" id="req-owner_name" aria-live="polite"></span>
+          </div>
+          <div>
+            <label for="owner_email">Kontakt-E-Mail (Impressum)</label>
+            <input id="owner_email" type="email" aria-describedby="req-owner_email">
+            <span class="reqflag" id="req-owner_email" aria-live="polite"></span>
+          </div>
+          <div>
+            <label for="owner_address">Straße &amp; Hausnummer</label>
+            <input id="owner_address" aria-describedby="req-owner_address">
+            <span class="reqflag" id="req-owner_address" aria-live="polite"></span>
+          </div>
+          <div>
+            <label for="owner_city">PLZ &amp; Stadt</label>
+            <input id="owner_city" aria-describedby="req-owner_city">
+            <span class="reqflag" id="req-owner_city" aria-live="polite"></span>
+          </div>
+          <div>
+            <label for="owner_phone">Telefon (Impressum)</label>
+            <input id="owner_phone" type="tel" aria-describedby="req-owner_phone">
+            <span class="reqflag" id="req-owner_phone" aria-live="polite"></span>
+          </div>
+          <div>
+            <label for="domain">Eigene Domain (z. B. kast.de)</label>
+            <input id="domain" placeholder="kast.de" aria-describedby="req-domain">
+            <span class="reqflag" id="req-domain" aria-live="polite"></span>
+          </div>
+        </div>
+
+        <label class="check"><input type="checkbox" id="useSeparate">
+          <span>Abweichende Adresszeile nur fürs Impressum verwenden</span></label>
+        <div id="sepBox" class="hidden">
+          <label for="separate_imprint_address">Impressum-Adresse (eigene Zeile)</label>
+          <input id="separate_imprint_address">
+        </div>
+
+        <label for="siteTheme">Design / Theme</label>
+        <select id="siteTheme">
+          <option value="default">Standard (Apple-neutral, hell)</option>
+          <option value="serious">Seriös-Jung (Navy + Terrakotta)</option>
+          <option value="fresh">Frisch-Minimal (Teal-Offwhite)</option>
+        </select>
+        <p class="muted">Vorschau jederzeit per <code>?dev=1</code> am Seitenrand (Buttons oben rechts).</p>
+
+        <button class="btn" id="saveWebsite" style="margin-top:16px">Speichern</button>
+      </div>
+
+      <div class="card">
+        <h3>Live-Schalter</h3>
+        <p class="muted">Solange Pflichtfelder fehlen, bleibt die Seite im „Vorschau"-Modus (kein öffentliches Impressum).</p>
+        <label class="check"><input type="checkbox" id="goLive" disabled>
+          <span>Live schalten (alle Pflichtangaben erfüllt)</span></label>
+      </div>
+    </section>
+
+    <!-- TAB: DATENBANK -->
+    <section class="tabpanel hidden" data-panel="database">
+      <h2 style="margin-top:24px">Datenbank &amp; Komparsen</h2>
+      <div class="card">
+        <h3>Komparsen-Kartei</h3>
+        <p class="muted">Übersicht und Pflege der erfassten Komparsen (Selfie-Status, Sichtbarkeit).</p>
+        <button class="btn secondary" id="exportAdag">ADAG-Abrechnung (CSV)</button>
+        <button class="btn secondary" id="exportCsv">Kartei-Export (CSV)</button>
+      </div>
+      <div class="card">
+        <h3>Selfie-Zyklus</h3>
+        <p class="muted">Komparsen werden alle <strong>6 Monate</strong> zur Aktualisierung (Live-Selfie) aufgefordert. Fällige Einträge siehst du im Dashboard.</p>
+      </div>
+    </section>
+
+    <!-- TAB: RECHTLICHES -->
+    <section class="tabpanel hidden" data-panel="legal">
+      <h2 style="margin-top:24px">Rechtstexte</h2>
+      <div class="card">
+        <label for="impressum">Impressum (Markdown — Du kannst hier direkt Text ergänzen)</label>
+        <textarea id="impressum" style="min-height:160px"></textarea>
+        <button class="btn" id="saveImpressum" style="margin-top:8px">Impressum speichern</button>
+
+        <label for="agb">AGB (Markdown)</label>
+        <textarea id="agb" style="min-height:140px"></textarea>
+        <span class="reqflag" id="req-agb" aria-live="polite"></span>
+
+        <label for="privacy">Datenschutz (Markdown)</label>
+        <textarea id="privacy" style="min-height:140px"></textarea>
+        <span class="reqflag" id="req-privacy" aria-live="polite"></span>
+        <button class="btn" id="saveLegal" style="margin-top:8px">Rechtstexte speichern</button>
+      </div>
+      <div class="card">
+        <h3>Cookie-Hinweis</h3>
+        <p class="muted">Ein DSGVO-konformer Banner wird Besuchern automatisch eingeblendet. Einwilligung wird lokal gespeichert.</p>
+      </div>
+    </section>
+
+    <!-- TAB: TEAM -->
+    <section class="tabpanel hidden" data-panel="team">
+      <h2 style="margin-top:24px">Team &amp; Admin-Rechte</h2>
+      <div class="card">
+        <h3>Admin einladen</h3>
+        <p class="muted">E-Mail eingeben, Rechte wählen — die Person erhält einen Einladungslink (z. B. per WhatsApp/ Mail).</p>
+        <div class="grid cols-2">
+          <div>
+            <label for="inviteEmail">E-Mail des neuen Admins</label>
+            <input id="inviteEmail" type="email" placeholder="admin@beispiel.de">
+          </div>
+          <div>
+            <label for="inviteScope">Berechtigung</label>
+            <select id="inviteScope">
+              <option value="all">Voller Zugriff (Haupt-Admin)</option>
+              <option value="website">Nur Website bearbeiten</option>
+              <option value="database">Nur Datenbank</option>
+              <option value="legal">Nur Rechtliches</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" id="inviteBtn" style="margin-top:12px">Einladung senden</button>
+        <div id="inviteResult" class="muted" style="margin-top:10px"></div>
+      </div>
+      <div class="card">
+        <h3>Bestehende Admins</h3>
+        <div id="adminList"><p class="muted">Lädt …</p></div>
+      </div>
+    </section>
   </div>
 
   <script src="/app.js"></script>

@@ -1,0 +1,34 @@
+/* ============================================================
+   KAST — Theme „Seriös-Jung"
+   Tiefes Navy/Anthrazit, warmer Terrakotta-Akzent.
+   Seriös, aber nicht steif. Kein Lila, kein KI-Slop.
+   ============================================================ */
+:root {
+  --bg: #f4f4f6;
+  --bg-elev: #ffffff;
+  --ink: #0f172a;          /* Slate-900 */
+  --ink-2: #475569;        /* Slate-600 */
+  --line: #cbd5e1;         /* Slate-300 */
+  --accent: #b45309;       /* Terrakotta / Amber-700 */
+  --accent-press: #92400e;
+  --danger: #b91c1c;
+  --ok: #15803d;
+  --radius: 12px;
+  --radius-sm: 9px;
+  --shadow: 0 1px 2px rgba(15,23,42,.06), 0 10px 30px rgba(15,23,42,.06);
+  --maxw: 980px;
+  --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+body { letter-spacing: .005em; }
+.nav { background: rgba(15,23,42,.86); }
+.nav a, .nav .brand-word { color: #e2e8f0; }
+.nav a:hover { color: #ffffff; text-decoration: none; }
+.brand-mark svg rect { fill: #0f172a; stroke: #e2e8f0; }
+.brand-mark svg path { stroke: #e2e8f0; }
+.hero-eyebrow { color: var(--accent); }
+.btn { background: var(--accent); }
+.btn:hover { background: var(--accent-press); }
+.btn.secondary { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+.btn.secondary:hover { border-color: var(--accent); color: var(--accent); }
+.card { border: 1px solid var(--line); }
+.tab.active { box-shadow: inset 0 -2px 0 var(--accent); }

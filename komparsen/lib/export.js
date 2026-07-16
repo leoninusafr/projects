@@ -19,7 +19,7 @@ async function exportBookings({ status, from, to } = {}) {
     const rate = Number(b.day_rate || 0);
     const sum = tage * rate;
     total += sum;
-    lines.push([b.id, b.extra_id, b.production_id, b.title || '', b.date_start, b.date_end,
+    lines.push([b.id, b.extra_id, b.production_id, b.title || '', b.date_start || '', b.date_end || '',
       b.location || '', rate.toFixed(2), tage, sum.toFixed(2), b.status]);
   }
   const csv = lines.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');

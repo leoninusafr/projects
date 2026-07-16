@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Team — Kast</title>
+  <link rel="icon" href="/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/styles-alt.css">
+</head>
+<body class="guard">
+  <nav class="nav"><div class="nav-inner">
+    <a class="brand" href="/" aria-label="Kast — Startseite">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32"><rect x="1.5" y="1.5" width="29" height="29" rx="8"/><path d="M11 8v16M11 16l8-8M12.8 16l8.2 8" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <span class="brand-word">Kast</span>
+    </a>
+    <a href="/dashboard.html">Dashboard</a>
+    <a href="/admin.html">Einstellungen</a>
+    <a href="/kalender.html">Kalender</a>
+    <a href="/team.html" class="active">Team</a>
+    <span class="spacer"></span>
+    <span id="navAuth"></span>
+  </div></nav>
+
+  <div class="container">
+    <h1>Team &amp; Admin-Rechte</h1>
+    <p class="lead">Wer darf was — übersichtlich und jederzeit änderbar.</p>
+
+    <div class="card">
+      <h3>Haupt-Admin (du)</h3>
+      <p class="muted">Voller Zugriff auf alles: Website, Datenbank, Rechtliches, Team.</p>
+    </div>
+
+    <div class="card">
+      <h3>Eingeladene Admins</h3>
+      <p class="muted">Werde unter <a href="/admin.html">Einstellungen → Team</a> verwaltet. Rechte: Website / Datenbank / Rechtliches / Voller Zugriff.</p>
+    </div>
+
+    <div class="card">
+      <h3>Rollen im System</h3>
+      <ul class="muted" style="line-height:1.7;padding-left:18px">
+        <li><strong>Komparse (Extra):</strong> Profil, Fotos, Selfie, eigene Datenkontrolle.</li>
+        <li><strong>Produktion (Caster):</strong> Suche, Warenkorb, Anfragen, Export.</li>
+        <li><strong>Admin:</strong> Einstellungen, Kalender, Buchungen, Admin-Verwaltung.</li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+  <script src="/nav.js"></script>
+<script src="/theme.js"></script>
+</body>
+</html>

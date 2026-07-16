@@ -6,7 +6,7 @@ const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
-const { newId, plusMonths } = require('./util');
+const { newId, plusMonths, isEmail } = require('./util');
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const FILE = path.join(DATA_DIR, 'db.json');
@@ -37,6 +37,7 @@ function emptyDb() {
     productions: [],
     bookings: [],
     shortlists: [],
+    admins: [],
     site_settings: defaultSettings(),
     _meta: { version: 1, seeded: false }
   };
@@ -244,9 +245,51 @@ async function searchExtras(query = {}) {
   });
 }
 
+async function inviteAdmin({ email, role_scope, invited_by }) {
+  const db = await ensure();
+  const e = String(email || '').toLowerCase().trim();
+  if (!isEmail(e)) throw new Error('Ungültige E-Mail');
+  if (db.admins.find(a => a.email === e && !a.revoked_at)) throw new Error('Admin bereits eingeladen');
+  const token = newId() + newId(); // 64 hex Einladungs-Token
+  const rec = {
+    id: newId(), email: e,
+    role_scope: role_scope || 'all',     // 'all' | 'website' | 'database' | 'legal'
+    token, invited_by: invited_by || null,
+    created_at: new Date().toISOString(), revoked_at: null
+  };
+  db.admins.push(rec);
+  scheduleSave();
+  return rec;
+}
+async function listAdmins() {
+  const db = await ensure();
+  return db.admins.map(a => Object.assign({}, a, { token: undefined }));
+}
+async function getAdminByToken(token) {
+  const db = await ensure();
+  return db.admins.find(a => a.token === token && !a.revoked_at) || null;
+}
+async function revokeAdmin(id) {
+  const db = await ensure();
+  const a = db.admins.find(x => x.id === id);
+  if (!a) throw new Error('nicht gefunden');
+  a.revoked_at = new Date().toISOString();
+  scheduleSave();
+  return true;
+}
+async function setAdminScope(id, scope) {
+  const db = await ensure();
+  const a = db.admins.find(x => x.id === id);
+  if (!a) throw new Error('nicht gefunden');
+  a.role_scope = scope;
+  scheduleSave();
+  return true;
+}
+
 module.exports = {
   ensure, persist, all, find, filter, insert, update, remove,
   getSetting, setSetting, getUserByEmail, getUserById, createUser,
   ensureProfile, searchExtras, defaultSettings, deleteUserCascade,
-  getSetupStatus, REQUIRED_SETUP_FIELDS
+  getSetupStatus, REQUIRED_SETUP_FIELDS,
+  inviteAdmin, listAdmins, getAdminByToken, revokeAdmin, setAdminScope
 };

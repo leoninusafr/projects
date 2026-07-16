@@ -1,26 +1,60 @@
 'use strict';
-// Theme-Steuerung: liest ?theme= oder localStorage, setzt body-Klasse.
-// Bietet einen Mini-Switcher (Editorial / Studio / Mono) zum Live-Vergleich.
+// Theme-Switcher: lädt das gewählte Theme-CSS zusätzlich zu styles.css.
+// Quelle: ?theme= (Vorschau-Link) > localStorage > Server-Setting (site_theme) > 'default'.
+// Themes: default (Apple-neutral), serious (Seriös-Jung), fresh (Frisch-Minimal).
 (function () {
+  const THEMES = {
+    default: null,                 // nur styles.css (+ styles-alt.css für Komponenten)
+    serious: '/theme-serious.css',
+    fresh: '/theme-fresh.css'
+  };
+
   const params = new URLSearchParams(location.search);
-  const t = params.get('theme') || localStorage.getItem('kast_theme') || 'studio';
+  const fromUrl = params.get('theme');
+  const stored = localStorage.getItem('kast_theme');
+
   function applyTheme(name) {
-    // Nur Theme-Klassen ersetzen — guard/auth-ok u.a. bleiben erhalten.
-    document.body.classList.remove('theme-editorial', 'theme-studio', 'theme-mono');
-    document.body.classList.add('theme-' + name);
+    name = THEMES.hasOwnProperty(name) ? name : 'default';
+    // existierende Theme-Links entfernen
+    document.querySelectorAll('link[data-theme]').forEach(l => l.remove());
+    const href = THEMES[name];
+    if (href) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = href;
+      link.setAttribute('data-theme', '1');
+      document.head.appendChild(link);
+    }
+    document.body.setAttribute('data-theme', name);
   }
-  applyTheme(t);
-  localStorage.setItem('kast_theme', t);
+
+  // 1) URL-Param (Vorschau/Live-Vergleich)
+  if (fromUrl && THEMES.hasOwnProperty(fromUrl)) {
+    applyTheme(fromUrl);
+    localStorage.setItem('kast_theme', fromUrl);
+  } else if (stored && THEMES.hasOwnProperty(stored)) {
+    // 2) lokal gespeichert
+    applyTheme(stored);
+  } else {
+    // 3) Server-Default (site_theme) — asynchron, fällt auf 'default' zurück
+    applyTheme('default');
+    fetch('/api/settings').then(r => r.ok ? r.json() : null).then(s => {
+      const t = s && s.site_theme;
+      if (t && THEMES.hasOwnProperty(t) && t !== 'default') {
+        applyTheme(t);
+        localStorage.setItem('kast_theme', t);
+      }
+    }).catch(() => {});
+  }
 
   // Mini-Switcher NUR im Entwickler-Modus (?dev=1) — echte Besucher sehen ihn nie.
   if (!params.has('dev')) return;
-
   const sw = document.createElement('div');
   sw.style.cssText = 'position:fixed;bottom:14px;right:14px;z-index:99;display:flex;gap:6px;' +
-    'background:#fff;border:1px solid var(--line);border-radius:980px;padding:6px;box-shadow:var(--shadow-sm)';
-  sw.innerHTML = '<button data-t="editorial" style="border:none;background:transparent;font:inherit;padding:6px 12px;cursor:pointer;border-radius:980px">Edt</button>' +
-    '<button data-t="studio" style="border:none;background:transparent;font:inherit;padding:6px 12px;cursor:pointer;border-radius:980px">Stu</button>' +
-    '<button data-t="mono" style="border:none;background:transparent;font:inherit;padding:6px 12px;cursor:pointer;border-radius:980px">Mno</button>';
+    'background:#fff;border:1px solid var(--line);border-radius:980px;padding:6px;box-shadow:var(--shadow)';
+  const btn = (t, label) =>
+    '<button data-t="' + t + '" style="border:none;background:transparent;font:inherit;padding:6px 12px;cursor:pointer;border-radius:980px">' + label + '</button>';
+  sw.innerHTML = btn('default', 'Std') + btn('serious', 'Seriös') + btn('fresh', 'Frisch');
   sw.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
     const nt = b.dataset.t;
     applyTheme(nt);
