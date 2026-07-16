@@ -342,6 +342,34 @@ async function setAdminScope(id, scope) {
   return true;
 }
 
+async function getImpressum() {
+  const db = await ensure();
+  const get = (k) => { const s = db.site_settings.find(x => x.key === k); return s ? String(s.value || '') : ''; };
+  // Platzhalter [..] und leere Werte ignorieren (nicht ins öffentliche Impressum)
+  const clean = (v) => { const s = String(v || '').trim(); return (s && !(s.startsWith('[') && s.endsWith(']'))) ? s : ''; };
+  const company = clean(get('company_name')) || 'KAST — Komparsen Agentur';
+  const owner = clean(get('owner_name'));
+  const addr = clean(get('owner_address'));
+  const city = clean(get('owner_city'));
+  const email = clean(get('owner_email'));
+  const phone = clean(get('owner_phone'));
+  const ustid = clean(get('owner_ustid'));
+  const extra = clean(get('impressum_extra'));
+
+  // Mindestens Inhaber + Kontakt vorhanden? Sonst Hinweis, nicht leeres Impressum.
+  if (!owner && !email && !phone) return ''; // Frontend zeigt dann „folgt in Kürze"
+
+  let out = '## ' + company + '\n\n';
+  if (owner) out += '**Vertreten durch:** ' + owner + '\n\n';
+  if (addr) out += addr + '\n';
+  if (city) out += city + '\n';
+  if (phone) out += 'Telefon: ' + phone + '\n';
+  if (email) out += 'E-Mail: ' + email + '\n';
+  if (ustid) out += 'USt-IdNr.: ' + ustid + '\n';
+  if (extra) out += '\n' + extra + '\n';
+  return out.trim();
+}
+
 module.exports = {
   ensure, persist, all, find, filter, insert, update, remove,
   getSetting, setSetting, getUserByEmail, getUserById, createUser,
