@@ -1,0 +1,42 @@
+/* ============================================================
+   KAST — Theme „Editorial"  (Magazin / Casting-Agentur)
+   Seriös, typografisch, hochwertig. Serifen-Display, feine
+   Linien, gedecktes Weinrot als Akzent. Wirkt wie ein
+   Casting-/Mode-Magazin. Kein Lila, kein KI-Slop.
+   ============================================================ */
+:root {
+  --bg: #fbfaf8;
+  --bg-elev: #ffffff;
+  --ink: #1a1a1a;
+  --ink-2: #5c5c5c;
+  --line: #d8d2c7;
+  --accent: #9b2226;        /* tiefes Weinrot */
+  --accent-press: #7a1a1d;
+  --danger: #b91c1c;
+  --ok: #15803d;
+  --radius: 6px;
+  --radius-sm: 4px;
+  --shadow: 0 1px 2px rgba(0,0,0,.05), 0 12px 30px rgba(0,0,0,.05);
+  --maxw: 960px;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+h1, h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 700; letter-spacing: -.01em; }
+h3 { font-family: Georgia, "Times New Roman", serif; font-weight: 700; }
+.hero { padding: 88px 0 44px; }
+.hero-eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 13px; font-weight: 600; }
+.hero h1 { font-size: 68px; line-height: 1.02; }
+.hero .lead { font-size: 20px; }
+.card { border: 1px solid var(--line); border-top: 3px solid var(--accent); }
+.btn { background: var(--accent); border-radius: var(--radius-sm); font-weight: 600; }
+.btn:hover { background: var(--accent-press); }
+.btn.secondary { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+.btn.secondary:hover { border-color: var(--accent); color: var(--accent); }
+.quote {
+  border-left: 3px solid var(--accent);
+  border-top: none; border-bottom: none;
+  text-align: left; padding: 8px 0 8px 28px;
+  font-family: Georgia, "Times New Roman", serif; font-size: 26px;
+}
+.quote-sub { font-family: var(--font); font-size: 15px; }
+.tab.active { box-shadow: inset 0 -2px 0 var(--accent); }
+.brand { font-family: Georgia, "Times New Roman", serif; font-weight: 700; }

@@ -392,6 +392,12 @@ function stripPhoto(p) { const { consents, ...rest } = p; return rest; }
 // Statische Dateien — mit 404-Abfang
 function serveStatic(req, res, pathname) {
   let rel = pathname === '/' ? '/index.html' : pathname;
+  // Clean-URLs ohne Dateiendung -> .html anhängen (z.B. /admin -> /admin.html)
+  if (path.extname(rel) === '') {
+    const cand = rel + '.html';
+    const fpCand = path.join(PUBLIC, path.normalize(cand));
+    if (fpCand.startsWith(PUBLIC) && fs.existsSync(fpCand)) rel = cand;
+  }
   const fp = path.join(PUBLIC, path.normalize(rel));
   if (!fp.startsWith(PUBLIC)) return send(res, 403, 'forbidden'); // path traversal
   fs.readFile(fp, (err, buf) => {

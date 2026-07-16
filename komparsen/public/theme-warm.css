@@ -1,0 +1,33 @@
+/* ============================================================
+   KAST — Theme „Warm"  (menschlich / einladend)
+   Komparsen = Menschen. Warmes Off-White, Terrakotta-Akzent,
+   weiche (aber nicht pill-runde) Radien. Nahbar, seriös,
+   vertrauensvoll. Kein Lila, kein KI-Slop.
+   ============================================================ */
+:root {
+  --bg: #faf6f0;            /* warmes Off-White */
+  --bg-elev: #fffdfa;
+  --ink: #2b2622;           /* warmes Dunkel */
+  --ink-2: #7a6f66;
+  --line: #e7ddd0;
+  --accent: #c2410c;        /* Terrakotta */
+  --accent-press: #9a3412;
+  --danger: #b91c1c;
+  --ok: #3f6212;
+  --radius: 12px;
+  --radius-sm: 9px;
+  --shadow: 0 1px 3px rgba(120,72,30,.06), 0 10px 28px rgba(120,72,30,.06);
+  --maxw: 1000px;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+.hero { padding: 84px 0 44px; }
+.hero-eyebrow { color: var(--accent); font-weight: 600; }
+.btn { background: var(--accent); border-radius: var(--radius); font-weight: 500; }
+.btn:hover { background: var(--accent-press); }
+.btn.secondary { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+.btn.secondary:hover { border-color: var(--accent); color: var(--accent); }
+.card { border: 1px solid var(--line); }
+.tab.active { box-shadow: inset 0 -2px 0 var(--accent); }
+.avatar { background: #f0e6da; }
+.chip { background: #f3ebe1; }
+.footer-social a:hover { color: var(--accent); }
