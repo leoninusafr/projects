@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Konto — Kast</title>
+  <link rel="icon" href="/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/theme-switcher.css">
+</head>
+<body>
+  <nav class="nav"><div class="nav-inner">
+    <a class="brand" href="/" aria-label="Kast — Startseite">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32"><rect x="1.5" y="1.5" width="29" height="29" rx="8"/><path d="M11 8v16M11 16l8-8M12.8 16l8.2 8" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <span class="brand-word">Kast</span>
+    </a><span class="spacer"></span>
+    <a href="/login.html">Abmelden</a>
+    <span id="navAuth"></span>
+  </div></nav>
+
+  <div class="container narrow">
+    <h1>Mein Konto</h1>
+    <p class="lead">E-Mail und Passwort ändern, oder dein Konto mit allen Daten löschen.</p>
+
+    <div id="msg"></div>
+
+    <div class="card">
+      <h3>E-Mail ändern</h3>
+      <label for="email">Neue E-Mail</label>
+      <input id="email" type="email" autocomplete="email">
+      <button class="btn block" id="saveEmail" style="margin-top:12px">E-Mail speichern</button>
+    </div>
+
+    <div class="card">
+      <h3>Passwort ändern</h3>
+      <label for="cur">Aktuelles Passwort</label>
+      <input id="cur" type="password" autocomplete="current-password">
+      <label for="next1">Neues Passwort (min. 8 Zeichen)</label>
+      <input id="next1" type="password" autocomplete="new-password">
+      <button class="btn block" id="savePw" style="margin-top:12px">Passwort ändern</button>
+    </div>
+
+    <div class="card danger-zone">
+      <h3>Konto löschen</h3>
+      <p class="muted">Damit werden <b>alle deine Daten unwiderruflich gelöscht</b> — Profil, Fotos, Selfie, Einwilligungen, Buchungen. Das kann nicht rückgängig gemacht werden.</p>
+      <label for="delConfirm">Zum Bestätigen tippe: <code>LOSCHEN</code></label>
+      <input id="delConfirm" placeholder="LOSCHEN">
+      <button class="btn danger block" id="delBtn" style="margin-top:12px" disabled>Konto endgültig löschen</button>
+    </div>
+
+    <a class="btn secondary block" href="/" style="margin-top:18px">Zur Startseite</a>
+  </div>
+
+  <script src="/app.js"></script>
+  <script src="/nav.js"></script>
+  <script>
+  (function () {
+    const $ = (id) => document.getElementById(id);
+    function msg(t, ok) { $('msg').innerHTML = '<div class="notice ' + (ok ? 'ok' : 'err') + '">' + t + '</div>'; }
+    function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+    // Logout-Button
+    $('navAuth') && ($('navAuth').innerHTML = '');
+
+    // E-Mail
+    $('saveEmail').addEventListener('click', async () => {
+      try {
+        const r = await api('/api/account/change-email', { method:'POST', body: JSON.stringify({ email: $('email').value }) });
+        const j = await r.json(); if (!r.ok) throw new Error(j.error||'fehlgeschlagen');
+        msg('E-Mail geändert. Bitte erneut bestätigen (neue Mail).', true);
+      } catch (e) { msg(esc(e.message||e), false); }
+    });
+
+    // Passwort
+    $('savePw').addEventListener('click', async () => {
+      try {
+        const r = await api('/api/account/change-password', { method:'POST', body: JSON.stringify({ current: $('cur').value, next: $('next1').value }) });
+        const j = await r.json(); if (!r.ok) throw new Error(j.error||'fehlgeschlagen');
+        msg('Passwort geändert.', true); $('cur').value=''; $('next1').value='';
+      } catch (e) { msg(esc(e.message||e), false); }
+    });
+
+    // Löschen (mit Warnung)
+    $('delConfirm').addEventListener('input', () => { $('delBtn').disabled = $('delConfirm').value.trim() !== 'LOSCHEN'; });
+    $('delBtn').addEventListener('click', async () => {
+      if ($('delConfirm').value.trim() !== 'LOSCHEN') return;
+      if (!confirm('Wirklich ALLES löschen? Das kann nicht rückgängig gemacht werden.')) return;
+      try {
+        const r = await api('/api/account/delete', { method:'POST', body: JSON.stringify({ confirm: 'LOSCHEN' }) });
+        const j = await r.json(); if (!r.ok) throw new Error(j.error||'fehlgeschlagen');
+        msg('Konto gelöscht. Du wirst abgemeldet.', true);
+        setTimeout(() => location.href = '/', 1200);
+      } catch (e) { msg(esc(e.message||e), false); }
+    });
+  })();
+  </script>
+  <script src="/theme.js"></script>
+  <script src="/consent.js"></script>
+</body>
+</html>

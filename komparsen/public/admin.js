@@ -13,6 +13,7 @@ requireRole(['admin'], '/admin.html').then(async (me) => {
       t.classList.add('active'); t.setAttribute('aria-selected', 'true');
       document.querySelector(`.tabpanel[data-panel="${t.dataset.tab}"]`).classList.remove('hidden');
       if (t.dataset.tab === 'team') renderAdmins();
+      if (t.dataset.tab === 'users') renderUsers();
     });
   });
 
@@ -155,6 +156,31 @@ requireRole(['admin'], '/admin.html').then(async (me) => {
         if (!confirm('Admin-Rechte für ' + btn.dataset.revoke + ' entziehen?')) return;
         await api('/api/admin/admins', { method: 'PATCH', body: JSON.stringify({ id: btn.dataset.revoke, revoke: true }) });
         renderAdmins();
+      });
+    });
+  }
+
+  async function renderUsers() {
+    const r = await api('/api/admin/users');
+    if (!r.ok) { $('userList').innerHTML = '<p class="muted">Kein Zugriff.</p>'; return; }
+    const j = await r.json();
+    const users = j.users || [];
+    if (!users.length) { $('userList').innerHTML = '<p class="muted">Noch keine Nutzer registriert.</p>'; return; }
+    const roleLabel = { extra: 'Komparse', production: 'Produktion', admin: 'Admin' };
+    $('userList').innerHTML = '<table><tr><th>E-Mail</th><th>Rolle</th><th>Verifiziert</th><th></th></tr>' +
+      users.map(u => {
+        const canDel = !u.is_main_admin;
+        return '<tr><td>' + esc(u.email) + '</td><td>' + (roleLabel[u.role] || u.role) + '</td>' +
+          '<td>' + (u.email_verified ? '✓' : '—') + '</td>' +
+          '<td><button class="btn sm danger" data-del="' + u.id + '"' + (canDel ? '' : ' disabled title="Haupt-Admin kann nicht gelöscht werden"') + '>Löschen</button></td></tr>';
+      }).join('') + '</table>';
+    $('userList').querySelectorAll('button[data-del]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.del;
+        if (!confirm('Nutzer endgültig löschen? Alle Daten (Profil, Fotos, Buchungen) werden entfernt.')) return;
+        const r2 = await api('/api/admin/users', { method: 'DELETE', body: JSON.stringify({ id }) });
+        if (r2.ok) renderUsers();
+        else { const e = await r2.json().catch(() => ({})); alert('Fehler: ' + (e.error || 'unbekannt')); }
       });
     });
   }

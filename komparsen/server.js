@@ -13,7 +13,7 @@ const db = (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY)
   : require('./lib/db');
 const auth = require('./lib/auth');
 const { exportBookings } = require('./lib/export');
-const { newId, esc, plusMonths, ageFromDob, isEmail } = require('./lib/util');
+const { newId, esc, plusMonths, ageFromDob, isEmail, hashPassword, verifyPassword } = require('./lib/util');
 
 const PORT = process.env.PORT || 4173;
 // WICHTIG: an alle Interfaces binden (0.0.0.0), damit ein Reverse-Proxy /
@@ -378,6 +378,60 @@ async function handleApi(req, res, parsed) {
       if (b.revoke) await db.revokeAdmin(b.id);
       return json(res, 200, { ok: true });
     } catch (e) { return json(res, 400, { error: e.message }); }
+  }
+
+  // ---- Account-Self-Service (eingeloggter User) ----
+  if (p === '/api/account/delete' && method === 'POST') {
+    if (!me) return json(res, 401, { error: 'login erforderlich' });
+    const b = await parseBody(req);
+    if (!b.confirm || b.confirm !== 'LOSCHEN') return json(res, 400, { error: 'Bestätigung fehlt (erwartet: LOSCHEN)' });
+    try { await db.deleteUserCascade(me.id); } catch (e) { return json(res, 500, { error: e.message }); }
+    // Session ungültig machen
+    if (sess) auth.destroySession(sess);
+    setCookie(res, 'sid', '', { maxAge: 0 });
+    return json(res, 200, { ok: true });
+  }
+  if (p === '/api/account/change-password' && method === 'POST') {
+    if (!me) return json(res, 401, { error: 'login erforderlich' });
+    const b = await parseBody(req);
+    if (!b.current || !b.next) return json(res, 400, { error: 'Felder fehlen' });
+    if (String(b.next).length < 8) return json(res, 400, { error: 'Neues Passwort zu kurz (min. 8)' });
+    const u = await db.getUserById(me.id);
+    if (!u || !verifyPassword(b.current, u.salt, u.password_hash)) return json(res, 403, { error: 'Aktuelles Passwort falsch' });
+    const salt = crypto.randomBytes(16).toString('hex');
+    const { hash: password_hash } = hashPassword(b.next, salt);
+    await db.update('users', me.id, { salt, password_hash });
+    return json(res, 200, { ok: true });
+  }
+  if (p === '/api/account/change-email' && method === 'POST') {
+    if (!me) return json(res, 401, { error: 'login erforderlich' });
+    const b = await parseBody(req);
+    if (!b.email || !isEmail(b.email)) return json(res, 400, { error: 'gültige E-Mail erforderlich' });
+    const exists = await db.getUserByEmail(b.email);
+    if (exists && exists.id !== me.id) return json(res, 409, { error: 'E-Mail bereits vergeben' });
+    await db.update('users', me.id, { email: String(b.email).toLowerCase().trim(), email_verified: false });
+    return json(res, 200, { ok: true });
+  }
+
+  // ---- Admin: Nutzer-Verwaltung ----
+  if (p === '/api/admin/users' && method === 'GET') {
+    if (!need(['admin'])) return json(res, 403, { error: 'admin' });
+    const users = (await db.all('users')).map(u => ({
+      id: u.id, email: u.email, role: u.role, email_verified: !!u.email_verified,
+      created_at: u.created_at, is_main_admin: !!u.is_main_admin, revoked: !!u.revoked
+    }));
+    return json(res, 200, { users });
+  }
+  if (p === '/api/admin/users' && method === 'DELETE') {
+    if (!need(['admin'])) return json(res, 403, { error: 'admin' });
+    const b = await parseBody(req);
+    if (!b.id) return json(res, 400, { error: 'id fehlt' });
+    const target = await db.getUserById(b.id);
+    if (!target) return json(res, 404, { error: 'nicht gefunden' });
+    if (target.is_main_admin) return json(res, 403, { error: 'Haupt-Admin kann nicht gelöscht werden' });
+    if (me && target.id === me.id) return json(res, 403, { error: 'Du kannst dich nicht selbst löschen — nutze den Account-Löschvorgang.' });
+    try { await db.deleteUserCascade(b.id); } catch (e) { return json(res, 500, { error: e.message }); }
+    return json(res, 200, { ok: true });
   }
 
   return json(res, 404, { error: 'unknown endpoint' });

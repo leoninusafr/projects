@@ -67,36 +67,49 @@
     <!-- Schritt 2: Profil -->
     <section class="card hidden" data-step="2">
       <h3>2 · Steckbrief</h3>
-      <div class="row">
-        <div><label for="fn">Vorname</label><input id="fn"></div>
-        <div><label for="ln">Nachname</label><input id="ln"></div>
+
+      <!-- NUR PRODUKTION: Firmenangaben -->
+      <div id="prodOnly" style="display:none">
+        <label for="contactName">Ansprechpartner (Name)</label>
+        <input id="contactName" placeholder="z.B. Maria Muster">
+        <label for="company2">Firma / Produktion</label>
+        <input id="company2" placeholder="z.B. Bavaria Film, XX Casting">
+        <p class="muted">Als Produktion brauchen Sie keinen Steckbrief — Sie erhalten nach Bestätigung Zugang zur Caster-Suche.</p>
       </div>
-      <label for="dob">Geburtsdatum</label>
-      <input id="dob" type="date">
-      <div class="row">
-        <div><label for="gender">Geschlecht</label>
-          <select id="gender"><option value="">–</option><option>weiblich</option><option>männlich</option><option>divers</option></select></div>
-        <div><label for="height">Größe (cm)</label><input id="height" type="number"></div>
+
+      <!-- NUR KOMPARSE: körperliche Angaben -->
+      <div id="extraOnly">
+        <div class="row">
+          <div><label for="fn">Vorname</label><input id="fn"></div>
+          <div><label for="ln">Nachname</label><input id="ln"></div>
+        </div>
+        <label for="dob">Geburtsdatum</label>
+        <input id="dob" type="date">
+        <div class="row">
+          <div><label for="gender">Geschlecht</label>
+            <select id="gender"><option value="">–</option><option>weiblich</option><option>männlich</option><option>divers</option></select></div>
+          <div><label for="height">Größe (cm)</label><input id="height" type="number"></div>
+        </div>
+        <div class="row">
+          <div><label for="hair">Haarfarbe</label>
+            <select id="hair"><option value="">–</option><option value="braun">braun</option><option value="blond">blond</option><option value="schwarz">schwarz</option><option value="rot">rot (Natur)</option><option value="grau">grau</option><option value="gefärbt">gefärbt (andere Farbe)</option></select></div>
+          <div><label for="eye">Augenfarbe</label>
+            <select id="eye"><option value="">–</option><option>blau</option><option>braun</option><option>grün</option><option>grau</option><option>sonstige</option></select></div>
+        </div>
+        <div class="row">
+          <div><label for="city">Wohnort</label><input id="city"></div>
+          <div><label for="plz">PLZ</label><input id="plz"></div>
+        </div>
+        <label for="skills">Fähigkeiten (Komma-getrennt, z.B. Reiten, Englisch)</label>
+        <input id="skills">
+        <label for="bio">Kurz zu dir</label>
+        <textarea id="bio"></textarea>
       </div>
-      <div class="row">
-        <div><label for="hair">Haarfarbe</label>
-          <select id="hair"><option value="">–</option><option>braun</option><option>blond</option><option>schwarz</option><option>rot</option><option>grau</option><option>gefärbt</option></select></div>
-        <div><label for="eye">Augenfarbe</label>
-          <select id="eye"><option value="">–</option><option>blau</option><option>braun</option><option>grün</option><option>grau</option><option>sonstige</option></select></div>
-      </div>
-      <div class="row">
-        <div><label for="city">Wohnort</label><input id="city"></div>
-        <div><label for="plz">PLZ</label><input id="plz"></div>
-      </div>
-      <label for="skills">Fähigkeiten (Komma-getrennt, z.B. Reiten, Englisch)</label>
-      <input id="skills">
-      <label for="bio">Kurz zu dir</label>
-      <textarea id="bio"></textarea>
       <button class="btn block" id="next2" style="margin-top:16px">Weiter</button>
     </section>
 
-    <!-- Schritt 3: Fotos -->
-    <section class="card hidden" data-step="3">
+    <!-- Schritt 3: Fotos (NUR KOMPARSE) -->
+    <section class="card hidden" data-step="3" id="stepPhotos">
       <h3>3 · Fotos</h3>
       <p class="muted">Lade ein Portrait und ein Ganzkörperbild hoch. Je besser das Bild, desto eher wirst du gebucht.</p>
       <label>Portrait</label>
@@ -106,8 +119,8 @@
       <button class="btn block" id="next3" style="margin-top:16px">Weiter</button>
     </section>
 
-    <!-- Schritt 4: Selfie + Consent -->
-    <section class="card hidden" data-step="4">
+    <!-- Schritt 4: Selfie + Consent (NUR KOMPARSE) -->
+    <section class="card hidden" data-step="4" id="stepSelfie">
       <h3>4 · Selfie &amp; Einwilligung</h3>
       <p class="muted">Ein aktuelles Selfie alle 6 Monate hält deine Sichtbarkeit frisch.
         Es wird <b>live</b> aufgenommen (kein Upload alter Fotos).</p>
@@ -127,6 +140,13 @@
       <label class="check"><input type="checkbox" id="cBio">
         <span>Ich willige ausdrücklich ein, dass ein Selfie (biometrische Daten, Art. 9 DSGVO) verarbeitet wird.</span></label>
       <button class="btn block" id="finish" style="margin-top:16px" disabled>Fertig — Profil aktivieren</button>
+    </section>
+
+    <!-- Schritt FERTIG (NUR PRODUKTION) -->
+    <section class="card hidden" data-step="5" id="stepProdDone">
+      <h3>Fertig</h3>
+      <p class="notice ok">Ihre Produktions-Anmeldung ist bestätigt. Sie können sich jetzt anmelden und Komparsen suchen.</p>
+      <a class="btn block" href="/login.html">Anmelden</a>
     </section>
   </div>
 

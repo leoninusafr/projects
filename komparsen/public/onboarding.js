@@ -28,6 +28,11 @@
   function syncRoleUI() {
     const isProd = currentRole() === 'production';
     $('companyWrap').style.display = isProd ? 'block' : 'none';
+    $('prodOnly').style.display = isProd ? 'block' : 'none';
+    $('extraOnly').style.display = isProd ? 'none' : 'block';
+    // Produktion: Foto/Selfie-Schritte ausblenden (kein Steckbrief/Biometrie)
+    if ($('stepPhotos')) $('stepPhotos').classList.toggle('hidden', isProd);
+    if ($('stepSelfie')) $('stepSelfie').classList.toggle('hidden', isProd);
     $('roleHint').textContent = isProd
       ? 'Sie erhalten nach Bestätigung Zugang zur Caster-Suche und können Komparsen anfragen.'
       : 'Nach Bestätigung richten Sie Ihr Profil und Fotos ein.';
@@ -72,8 +77,18 @@
     })();
   }
 
-  // Schritt 2 -> Profil speichern
+  // Schritt 2 -> Profil speichern (nur Komparse) / Produktion direkt fertig
   $('next2').addEventListener('click', async () => {
+    if (currentRole() === 'production') {
+      // Produktion: keine körperlichen Daten, nur Firmeninfos (optional im Account schon gesendet)
+      const company = $('company2') ? $('company2').value : '';
+      const contact = $('contactName') ? $('contactName').value : '';
+      try {
+        await api('/api/profile/me', { method: 'PUT', body: JSON.stringify({ company, contact_name: contact }) });
+      } catch (e) { /* nicht kritisch */ }
+      show(5);
+      return;
+    }
     const profile = {
       first_name: $('fn').value, last_name: $('ln').value, dob: $('dob').value,
       gender: $('gender').value, height_cm: Number($('height').value) || null,
