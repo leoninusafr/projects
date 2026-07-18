@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light;
   --bg: #fbfbfd;
   --surface: #ffffff;
   --surface-2: #f5f5f7;
@@ -24,6 +25,7 @@
 }
 
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --bg: #000000;
   --surface: #1c1c1e;
   --surface-2: #2c2c2e;
@@ -331,3 +333,21 @@ input[type="text"], button, .choice, .mod-card, .mode-card { font-size: 16px; }
 .rev-explain { font-size: 14px; color: var(--text-soft); line-height: 1.6; margin-top: 8px; }
 .rev-note { display: flex; align-items: flex-start; gap: 6px; margin-top: 10px; padding: 10px 12px; background: var(--surface-2); border-radius: 9px; font-size: 13.5px; color: var(--text); line-height: 1.5; }
 .rev-note .icon { width: 16px; height: 16px; flex: none; margin-top: 1px; color: var(--text-soft); }
+
+/* ---- Theme-Härtung: nirgends dunkler Text auf dunklem Grund ---- */
+/* KaTeX erbt Textfarbe erzwungen (statt eigener/schwarzer Farbe) */
+.katex, .katex * { color: currentColor !important; }
+.q-prompt, .q-prompt *,
+.explain-body, .explain-body *,
+.rev-prompt, .rev-prompt *,
+.rev-ans, .rev-explain,
+.feedback-note { color: inherit; }
+.q-prompt { color: var(--text); }
+.explain-body { color: var(--text); }
+/* Formel-/Codeblöcke: heller Text auf der Fläche garantiert */
+.fblock, .explain-body code, .explain-body .formula,
+.q-prompt code, .q-prompt .formula { color: var(--text); }
+/* Akzent-/Fett-Elemente behalten ihre Farbe */
+.explain-body b, .feedback-note b, .rev-ans b { color: var(--accent); }
+.tok-wrong { color: var(--bad); }
+
