@@ -380,14 +380,13 @@
 
     const node = tpl("tpl-quiz");
     const idx = list[pos];
-    // q-top: Zurück (außer bei 1.) + Notiz + Abbrechen
+    // q-top: Zurück (außer bei 1.) + Notiz
     const qTop = $("#qTop", node);
     qTop.innerHTML = `
       <div class="q-top-left">
         ${pos > 0 ? `<button class="link-btn" id="backBtn">${icon("i-back")} Zurück</button>` : `<span></span>`}
         <button class="link-btn" id="noteBtn">${icon("i-note")} Notiz</button>
-      </div>
-      <button class="link-btn" id="quitBtn">${icon("i-x")} Abbrechen</button>`;
+      </div>`;
     $("#qCrumb", node).textContent = mod.title;
     $("#barFill", node).style.width = Math.round((pos / list.length) * 100) + "%";
     $("#qCount", node).textContent = (pos + 1) + " / " + list.length;
@@ -427,9 +426,6 @@
     // Zurück-Button
     const backBtn = $("#backBtn", node);
     if (backBtn) backBtn.addEventListener("click", () => { QUIZ.pos--; renderQuestion(); });
-    // Abbrechen → zurück zur Modul-Übersicht
-    const quitBtn = $("#quitBtn", node);
-    if (quitBtn) quitBtn.addEventListener("click", () => goModule(mod.id));
 
     const checkBtn = $("#checkBtn", node);
     const sel = new Set();
@@ -602,50 +598,15 @@
       : "Noch keine Aufgaben — PDFs fehlen";
   }
 
-  /* ---------- Sync (Export/Import; später Supabase) ---------- */
-  function wireSync() {
-    const exportBtn = $("#exportBtn");
-    const importBtn = $("#importBtn");
-    const importFile = $("#importFile");
-    if (!exportBtn || !importBtn || !importFile) return;
-
-    exportBtn.addEventListener("click", () => {
-      const payload = {
-        app: "lernhub", version: 1,
-        exported: new Date().toISOString(),
-        progress, exact,
-        modules: MODULES.map(m => m.id)
-      };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url; a.download = "lernhub-fortschritt.json";
-      document.body.appendChild(a); a.click(); a.remove();
-      URL.revokeObjectURL(url);
-    });
-
-    importBtn.addEventListener("click", () => importFile.click());
-    importFile.addEventListener("change", () => {
-      const f = importFile.files[0];
-      if (!f) return;
-      const r = new FileReader();
-      r.onload = () => {
-        try {
-          const data = JSON.parse(r.result);
-          if (data.progress) { progress = Object.assign({}, progress, data.progress); Store.write(progress); }
-          if (data.exact) { exact = Object.assign({}, exact, data.exact); Store.writeExact(exact); }
-          renderHome(); updateFooter();
-        } catch { /* stumm: ungültige Datei */ }
-      };
-      r.readAsText(f);
-      importFile.value = "";
-    });
-  }
+  /* ---------- Sync ----------
+   * Aktuell: reiner localStorage (Fortschritt/Notes automatisch im Browser,
+   * kein Download nötig). Später: Store = SupabaseStore(...) für geräteübergreifend.
+   */
+  function wireSync() { /* Platzhalter — siehe Store oben */ }
 
   /* ---------- Boot ---------- */
   const brandHome = document.getElementById("brandHome");
   if (brandHome) brandHome.addEventListener("click", goHome);
   initTheme();
-  wireSync();
   renderHome();
 })();
