@@ -201,14 +201,31 @@
     }
     return prev[n];
   }
-  function gradeText(input, solution, answers) {
+  function gradeText(input, solution, answers, required, accept) {
     const u = normText(input);
     if (!u) return { correct: false, near: false, reason: "empty" };
     const s = normText(solution);
-    if (!s && (!answers || !answers.length)) return { correct: false, near: false, reason: "no-key", selfCheck: true };
+    if (!s && (!answers || !answers.length) && (!accept || !accept.length))
+      return { correct: false, near: false, reason: "no-key", selfCheck: true };
 
-    // Aufzählung mit vorgegebenen Begriffen (answers) — exakte Begriffsliste,
-    // kein blindes Splitten des Lösungstexts.
+    // 1) accept-Liste: EINE akzeptierte Voll-Antwort reicht (Synonyme/Varianten).
+    //    z.B. LCD -> ["liquid crystal display", "flüssigkristallbildschirm"].
+    if (accept && accept.length) {
+      for (const a of accept) {
+        const na = normText(a);
+        if (!na) continue;
+        if (u === na) return { correct: true, near: false, reason: "exact" };
+        // Teilstring-Treffer (User schreibt mehr/weniger drumherum)
+        if (u.includes(na) || na.includes(u)) return { correct: true, near: false, reason: "exact" };
+        const d = lev(u, na);
+        if (d <= 3 && d / Math.max(u.length, na.length) <= 0.2)
+          return { correct: true, near: true, reason: "typo", dist: d };
+      }
+      // nichts getroffen → falsch, mit Hinweis auf akzeptierte Varianten
+      return { correct: false, near: false, reason: "wrong", accepted: accept };
+    }
+
+    // 2) Aufzählung mit vorgegebenen Begriffen (answers) — nur required nötig.
     if (answers && answers.length) {
       const sWords = answers.map(a => normText(a)).filter(Boolean);
       const uWords = u.split(/[\s,/;]+/).filter(Boolean);
@@ -220,8 +237,6 @@
         sWords.forEach((sw, i) => {
           if (usedS.has(i)) return;
           const d = lev(w, sw);
-          // Tippfehler-Toleranz: bei kurzen Begriffen (<=4) kein Toleranz-
-          // Spielraum — sonst matchen "DVB-I" irrtümlich "DVB-C".
           const tol = sw.length <= 4 ? 0 : (sw.length > 7 ? 3 : 2);
           const ok = (w === sw) || (tol > 0 && d <= tol && d / Math.max(w.length, sw.length) <= 0.3);
           if (ok && d < bestD) { best = i; bestD = d; }
@@ -243,41 +258,30 @@
 
     if (!s) return { correct: false, near: false, reason: "no-key", selfCheck: true };
 
-    // Aufzählung? mehrere Begriffe durch Leer/Komma/Slash
-    const splitRe = /[\s,/;]+/;
-    const uWords = u.split(splitRe).filter(Boolean);
-    const sWords = s.split(splitRe).filter(Boolean);
-
-    if (uWords.length > 1 || sWords.length > 1) {
-      const usedS = new Set();
-      const wrong = [];
-      let matched = 0;
-      for (const w of uWords) {
-        let best = -1, bestD = 99;
-        sWords.forEach((sw, i) => {
-          if (usedS.has(i)) return;
-          const d = lev(w, sw);
-          const ok = (w === sw) || (d <= 2 && d / Math.max(w.length, sw.length) <= 0.25);
-          if (ok && d < bestD) { best = i; bestD = d; }
-        });
-        if (best >= 0) { usedS.add(best); matched++; }
-        else wrong.push(w);
-      }
-      const missing = sWords.filter((_, i) => !usedS.has(i));
-      const allRight = matched === sWords.length && wrong.length === 0;
-      const incomplete = wrong.length === 0 && matched < sWords.length;
-      return {
-        correct: allRight, near: false, list: true,
-        matched, total: sWords.length, wrong, missing,
-        reason: allRight ? "exact" : (wrong.length ? "wrong-items" : "incomplete"),
-        incomplete
-      };
-    }
-
+    // 3) Freitext-Definition ohne feste Begriffsliste: Ähnlichkeit zur Lösung.
+    //    Der User muss die Kernaussage treffen (nicht Wort-für-Wort, keine
+    //    Synonyme/Klammer-Zusätze erzwungen).
     if (u === s) return { correct: true, near: false, reason: "exact" };
+    // Wenn die Nutzerantwort als Teilstring in der Lösung steckt (oder umgekehrt)
+    // und mindestens 4 Zeichen hat → als Treffer werten.
+    if (u.length >= 4 && (s.includes(u) || u.includes(s)))
+      return { correct: true, near: false, reason: "exact" };
+    // Wortweise: wie viele Lösungswörter (>=3 Zeichen) kommen vor?
+    const sTokens = s.split(/[\s,/;]+/).filter(t => t.length >= 3);
+    const uTokens = u.split(/[\s,/;]+/).filter(Boolean);
+    if (sTokens.length) {
+      let hit = 0;
+      for (const st of sTokens) {
+        if (uTokens.some(ut => ut === st || (lev(ut, st) <= 2 && lev(ut, st) / Math.max(ut.length, st.length) <= 0.3)))
+          hit++;
+      }
+      const frac = hit / sTokens.length;
+      // Kernbegriffe getroffen → richtig; teilweise → fast
+      if (frac >= 0.6) return { correct: true, near: frac < 1, reason: frac < 1 ? "typo" : "exact" };
+      if (frac >= 0.35) return { correct: false, near: false, reason: "partial", matched: hit, total: sTokens.length };
+    }
     const d = lev(u, s);
-    const maxLen = Math.max(u.length, s.length);
-    const ratio = d / maxLen;
+    const ratio = d / Math.max(u.length, s.length);
     if (ratio <= 0.18 && d <= 3) return { correct: true, near: true, reason: "typo", dist: d };
     return { correct: false, near: false, reason: "wrong", dist: d };
   }
@@ -381,17 +385,53 @@
     updateFooter();
   }
 
+  // Fisher-Yates In-Place-Shuffle
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  // Blockschlüssel aus der Aufgaben-ID: "vt2-2-7" -> "2", "vt2-3c-choice" -> "3",
+  // "phys2-5c" -> "5". So bleiben Themenblöcke zusammen.
+  function blockKey(q, fallbackIdx) {
+    const m = (q.block != null) ? String(q.block)
+      : (typeof q.id === "string" ? (q.id.match(/-(\d+)/) || [])[1] : null);
+    return m != null ? m : "z" + fallbackIdx;
+  }
+
+  // Mischt Aufgaben blockweise: Reihenfolge der Blöcke gemischt +
+  // Reihenfolge innerhalb jedes Blocks gemischt. Original-Blockstruktur bleibt.
+  function shuffleBlocks(mod, idxs) {
+    const groups = new Map();
+    idxs.forEach(i => {
+      const k = blockKey(mod.questions[i], i);
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(i);
+    });
+    const blocks = shuffle([...groups.values()]);
+    const out = [];
+    blocks.forEach(b => shuffle(b).forEach(i => out.push(i)));
+    return out;
+  }
+
   function pickQuestions(mod, mode) {
     const idxs = mod.questions.map((_, i) => i);
+    const exOn = !!exact[mod.id]; // Exakt-Modus = Originalreihenfolge (wie Klausur)
+    let list;
     if (mode === "wrong") {
       const w = idxs.filter(i => { const p = progress[qKey(mod.id, i)]; return p && !p.lastOk; });
-      return w.length ? w : idxs;
-    }
-    if (mode === "unseen") {
+      list = w.length ? w : idxs.slice();
+    } else if (mode === "unseen") {
       const u = idxs.filter(i => !((progress[qKey(mod.id, i)] || {}).seen));
-      return u.length ? u : idxs;
+      list = u.length ? u : idxs.slice();
+    } else {
+      list = idxs.slice();
     }
-    return idxs;
+    // Ohne Exakt-Modus: blockweise mischen, damit man nicht die Reihenfolge lernt.
+    return exOn ? list : shuffleBlocks(mod, list);
   }
 
   /* ---------- Quiz ---------- */
@@ -502,7 +542,7 @@
       } else {
         // short / text / huffman: echte Bewertung mit Tippfehler-Toleranz
         userVal = ansEl ? ansEl.value : "";
-        const g = gradeText(userVal, q.solution || "", q.answers || null, q.required || 0);
+        const g = gradeText(userVal, q.solution || "", q.answers || null, q.required || 0, q.accept || null);
         correct = g.correct;
         window.__grade = g; // für Feedback-Anzeige
       }

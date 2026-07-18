@@ -11,9 +11,11 @@ window.MODULE_VT2 = {
     /* ---- 1. Kurz und knapp (a–r) ---- */
     { id: "vt2-1a", type: "short", prompt: "Wofür steht die Abkürzung LCD?",
       solution: "Liquid Crystal Display — Flüssigkristallbildschirm.",
+      accept: ["liquid crystal display", "flüssigkristallbildschirm", "flüssigkristallanzeige", "flüssig kristall display"],
       explain: "LCD nutzt Flüssigkristalle, deren Ausrichtung durch Spannung gesteuert wird, um Licht zu modulieren. Hintergrundbeleuchtung nötig (selbst nicht leuchtend)." },
     { id: "vt2-1b", type: "short", prompt: "Was sind die Grundfarben der additiven Farbmischung?",
       solution: "Rot, Grün, Blau (R,G,B).",
+      answers: ["Rot", "Grün", "Blau"], required: 3,
       explain: "Additiv = Licht wird addiert. Alle drei ergeben Weiß. (Subtraktiv wäre C,M,Y,K — Farbstoffe.)" },
     { id: "vt2-1c", type: "short", prompt: "Nennen Sie 3 Wege, über die das digitale Fernsehen verbreitet werden kann.",
       solution: "z.B. DVB-S (Satellit), DVB-C (Kabel), DVB-T (terrestrisch/antenne); optional: IPTV/Streaming.",
