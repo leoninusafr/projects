@@ -10,6 +10,7 @@
   const EXACT_KEY = "lernhub.exact.v1";
   const THEME_KEY = "lernhub.theme.v1";
   const NOTES_KEY = "lernhub.notes.v1";
+  const RESUME_KEY = "lernhub.resume.v1";
 
   /* ---------- Store (Persistenz, später Supabase) ---------- */
   const Store = {
@@ -380,7 +381,7 @@
     });
 
     node.querySelectorAll(".mode-card").forEach(btn => {
-      btn.addEventListener("click", () => startQuiz(modId, btn.getAttribute("data-mode")));
+      btn.addEventListener("click", () => startQuiz(modId, btn.getAttribute("data-mode"), { fresh: true }));
     });
 
     app.replaceChildren(node);
@@ -440,11 +441,41 @@
   /* ---------- Quiz ---------- */
   let QUIZ = null;
 
-  function startQuiz(modId, mode) {
+  function saveResume() {
+    if (!QUIZ) return;
+    try {
+      localStorage.setItem(RESUME_KEY, JSON.stringify({
+        modId: QUIZ.mod.id, mode: QUIZ.mode, list: QUIZ.list,
+        pos: QUIZ.pos, score: QUIZ.score
+      }));
+    } catch {}
+  }
+  function loadResume(modId) {
+    try {
+      const r = JSON.parse(localStorage.getItem(RESUME_KEY));
+      if (r && r.modId === modId && Array.isArray(r.list) && r.list.length) return r;
+    } catch {}
+    return null;
+  }
+  function clearResume() {
+    try { localStorage.removeItem(RESUME_KEY); } catch {}
+  }
+
+  function startQuiz(modId, mode, opts) {
     const mod = MODULES.find(m => m.id === modId);
-    const list = pickQuestions(mod, mode);
-    if (!list.length) { goModule(modId); return; }
-    QUIZ = { mod, list, pos: 0, score: 0 };
+    let list, pos = 0, score = 0;
+    // Fortsetzen? Wenn ein gespeicherter Durchlauf für dieses Mod existiert
+    // und nicht explizit "neu" gewollt ist → den gemischten Stand wiederherstellen.
+    if (!opts || !opts.fresh) {
+      const r = loadResume(modId);
+      if (r) { list = r.list; pos = r.pos; score = r.score || 0; mode = r.mode || mode; }
+    }
+    if (!list) {
+      list = pickQuestions(mod, mode);
+      if (!list.length) { goModule(modId); return; }
+    }
+    QUIZ = { mod, list, pos, score, mode };
+    saveResume();
     renderQuestion();
   }
 
@@ -454,6 +485,64 @@
     const useExact = !!exact[mod.id];
     const vals = resolveValues(q, useExact);
 
+    // --- Read-only "Zurück"-Ansicht: Aufgabe nur ansehen + Lösung, kein erneutes Beantworten ---
+    if (QUIZ.reviewMode) {
+      const node = tpl("tpl-quiz");
+      const qTop = $("#qTop", node);
+      qTop.innerHTML = `
+        <div class="q-top-left">
+          <button class="link-btn" id="backBtn">${icon("i-back")} Zurück</button>
+          <button class="link-btn" id="noteBtn">${icon("i-note")} Notiz</button>
+        </div>`;
+      $("#qCrumb", node).textContent = mod.title;
+      $("#barFill", node).style.width = Math.round((pos / list.length) * 100) + "%";
+      $("#qCount", node).textContent = (pos + 1) + " / " + list.length;
+
+      const card = $("#quizCard", node);
+      let html = `<div class="q-prompt">${fmt(substitute(q.prompt, vals))}</div>`;
+      html += `<div class="ro-tag">Nur ansehen — du warst hier schon.</div>`;
+      html += `<div id="fb"></div>`;
+      card.innerHTML = html;
+
+      // Notiz
+      const noteWrap = document.createElement("div");
+      noteWrap.className = "note-area";
+      noteWrap.innerHTML = `<textarea id="noteArea" class="note-input" placeholder="Notiz zu dieser Aufgabe (bleibt gespeichert)…" rows="2">${esc(getNote(mod.id, list[pos]))}</textarea>`;
+      card.appendChild(noteWrap);
+      const noteArea = $("#noteArea", node);
+      noteArea.addEventListener("input", () => setNote(mod.id, list[pos], noteArea.value));
+      $("#noteBtn", node).addEventListener("click", () => noteArea.focus());
+      $("#backBtn", node).addEventListener("click", () => { QUIZ.reviewMode = false; QUIZ.pos++; renderQuestion(); });
+
+      // Lösung direkt anzeigen (wie nach dem Abgeben)
+      const merged = Object.assign({}, vals, (typeof q.extra === "function" ? q.extra(vals) : {}));
+      let body = "";
+      if (q.solution) body += `**Lösung:** ${fmt(substitute(q.solution, merged))}\n\n`;
+      if (q.explain) body += fmt(substitute(q.explain, merged));
+      body = fmt(body);
+      let fbHtml = `<div class="feedback self">${icon("i-eye")}<span>Schon bearbeitet — Lösung zur Kontrolle.</span></div>`;
+      // Multiple-Choice/WF: richtige Boxen grün zeigen
+      if (q.type === "choice" || q.type === "wf") {
+        const correctSet = new Set(q.type === "wf" ? [q.correct ? 1 : 0] : (Array.isArray(q.correct) ? q.correct : [q.correct]));
+        let ch = `<div class="choices">`;
+        const opts = q.type === "wf" ? [{ t: "Wahr", i: 1 }, { t: "Falsch", i: 0 }] : q.choices.map((c, i) => ({ t: c, i }));
+        opts.forEach(o => {
+          const cls = "choice" + (correctSet.has(o.i) ? " is-correct" : "");
+          ch += `<div class="${cls}"><span class="mark"></span><span>${fmt(o.t)}</span></div>`;
+        });
+        ch += `</div>`;
+        fbHtml = ch + fbHtml;
+      }
+      fbHtml += `<details class="explain" open><summary>Warum — Lösungsweg</summary><div class="explain-body">${body}</div></details>`;
+      fbHtml += `<div class="next-row"><button class="btn primary block" id="nextBtn">Weiter</button></div>`;
+      $("#fb", node).innerHTML = fbHtml;
+      $("#nextBtn", node).addEventListener("click", () => { QUIZ.reviewMode = false; QUIZ.pos++; renderQuestion(); });
+
+      app.replaceChildren(node);
+      renderMath();
+      saveResume();
+      return;
+    }
     const node = tpl("tpl-quiz");
     const idx = list[pos];
     // q-top: Zurück (außer bei 1.) + Notiz
@@ -479,7 +568,21 @@
       });
       html += `</div>`;
     } else if (q.type === "text" || q.type === "short" || q.type === "huffman") {
-      html += `<div class="q-input"><input id="ans" type="text" placeholder="${esc(q.placeholder || "Antwort eintippen")}" autocomplete="off"></div>`;
+      if (q.sketch) {
+        html += `<div class="sketch-builder">
+          <div class="sketch-bar"><span>Schaltbild-Baukasten:</span>
+            <button type="button" class="chip" data-sk="src">Quelle A/B/C</button>
+            <button type="button" class="chip" data-sk="mix">Mix-Effekt</button>
+            <button type="button" class="chip" data-sk="key">Key-Layer</button>
+            <button type="button" class="chip" data-sk="cross">Kreuzschiene</button>
+            <button type="button" class="chip" data-sk="out">Ausgang</button>
+            <button type="button" class="chip" data-sk="arrow">Pfeil ↓</button>
+          </div>
+          <textarea id="ans" class="sketch-area" placeholder="Schaltbild hier skizzieren (ASCII) — Bausteine oben einfügen oder selbst tippen…" rows="6"></textarea>
+        </div>`;
+      } else {
+        html += `<div class="q-input"><input id="ans" type="text" placeholder="${esc(q.placeholder || "Antwort eintippen")}" autocomplete="off"></div>`;
+      }
     } else if (q.type === "wf") {
       html += `<div class="choices" id="choices">
         <div class="choice" data-i="1"><span class="mark"></span><span>Wahr</span></div>
@@ -501,7 +604,7 @@
 
     // Zurück-Button
     const backBtn = $("#backBtn", node);
-    if (backBtn) backBtn.addEventListener("click", () => { QUIZ.pos--; renderQuestion(); });
+    if (backBtn) backBtn.addEventListener("click", () => { QUIZ.pos--; QUIZ.reviewMode = true; renderQuestion(); });
 
     const checkBtn = $("#checkBtn", node);
     const sel = new Set();
@@ -513,8 +616,32 @@
 
     if (q.type === "numeric" || q.type === "text" || q.type === "short" || q.type === "huffman") {
       const inp = $("#ans", node);
-      inp.addEventListener("input", () => { checkBtn.disabled = inp.value.trim() === ""; });
-      inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); submit(); } });
+      if (inp) {
+        inp.addEventListener("input", () => { checkBtn.disabled = inp.value.trim() === ""; });
+        if (!q.sketch) inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); submit(); } });
+        // Schaltbild-Baukasten: Baustein-Klick fügt Snippet ein
+        if (q.sketch) {
+          const SKETCH = {
+            src: "Quelle A ─┐\nQuelle B ─┤\nQuelle C ─┘\n",
+            mix: "[ Mix-Effekt / ME-Bank ]\n",
+            key: "[ Key-Layer (C über A+B) ]\n",
+            cross: "[ Kreuzschiene: wählt 1 von N Eingängen ]\n",
+            out: "══> Programm-Ausgang\n",
+            arrow: "      ↓\n"
+          };
+          node.querySelectorAll(".chip").forEach(chip => {
+            chip.addEventListener("click", () => {
+              const snip = SKETCH[chip.getAttribute("data-sk")] || "";
+              const start = inp.selectionStart || inp.value.length;
+              const end = inp.selectionEnd || inp.value.length;
+              inp.value = inp.value.slice(0, start) + snip + inp.value.slice(end);
+              inp.focus();
+              inp.selectionStart = inp.selectionEnd = start + snip.length;
+              checkBtn.disabled = inp.value.trim() === "";
+            });
+          });
+        }
+      }
     } else if (q.type === "choice" || q.type === "wf") {
       card.querySelectorAll(".choice").forEach(ch => {
         ch.addEventListener("click", () => {
@@ -533,6 +660,7 @@
       let correct, userVal;
       const ansEl = document.querySelector("#ans");
       const fbEl = document.querySelector("#fb");
+      let g = {}; // Grade-Ergebnis (vor recordAttempt verfügbar)
       if (q.type === "numeric") {
         userVal = parseFloat(ansEl.value.replace(",", "."));
         correct = checkNumeric(userVal, q, vals);
@@ -545,7 +673,7 @@
       } else {
         // short / text / huffman: echte Bewertung mit Tippfehler-Toleranz
         userVal = ansEl ? ansEl.value : "";
-        const g = gradeText(userVal, q.solution || "", q.answers || null, q.required || 0, q.accept || null);
+        g = gradeText(userVal, q.solution || "", q.answers || null, q.required || 0, q.accept || null);
         if (q.selfCheck) g.selfCheck = true; // explizit als Selbst-Check markieren
         correct = g.correct;
         window.__grade = g; // für Feedback-Anzeige
@@ -555,7 +683,6 @@
       if (correct) QUIZ.score++;
 
       const fb = fbEl;
-      const g = window.__grade || {};
       let fbIcon, fbCls, fbMsg;
       if (g.selfCheck) {
         // Keine Musterlösung hinterlegt → User bewertet selbst
@@ -609,6 +736,7 @@
         let body = "";
         if (q.solution) body += `**Lösung:** ${fmt(substitute(q.solution, merged))}\n\n`;
         if (q.explain) body += fmt(substitute(q.explain, merged));
+        body = fmt(body); // **bold** etc. erst am Ende rendern
         fbHtml += `<details class="explain" open><summary>Warum — Lösungsweg</summary><div class="explain-body">${body}</div></details>`;
       }
 
@@ -656,12 +784,14 @@
     renderMath();
     // Fokus auf Eingabe
     const ai = document.querySelector("#ans"); if (ai) ai.focus();
+    saveResume(); // Position nach jedem Rendern sichern (auch bei Zurück)
   }
 
   function renderResult() {
     const { mod, list, score } = QUIZ;
     const total = list.length;
     const pct = Math.round((score / total) * 100);
+    clearResume(); // Durchlauf abgeschlossen → Fortsetzen zurücksetzen
     const node = tpl("tpl-result");
 
     const badge = $("#resultBadge", node);
@@ -679,7 +809,7 @@
     node.querySelectorAll("[data-act]").forEach(b => {
       b.addEventListener("click", () => {
         const a = b.getAttribute("data-act");
-        if (a === "retry") startQuiz(mod.id, "all");
+        if (a === "retry") startQuiz(mod.id, "all", { fresh: true });
         else if (a === "review") renderReview();
         else goHome();
       });

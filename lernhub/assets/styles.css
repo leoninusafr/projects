@@ -350,4 +350,16 @@ input[type="text"], button, .choice, .mod-card, .mode-card { font-size: 16px; }
 /* Akzent-/Fett-Elemente behalten ihre Farbe */
 .explain-body b, .feedback-note b, .rev-ans b { color: var(--accent); }
 .tok-wrong { color: var(--bad); }
-
+.tok-missing { color: var(--warn); }
+/* Read-only "Zurück"-Ansicht */
+.ro-tag { margin-top: 14px; font-size: 13px; color: var(--text-soft); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; }
+.feedback.self { background: var(--accent-soft); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+.feedback.self svg { color: var(--accent); }
+/* Schaltbild-Baukasten */
+.sketch-builder { margin-top: 18px; }
+.sketch-bar { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; margin-bottom: 9px; font-size: 13px; color: var(--text-soft); }
+.chip { font-family: var(--font); font-size: 12.5px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); cursor: pointer; transition: border-color .15s, background .15s; }
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+.chip:active { background: var(--accent-soft); }
+.sketch-area { width: 100%; font-family: var(--mono); font-size: 14px; line-height: 1.5; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; resize: vertical; white-space: pre; }
+.sketch-area:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }

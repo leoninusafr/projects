@@ -209,11 +209,20 @@ window.MODULE_VT2 = {
       solution: "Baum: E(5)+D(15)=20; C(15)+B(15)=30; 20+30=50; 50+A(50)=100. Code z.B. A=0, B=10, C=110, D=1110, E=1111. Mittlere Länge = 0.5·1+0.15·2+0.15·3+0.15·4+0.05·4 = 2.15 bit < 3 bit.",
       explain:
         "Huffman: seltene Symbole länger, häufige kürzer. Mittlere Länge ≈ 2,15 bit/Wort vs. 3 bit fix → ~28% Ersparnis. Eignet sich gut für verlustfreie Reduktion (Entropiecodierung)." },
-    { id: "vt2-4b", type: "short",
-      prompt: "Was sind die grundlegenden Aufgaben eines klassischen Bildmischers? Beantworte in drei Punkten:\n1) Grundaufgaben (Umschalten, Mix, Wipe/Key, Effekte)\n2) Wie verhindert man Artefakte (halbe Bilder / nur Teile von Bildern im Programm-Output)?\n3) Wie könnte man 3 Eingänge mischen? Reicht als Skizze ein einfaches ASCII-Schaltbild / Stichwort-Skizze in Text (z.B. A und B über Mix-Effekt, C als Key, oder Kreuzschiene vor dem Mixer).",
-      solution: "Aufgaben: Umschalten, Überblenden (Mix), Wipe/Key, Effekte. Artefakte vermeiden: gleiche Synchronisation/Genlock aller Quellen, gleiches Format (kein Timing-Offset). 3 Eingänge mischen: z.B. A+B via Mix-Effekt, dann Key (z.B. C als Insert/Luminanz-Key) — oder Kreuzschiene vor dem Mixer.",
+    { id: "vt2-4b-1", type: "short",
+      prompt: "Was sind die grundlegenden Aufgaben eines klassischen Bildmischers? (Umschalten, Mix, Wipe/Key, Effekte)",
+      solution: "Grundaufgaben: Umschalten (Cut), Überblenden (Mix), Wipe und Key (Einblendungen), Effekte/Overlay.",
       selfCheck: true,
-      explain:
-        "Genlock (Referenztakt) ist essenziell, damit Quellen phasengleich sind. Mischer nutzen ME-Banks: Layer (Background + Key) ermöglichen 3+ Quellen gleichzeitig." }
+      explain: "Bildmischer (Vision Mixer) kombinieren mehrere Quellen zu einem Programmbild. Die zentrale Stufe ist die Mix-Effects-Bank (ME), auf der Übergänge und Effekte laufen." },
+    { id: "vt2-4b-2", type: "short",
+      prompt: "Wie verhindert man Artefakte (halbe Bilder / nur Teile von Bildern im Programm-Output) bei einem Bildmischer?",
+      solution: "Alle Quellen gleich synchronisieren (Genlock/Referenztakt), gleiches Format und gleiches Timing — kein Phasen-/Timing-Offset zwischen den Eingängen.",
+      selfCheck: true,
+      explain: "Genlock (Generator Lock) gibt allen Quellen denselben Referenztakt, damit sie phasengleich sind. Sonst entstehen Halbbilder oder Sprünge im Ausgangssignal." },
+    { id: "vt2-4b-3", type: "short",
+      prompt: "Wie könnte man 3 Eingänge (A, B, C) mischen? Skizze reicht als einfaches ASCII-Schaltbild / Stichworte in Text.",
+      solution: "A und B über einen Mix-Effekt (ME-Bank) mischen, C als Key (Insert/Luminanz-Key) darüber legen — oder eine Kreuzschiene vor den Mixer schalten.",
+      selfCheck: true, sketch: true,
+      explain: "Mix-Effekt (A over B) liefert den Hintergrund; der Key-Layer (C) liegt darüber. Layer in der ME-Bank erlauben so 3+ Quellen gleichzeitig." }
   ]
 };
