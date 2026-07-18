@@ -175,12 +175,13 @@
     return (s || "")
       .toLowerCase()
       .normalize("NFKD").replace(/[̀-ͯ]/g, "") // Akzente weg
-      .replace(/[­­­­­­­­­­]/g, "") // Soft-Hyphen
+      .replace(/[­­­­­­­­­­]/g, "") // Soft-Hyphens
       .replace(/[­­­­­­­­­­]/g, "") // Zero-Width
       .replace(/[­­­­­­­­­­]/g, "") // BOM
       .replace(/[­­­­­­­­­­]/g, "") // Zero-Width-Space
       .replace(/[­­­­­­­­­­]/g, "") // Non-Joiner
-      .replace(/[-–—_.]/g, " ")        // Trennzeichen -> Leerzeichen
+      .replace(/[()[\]{}]/g, " ")     // Klammern -> Leerzeichen (damit "RLE)" nicht klebt)
+      .replace(/[-–—_.]/g, "")        // Bindestriche/Unterstrich/Punkt entfernen (DVB-S == DVBS)
       .replace(/\s+/g, " ")            // Mehrfachspaces
       .trim();
   }
@@ -199,10 +200,46 @@
     }
     return prev[n];
   }
-  function gradeText(input, solution) {
+  function gradeText(input, solution, answers) {
     const u = normText(input);
-    const s = normText(solution);
     if (!u) return { correct: false, near: false, reason: "empty" };
+    const s = normText(solution);
+    if (!s && (!answers || !answers.length)) return { correct: false, near: false, reason: "no-key", selfCheck: true };
+
+    // Aufzählung mit vorgegebenen Begriffen (answers) — exakte Begriffsliste,
+    // kein blindes Splitten des Lösungstexts.
+    if (answers && answers.length) {
+      const sWords = answers.map(a => normText(a)).filter(Boolean);
+      const uWords = u.split(/[\s,/;]+/).filter(Boolean);
+      const usedS = new Set();
+      const wrong = [];
+      let matched = 0;
+      for (const w of uWords) {
+        let best = -1, bestD = 99;
+        sWords.forEach((sw, i) => {
+          if (usedS.has(i)) return;
+          const d = lev(w, sw);
+          // Tippfehler-Toleranz: bei kurzen Begriffen (<=4) kein Toleranz-
+          // Spielraum — sonst matchen "DVB-I" irrtümlich "DVB-C".
+          const tol = sw.length <= 4 ? 0 : (sw.length > 7 ? 3 : 2);
+          const ok = (w === sw) || (tol > 0 && d <= tol && d / Math.max(w.length, sw.length) <= 0.3);
+          if (ok && d < bestD) { best = i; bestD = d; }
+        });
+        if (best >= 0) { usedS.add(best); matched++; }
+        else wrong.push(w);
+      }
+      const missing = sWords.filter((_, i) => !usedS.has(i));
+      const need = (typeof required === "number" && required > 0) ? required : sWords.length;
+      const allRight = matched >= need && wrong.length === 0;
+      const incomplete = wrong.length === 0 && matched < need;
+      return {
+        correct: allRight, near: false, list: true,
+        matched, total: need, wrong, missing,
+        reason: allRight ? "exact" : (wrong.length ? "wrong-items" : "incomplete"),
+        incomplete
+      };
+    }
+
     if (!s) return { correct: false, near: false, reason: "no-key", selfCheck: true };
 
     // Aufzählung? mehrere Begriffe durch Leer/Komma/Slash
@@ -211,7 +248,6 @@
     const sWords = s.split(splitRe).filter(Boolean);
 
     if (uWords.length > 1 || sWords.length > 1) {
-      // wortweise matchen (mit Tippfehler-Toleranz pro Wort)
       const usedS = new Set();
       const wrong = [];
       let matched = 0;
@@ -227,15 +263,11 @@
         else wrong.push(w);
       }
       const missing = sWords.filter((_, i) => !usedS.has(i));
-      // Nur richtig, wenn ALLE Begriffe der Lösung genannt UND keine falschen dabei.
       const allRight = matched === sWords.length && wrong.length === 0;
       const incomplete = wrong.length === 0 && matched < sWords.length;
       return {
-        correct: allRight,
-        near: false,
-        list: true,
-        matched, total: sWords.length,
-        wrong, missing,
+        correct: allRight, near: false, list: true,
+        matched, total: sWords.length, wrong, missing,
         reason: allRight ? "exact" : (wrong.length ? "wrong-items" : "incomplete"),
         incomplete
       };
@@ -469,7 +501,7 @@
       } else {
         // short / text / huffman: echte Bewertung mit Tippfehler-Toleranz
         userVal = ansEl ? ansEl.value : "";
-        const g = gradeText(userVal, q.solution || "");
+        const g = gradeText(userVal, q.solution || "", q.answers || null, q.required || 0);
         correct = g.correct;
         window.__grade = g; // für Feedback-Anzeige
       }
