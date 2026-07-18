@@ -44,6 +44,7 @@
   let exact = Store.readExact();
   let notes = Store.readNotes();
 
+  function qKey(modId, idx) { return modId + ":" + idx; }
   function noteKey(modId, idx) { return modId + ":" + idx; }
   function getNote(modId, idx) { return notes[noteKey(modId, idx)] || ""; }
   function setNote(modId, idx, val) {
@@ -521,7 +522,11 @@
       } else if (correct) {
         fbIcon = "i-check"; fbCls = "good"; fbMsg = "Richtig.";
       } else {
-        fbIcon = "i-x"; fbCls = "bad"; fbMsg = (q.type === "wf" ? "Falsch eingeschätzt." : (g.incomplete ? "Zu wenig genannt." : "Nicht quite."));
+        fbIcon = "i-x"; fbCls = "bad";
+        if (q.type === "wf") fbMsg = "Falsch eingeschätzt.";
+        else if (g.list && g.matched > 0) fbMsg = `Halb richtig — ${g.matched}/${g.total}. Schau dir den Rest an.`;
+        else if (g.incomplete) fbMsg = "Zu wenig genannt.";
+        else fbMsg = "Nicht ganz.";
       }
       let fbHtml = `<div class="feedback ${fbCls}">${icon(fbIcon)}<span>${fbMsg}</span></div>`;
 
@@ -539,9 +544,11 @@
       }
       if (g.list && !g.correct) {
         const parts = [];
-        parts.push(`${g.matched}/${g.total} Begriffe richtig.`);
-        if (g.wrong && g.wrong.length) parts.push(`Falsch: <b>${esc(g.wrong.join(", "))}</b>`);
-        if (g.missing && g.missing.length) parts.push(`Fehlt: <b>${esc(g.missing.join(", "))}</b>`);
+        parts.push(`<b>${g.matched}/${g.total}</b> richtig.`);
+        if (g.wrong && g.wrong.length)
+          parts.push(`Falsch: ${g.wrong.map(w => `<span class="tok-wrong">${esc(w)}</span>`).join(" ")}`);
+        if (g.missing && g.missing.length)
+          parts.push(`Fehlt: ${g.missing.map(w => `<span class="tok-missing">${esc(w)}</span>`).join(" ")}`);
         fbHtml += `<div class="feedback-note">${parts.join(" ")}</div>`;
         fbHtml += `<div class="feedback-note">Richtig wäre: <b>${esc(normText(q.solution || "").replace(/\s+/g, " "))}</b></div>`;
       }
@@ -569,6 +576,24 @@
       checkBtn.disabled = true;
       const inp = document.querySelector("#ans"); if (inp) inp.disabled = true;
       document.querySelectorAll(".choice").forEach(c => c.style.pointerEvents = "none");
+
+      // Antwort-Boxen einfärben: richtig = grün, falsch angeklickt = rot
+      if (q.type === "choice" || q.type === "wf") {
+        const correctSet = new Set(
+          q.type === "wf"
+            ? [q.correct ? 1 : 0]
+            : (Array.isArray(q.correct) ? q.correct : [q.correct])
+        );
+        document.querySelectorAll(".choice").forEach(ch => {
+          const i = +ch.getAttribute("data-i");
+          const picked = sel.has(i);
+          if (correctSet.has(i)) {
+            ch.classList.add("is-correct");            // immer die richtige Lösung grün
+          } else if (picked) {
+            ch.classList.add("is-wrong");              // falsch angeklickt rot
+          }
+        });
+      }
 
       const nextBtn = document.querySelector("#nextBtn");
       function goNext() {

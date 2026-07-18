@@ -225,6 +225,18 @@ input[type="text"], button, .choice, .mod-card, .mode-card { font-size: 16px; }
 .choice.multi .mark { border-radius: 6px; }
 .choice.multi.selected .mark::after { border-radius: 2px; }
 
+/* Auswertung: richtige Box grün, falsch angeklickte rot */
+.choice.is-correct { border-color: var(--good); background: color-mix(in srgb, var(--good) 12%, transparent); }
+.choice.is-correct .mark { border-color: var(--good); background: var(--good); }
+.choice.is-correct .mark::after { content: ""; width: 9px; height: 9px; border-radius: 50%; background: #fff; }
+.choice.is-wrong { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, transparent); }
+.choice.is-wrong .mark { border-color: var(--bad); background: var(--bad); }
+.choice.is-wrong .mark::after { content: "✕"; color: #fff; font-size: 12px; font-weight: 700; line-height: 1; background: none; width: auto; height: auto; }
+
+/* Aufzählung: falsche Wörter durchgestrichen rot, fehlende orange */
+.tok-wrong { color: var(--bad); text-decoration: line-through; font-family: var(--mono); font-weight: 600; }
+.tok-missing { color: #c77d00; font-family: var(--mono); font-weight: 600; }
+
 .btn {
   border: none; border-radius: var(--radius-sm); padding: 13px 22px;
   font-size: 16px; font-weight: 600; font-family: var(--font); cursor: pointer;
