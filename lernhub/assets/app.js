@@ -55,13 +55,17 @@
   }
   // `code` -> <code>, {{key}} bleibt für Werte-Einsetzung
   function fmt(text) {
-    // LaTeX-Passagen: \(..\) oder $..$ in <span class="tex"> verpacken
     let s = esc(text);
-    s = s.replace(/\`([^\`]+)\`/g, "<code>$1</code>");
-    // \( ... \) inline
+    // Inline-Code `code`
+    s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+    // LaTeX \\( ... \\) und $ ... $
     s = s.replace(/\\\(([\s\S]+?)\\\)/g, (m, tex) => `<span class="tex">${tex}</span>`);
-    // $ ... $ inline (einfach, nur wenn nicht escapt)
     s = s.replace(/(^|[^\\$])\$([^$\n]+?)\$(?!\d)/g, (m, pre, tex) => `${pre}<span class="tex">${tex}</span>`);
+    // **bold** und *italic* (Markdown)
+    s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    s = s.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+    // Zeilenumbrüche erhalten
+    s = s.replace(/\n/g, "<br>");
     return s;
   }
   // KaTeX anwenden auf alle .tex-Spans im app-Container
@@ -149,17 +153,62 @@
     return true;
   }
 
+  // Text-Bewertung mit Tippfehler-Toleranz (Levenshtein).
+  // Erkennt: exakt richtig / fast richtig (Tippfehler) / falsch.
+  function normText(s) {
+    return (s || "")
+      .toLowerCase()
+      .normalize("NFKD").replace(/[̀-ͯ]/g, "") // Akzente weg
+      .replace(/[­­­­­­­­­­]/g, "") // Soft-Hyphen
+      .replace(/[­­­­­­­­­­]/g, "") // Zero-Width
+      .replace(/[­­­­­­­­­­]/g, "") // BOM
+      .replace(/[­­­­­­­­­­]/g, "") // Zero-Width-Space
+      .replace(/[­­­­­­­­­­]/g, "") // Non-Joiner
+      .replace(/[-–—_.]/g, " ")        // Trennzeichen -> Leerzeichen
+      .replace(/\s+/g, " ")            // Mehrfachspaces
+      .trim();
+  }
+  function lev(a, b) {
+    a = a || ""; b = b || "";
+    const m = a.length, n = b.length;
+    if (!m) return n; if (!n) return m;
+    let prev = [...Array(n + 1).keys()];
+    for (let i = 1; i <= m; i++) {
+      let cur = [i];
+      for (let j = 1; j <= n; j++) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+      }
+      prev = cur;
+    }
+    return prev[n];
+  }
+  function gradeText(input, solution) {
+    const u = normText(input);
+    const s = normText(solution);
+    if (!u) return { correct: false, near: false, reason: "empty" };
+    if (!s) return { correct: true, near: false, reason: "no-key" };
+    if (u === s) return { correct: true, near: false, reason: "exact" };
+    const d = lev(u, s);
+    const maxLen = Math.max(u.length, s.length);
+    // Tippfehler: wenige Zeichen Abweichung relativ zur Länge
+    const ratio = d / maxLen;
+    if (ratio <= 0.18 && d <= 3) return { correct: true, near: true, reason: "typo", dist: d };
+    return { correct: false, near: false, reason: "wrong", dist: d };
+  }
+
   /* ---------- Theme ---------- */
   function applyTheme(t) {
-    document.body.setAttribute("data-theme", t);
-    $("#themeIcon").innerHTML = `<use href="#${t === "dark" ? "i-sun" : "i-moon"}"/>`;
+    document.documentElement.setAttribute("data-theme", t);
+    const ti = $("#themeIcon"); if (ti) ti.innerHTML = `<use href="#${t === "dark" ? "i-sun" : "i-moon"}"/>`;
   }
   function initTheme() {
     let t = localStorage.getItem(THEME_KEY);
     if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     applyTheme(t);
-    $("#themeToggle").addEventListener("click", () => {
-      const next = document.body.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    const tt = $("#themeToggle");
+    if (tt) tt.addEventListener("click", () => {
+      const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
       localStorage.setItem(THEME_KEY, next);
       applyTheme(next);
     });
@@ -346,17 +395,23 @@
         userVal = [...sel][0];
         correct = (userVal === (q.correct ? 1 : 0));
       } else {
-        correct = true; // Selbst-Check (short/huffman/text), Lösung wird gezeigt
+        // short / text / huffman: echte Bewertung mit Tippfehler-Toleranz
         userVal = ansEl ? ansEl.value : "";
+        const g = gradeText(userVal, q.solution || "");
+        correct = g.correct;
+        window.__grade = g; // für Feedback-Anzeige
       }
 
       recordAttempt(mod.id, list[pos], correct);
       if (correct) QUIZ.score++;
 
       const fb = fbEl;
-      const fbIcon = correct ? "i-check" : "i-x";
-      const fbCls = correct ? "good" : "bad";
-      let fbHtml = `<div class="feedback ${fbCls}">${icon(fbIcon)}<span>${correct ? "Richtig." : (q.type === "wf" ? "Falsch eingeschätzt." : "Nicht quite.")}</span></div>`;
+      const g = window.__grade || {};
+      let fbIcon, fbCls, fbMsg;
+      if (g.near) { fbIcon = "i-check"; fbCls = "good"; fbMsg = "Fast richtig — Tippfehler erkannt. So sitzt's."; }
+      else if (correct) { fbIcon = "i-check"; fbCls = "good"; fbMsg = "Richtig."; }
+      else { fbIcon = "i-x"; fbCls = "bad"; fbMsg = (q.type === "wf" ? "Falsch eingeschätzt." : "Nicht quite."); }
+      let fbHtml = `<div class="feedback ${fbCls}">${icon(fbIcon)}<span>${fbMsg}</span></div>`;
 
       if (!correct && q.type === "numeric") {
         const ans = q.compute(vals);
@@ -370,8 +425,11 @@
         const richtig = q.correct ? "Wahr" : "Falsch";
         fbHtml += `<div class="feedback-note">Richtig ist: <b>${richtig}</b></div>`;
       }
-      if (q.type === "text" || q.type === "short" || q.type === "huffman") {
+      if ((q.type === "text" || q.type === "short" || q.type === "huffman") && !g.near) {
         fbHtml += `<div class="feedback-note">Lösung unten zur Kontrolle.</div>`;
+      }
+      if (g.near) {
+        fbHtml += `<div class="feedback-note">Gemeint war: <b>${esc(normText(q.solution || "").replace(/\s+/g," "))}</b> — Schreibweise ist egal, Hauptsache der Begriff stimmt.</div>`;
       }
 
       if (q.explain || q.solution) {
