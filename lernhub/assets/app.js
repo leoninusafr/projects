@@ -53,11 +53,14 @@
     else delete notes[k];
     Store.writeNotes(notes);
   }
-  function recordAttempt(modId, idx, correct) {
+  function recordAttempt(modId, idx, correct, selfCheck) {
     const k = qKey(modId, idx);
     const p = progress[k] || { seen: 0, correct: 0, wrong: 0, lastOk: false };
     p.seen += 1;
-    if (correct) { p.correct += 1; p.lastOk = true; }
+    // Self-Check: als "gesehen" werten, aber NICHT als sicher/z richtig verbuchen
+    // (der User bewertet selbst — wir wissen nicht, ob's stimmt).
+    if (selfCheck) { p.lastOk = false; }
+    else if (correct) { p.correct += 1; p.lastOk = true; }
     else { p.wrong += 1; p.lastOk = false; }
     progress[k] = p;
     Store.write(progress);
@@ -543,11 +546,12 @@
         // short / text / huffman: echte Bewertung mit Tippfehler-Toleranz
         userVal = ansEl ? ansEl.value : "";
         const g = gradeText(userVal, q.solution || "", q.answers || null, q.required || 0, q.accept || null);
+        if (q.selfCheck) g.selfCheck = true; // explizit als Selbst-Check markieren
         correct = g.correct;
         window.__grade = g; // für Feedback-Anzeige
       }
 
-      recordAttempt(mod.id, list[pos], correct);
+      recordAttempt(mod.id, list[pos], correct, g.selfCheck);
       if (correct) QUIZ.score++;
 
       const fb = fbEl;

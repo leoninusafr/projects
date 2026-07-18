@@ -210,8 +210,9 @@ window.MODULE_VT2 = {
       explain:
         "Huffman: seltene Symbole länger, häufige kürzer. Mittlere Länge ≈ 2,15 bit/Wort vs. 3 bit fix → ~28% Ersparnis. Eignet sich gut für verlustfreie Reduktion (Entropiecodierung)." },
     { id: "vt2-4b", type: "short",
-      prompt: "Was sind die grundlegenden Aufgaben eines klassischen Bildmischers? Wie verhindert man Artefakte (halbe Bilder / nur Teile von Bildern im Programm-Output)? Wie könnte man 3 Eingänge mischen (Skizze)?",
-      solution: "Aufgaben: Umschalten, Überblenden (Mix), Wipe/Key, Effekte. Artefekte vermeiden: gleiche Synchronisation/Genlock aller Quellen, gleiches Format (kein Timing-Offset). 3 Eingänge mischen: z.B. A+B via Mix-Effekt, dann Key (z.B. C als Insert/Luminanz-Key) — oder Kreuzschiene vor dem Mixer.",
+      prompt: "Was sind die grundlegenden Aufgaben eines klassischen Bildmischers? Beantworte in drei Punkten:\n1) Grundaufgaben (Umschalten, Mix, Wipe/Key, Effekte)\n2) Wie verhindert man Artefakte (halbe Bilder / nur Teile von Bildern im Programm-Output)?\n3) Wie könnte man 3 Eingänge mischen? Reicht als Skizze ein einfaches ASCII-Schaltbild / Stichwort-Skizze in Text (z.B. A und B über Mix-Effekt, C als Key, oder Kreuzschiene vor dem Mixer).",
+      solution: "Aufgaben: Umschalten, Überblenden (Mix), Wipe/Key, Effekte. Artefakte vermeiden: gleiche Synchronisation/Genlock aller Quellen, gleiches Format (kein Timing-Offset). 3 Eingänge mischen: z.B. A+B via Mix-Effekt, dann Key (z.B. C als Insert/Luminanz-Key) — oder Kreuzschiene vor dem Mixer.",
+      selfCheck: true,
       explain:
         "Genlock (Referenztakt) ist essenziell, damit Quellen phasengleich sind. Mischer nutzen ME-Banks: Layer (Background + Key) ermöglichen 3+ Quellen gleichzeitig." }
   ]
