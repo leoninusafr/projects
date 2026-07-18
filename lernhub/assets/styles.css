@@ -300,3 +300,22 @@ input[type="text"], button, .choice, .mod-card, .mode-card { font-size: 16px; }
   .footer { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
   .topbar { padding-top: calc(12px + env(safe-area-inset-top)); }
 }
+
+/* Review / Durchsehen */
+.rev-head-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 4px 0 22px; flex-wrap: wrap; }
+.rev-head-row h2 { font-size: clamp(20px, 4vw, 26px); font-weight: 600; letter-spacing: -0.02em; }
+.rev-list { display: grid; gap: 14px; }
+.rev-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 18px 20px; border-left: 3px solid var(--border); }
+.rev-card.ok { border-left-color: var(--good); }
+.rev-card.bad { border-left-color: var(--bad); }
+.rev-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.rev-n { font-size: 13px; font-weight: 600; color: var(--text-soft); font-variant-numeric: tabular-nums; }
+.rev-status { font-size: 12.5px; color: var(--text-faint); }
+.rev-card.ok .rev-status { color: var(--good); }
+.rev-card.bad .rev-status { color: var(--bad); }
+.rev-prompt { font-size: 16.5px; font-weight: 500; line-height: 1.5; letter-spacing: -0.01em; margin-bottom: 8px; }
+.rev-ans { font-size: 14.5px; color: var(--text); margin-top: 6px; line-height: 1.5; }
+.rev-ans b { color: var(--accent); font-family: var(--mono); }
+.rev-explain { font-size: 14px; color: var(--text-soft); line-height: 1.6; margin-top: 8px; }
+.rev-note { display: flex; align-items: flex-start; gap: 6px; margin-top: 10px; padding: 10px 12px; background: var(--surface-2); border-radius: 9px; font-size: 13.5px; color: var(--text); line-height: 1.5; }
+.rev-note .icon { width: 16px; height: 16px; flex: none; margin-top: 1px; color: var(--text-soft); }

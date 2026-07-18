@@ -611,9 +611,56 @@
       b.addEventListener("click", () => {
         const a = b.getAttribute("data-act");
         if (a === "retry") startQuiz(mod.id, "all");
+        else if (a === "review") renderReview();
         else goHome();
       });
     });
+    app.replaceChildren(node);
+    renderMath();
+    updateFooter();
+  }
+
+  function renderReview() {
+    const { mod, list } = QUIZ;
+    const node = tpl("tpl-review");
+    $("#revTitle", node).textContent = "Durchsehen · " + mod.title;
+    const wrap = $("#revList", node);
+
+    list.forEach((idx, n) => {
+      const q = mod.questions[idx];
+      const useExact = !!exact[mod.id];
+      const vals = resolveValues(q, useExact);
+      const p = progress[qKey(mod.id, idx)] || {};
+      const note = getNote(mod.id, idx);
+
+      const card = document.createElement("div");
+      card.className = "rev-card " + (p.lastOk ? "ok" : (p.seen ? "bad" : ""));
+      let html = `<div class="rev-head"><span class="rev-n">${n + 1}</span>`;
+      html += `<span class="rev-status">${p.lastOk ? "✓ sicher" : (p.seen ? "✗ offen" : "–")}</span></div>`;
+      html += `<div class="rev-prompt">${fmt(substitute(q.prompt, vals))}</div>`;
+      if (q.type === "numeric") {
+        html += `<div class="rev-ans">Richtig: <b>${esc(fmtNum(q.compute(vals)))} ${esc(q.unit || "")}</b></div>`;
+      } else if (q.type === "choice") {
+        const right = (Array.isArray(q.correct) ? q.correct : [q.correct]).map(i => fmt(q.choices[i])).join(q.multiple ? " + " : " / ");
+        html += `<div class="rev-ans">Richtig: <b>${right}</b></div>`;
+      } else if (q.type === "wf") {
+        html += `<div class="rev-ans">Richtig: <b>${q.correct ? "Wahr" : "Falsch"}</b></div>`;
+      } else if (q.solution) {
+        const extraVals = typeof q.extra === "function" ? q.extra(vals) : {};
+        const merged = Object.assign({}, vals, extraVals);
+        html += `<div class="rev-ans">Lösung: <b>${fmt(substitute(q.solution, merged))}</b></div>`;
+      }
+      if (q.explain) {
+        const extraVals = typeof q.extra === "function" ? q.extra(vals) : {};
+        const merged = Object.assign({}, vals, extraVals);
+        html += `<div class="rev-explain">${fmt(substitute(q.explain, merged))}</div>`;
+      }
+      if (note.trim()) html += `<div class="rev-note">${icon("i-note")} ${esc(note)}</div>`;
+      card.innerHTML = html;
+      wrap.appendChild(card);
+    });
+
+    node.querySelectorAll("[data-nav]").forEach(b => b.addEventListener("click", goHome));
     app.replaceChildren(node);
     renderMath();
     updateFooter();
