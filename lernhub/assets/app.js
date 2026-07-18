@@ -9,6 +9,7 @@
   const STORE_KEY = "lernhub.progress.v1";
   const EXACT_KEY = "lernhub.exact.v1";
   const THEME_KEY = "lernhub.theme.v1";
+  const NOTES_KEY = "lernhub.notes.v1";
 
   /* ---------- Store (Persistenz, später Supabase) ---------- */
   const Store = {
@@ -26,6 +27,13 @@
     },
     writeExact(e) {
       try { localStorage.setItem(EXACT_KEY, JSON.stringify(e)); } catch {}
+    },
+    readNotes() {
+      try { return JSON.parse(localStorage.getItem(NOTES_KEY)) || {}; }
+      catch { return {}; }
+    },
+    writeNotes(n) {
+      try { localStorage.setItem(NOTES_KEY, JSON.stringify(n)); } catch {}
     }
   };
 
@@ -34,8 +42,16 @@
 
   let progress = Store.read();
   let exact = Store.readExact();
+  let notes = Store.readNotes();
 
-  function qKey(modId, idx) { return modId + ":" + idx; }
+  function noteKey(modId, idx) { return modId + ":" + idx; }
+  function getNote(modId, idx) { return notes[noteKey(modId, idx)] || ""; }
+  function setNote(modId, idx, val) {
+    const k = noteKey(modId, idx);
+    if (val && val.trim()) notes[k] = val;
+    else delete notes[k];
+    Store.writeNotes(notes);
+  }
   function recordAttempt(modId, idx, correct) {
     const k = qKey(modId, idx);
     const p = progress[k] || { seen: 0, correct: 0, wrong: 0, lastOk: false };
@@ -187,11 +203,47 @@
     const u = normText(input);
     const s = normText(solution);
     if (!u) return { correct: false, near: false, reason: "empty" };
-    if (!s) return { correct: true, near: false, reason: "no-key" };
+    if (!s) return { correct: false, near: false, reason: "no-key", selfCheck: true };
+
+    // Aufzählung? mehrere Begriffe durch Leer/Komma/Slash
+    const splitRe = /[\s,/;]+/;
+    const uWords = u.split(splitRe).filter(Boolean);
+    const sWords = s.split(splitRe).filter(Boolean);
+
+    if (uWords.length > 1 || sWords.length > 1) {
+      // wortweise matchen (mit Tippfehler-Toleranz pro Wort)
+      const usedS = new Set();
+      const wrong = [];
+      let matched = 0;
+      for (const w of uWords) {
+        let best = -1, bestD = 99;
+        sWords.forEach((sw, i) => {
+          if (usedS.has(i)) return;
+          const d = lev(w, sw);
+          const ok = (w === sw) || (d <= 2 && d / Math.max(w.length, sw.length) <= 0.25);
+          if (ok && d < bestD) { best = i; bestD = d; }
+        });
+        if (best >= 0) { usedS.add(best); matched++; }
+        else wrong.push(w);
+      }
+      const missing = sWords.filter((_, i) => !usedS.has(i));
+      // Nur richtig, wenn ALLE Begriffe der Lösung genannt UND keine falschen dabei.
+      const allRight = matched === sWords.length && wrong.length === 0;
+      const incomplete = wrong.length === 0 && matched < sWords.length;
+      return {
+        correct: allRight,
+        near: false,
+        list: true,
+        matched, total: sWords.length,
+        wrong, missing,
+        reason: allRight ? "exact" : (wrong.length ? "wrong-items" : "incomplete"),
+        incomplete
+      };
+    }
+
     if (u === s) return { correct: true, near: false, reason: "exact" };
     const d = lev(u, s);
     const maxLen = Math.max(u.length, s.length);
-    // Tippfehler: wenige Zeichen Abweichung relativ zur Länge
     const ratio = d / maxLen;
     if (ratio <= 0.18 && d <= 3) return { correct: true, near: true, reason: "typo", dist: d };
     return { correct: false, near: false, reason: "wrong", dist: d };
@@ -327,6 +379,15 @@
     const vals = resolveValues(q, useExact);
 
     const node = tpl("tpl-quiz");
+    const idx = list[pos];
+    // q-top: Zurück (außer bei 1.) + Notiz + Abbrechen
+    const qTop = $("#qTop", node);
+    qTop.innerHTML = `
+      <div class="q-top-left">
+        ${pos > 0 ? `<button class="link-btn" id="backBtn">${icon("i-back")} Zurück</button>` : `<span></span>`}
+        <button class="link-btn" id="noteBtn">${icon("i-note")} Notiz</button>
+      </div>
+      <button class="link-btn" id="quitBtn">${icon("i-x")} Abbrechen</button>`;
     $("#qCrumb", node).textContent = mod.title;
     $("#barFill", node).style.width = Math.round((pos / list.length) * 100) + "%";
     $("#qCount", node).textContent = (pos + 1) + " / " + list.length;
@@ -354,6 +415,21 @@
     html += `<button class="btn primary block" id="checkBtn" disabled>Aufgabe abgeben</button>`;
     html += `<div id="fb"></div>`;
     card.innerHTML = html;
+
+    // Notiz-Bereich (bleibt sichtbar, wird pro Aufgabe gespeichert)
+    const noteWrap = document.createElement("div");
+    noteWrap.className = "note-area";
+    noteWrap.innerHTML = `<textarea id="noteArea" class="note-input" placeholder="Notiz zu dieser Aufgabe (bleibt gespeichert)…" rows="2">${esc(getNote(mod.id, idx))}</textarea>`;
+    card.appendChild(noteWrap);
+    const noteArea = $("#noteArea", node);
+    noteArea.addEventListener("input", () => setNote(mod.id, idx, noteArea.value));
+
+    // Zurück-Button
+    const backBtn = $("#backBtn", node);
+    if (backBtn) backBtn.addEventListener("click", () => { QUIZ.pos--; renderQuestion(); });
+    // Abbrechen → zurück zur Modul-Übersicht
+    const quitBtn = $("#quitBtn", node);
+    if (quitBtn) quitBtn.addEventListener("click", () => goModule(mod.id));
 
     const checkBtn = $("#checkBtn", node);
     const sel = new Set();
@@ -408,9 +484,17 @@
       const fb = fbEl;
       const g = window.__grade || {};
       let fbIcon, fbCls, fbMsg;
-      if (g.near) { fbIcon = "i-check"; fbCls = "good"; fbMsg = "Fast richtig — Tippfehler erkannt. So sitzt's."; }
-      else if (correct) { fbIcon = "i-check"; fbCls = "good"; fbMsg = "Richtig."; }
-      else { fbIcon = "i-x"; fbCls = "bad"; fbMsg = (q.type === "wf" ? "Falsch eingeschätzt." : "Nicht quite."); }
+      if (g.selfCheck) {
+        // Keine Musterlösung hinterlegt → User bewertet selbst
+        fbIcon = "i-check"; fbCls = "self"; fbMsg = "Selbst-Check — Lösung unten. Stimmt's? Dann als gelernt markieren.";
+        correct = true; // für die Session als "bearbeitet" werten, aber ehrlich als Self-Check
+      } else if (g.near) {
+        fbIcon = "i-check"; fbCls = "good"; fbMsg = "Fast richtig — Tippfehler erkannt. So sitzt's.";
+      } else if (correct) {
+        fbIcon = "i-check"; fbCls = "good"; fbMsg = "Richtig.";
+      } else {
+        fbIcon = "i-x"; fbCls = "bad"; fbMsg = (q.type === "wf" ? "Falsch eingeschätzt." : (g.incomplete ? "Zu wenig genannt." : "Nicht quite."));
+      }
       let fbHtml = `<div class="feedback ${fbCls}">${icon(fbIcon)}<span>${fbMsg}</span></div>`;
 
       if (!correct && q.type === "numeric") {
@@ -425,11 +509,19 @@
         const richtig = q.correct ? "Wahr" : "Falsch";
         fbHtml += `<div class="feedback-note">Richtig ist: <b>${richtig}</b></div>`;
       }
-      if ((q.type === "text" || q.type === "short" || q.type === "huffman") && !g.near) {
-        fbHtml += `<div class="feedback-note">Lösung unten zur Kontrolle.</div>`;
+      if (g.list && !g.correct) {
+        const parts = [];
+        parts.push(`${g.matched}/${g.total} Begriffe richtig.`);
+        if (g.wrong && g.wrong.length) parts.push(`Falsch: <b>${esc(g.wrong.join(", "))}</b>`);
+        if (g.missing && g.missing.length) parts.push(`Fehlt: <b>${esc(g.missing.join(", "))}</b>`);
+        fbHtml += `<div class="feedback-note">${parts.join(" ")}</div>`;
+        fbHtml += `<div class="feedback-note">Richtig wäre: <b>${esc(normText(q.solution || "").replace(/\s+/g, " "))}</b></div>`;
       }
       if (g.near) {
-        fbHtml += `<div class="feedback-note">Gemeint war: <b>${esc(normText(q.solution || "").replace(/\s+/g," "))}</b> — Schreibweise ist egal, Hauptsache der Begriff stimmt.</div>`;
+        fbHtml += `<div class="feedback-note">Gemeint war: <b>${esc(normText(q.solution || "").replace(/\s+/g, " "))}</b> — Schreibweise ist egal, Hauptsache der Begriff stimmt.</div>`;
+      }
+      if (g.selfCheck) {
+        fbHtml += `<div class="feedback-note">Lösung / Erklärung unten — vergleich selbst.</div>`;
       }
 
       if (q.explain || q.solution) {
@@ -551,6 +643,8 @@
   }
 
   /* ---------- Boot ---------- */
+  const brandHome = document.getElementById("brandHome");
+  if (brandHome) brandHome.addEventListener("click", goHome);
   initTheme();
   wireSync();
   renderHome();

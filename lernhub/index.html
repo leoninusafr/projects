@@ -71,10 +71,10 @@
   </svg>
 
   <header class="topbar">
-    <div class="brand">
+    <button class="brand brand-btn" id="brandHome" aria-label="Zur Startseite">
       <svg class="brand-mark"><use href="#i-logo"/></svg>
       <span class="brand-name">LernHub</span>
-    </div>
+    </button>
     <div class="topbar-actions">
       <button id="importBtn" class="icon-btn" aria-label="Fortschritt laden" title="Fortschritt laden">
         <svg class="icon"><use href="#i-fresh"/></svg>
@@ -151,6 +151,7 @@
         <div class="bar"><div class="bar-fill" id="barFill"></div></div>
         <span class="qcount" id="qCount"></span>
       </div>
+      <div class="q-top" id="qTop"></div>
       <div class="quiz-card" id="quizCard"></div>
     </section>
   </template>
@@ -166,6 +167,7 @@
         <div class="result-stats" id="resultStats"></div>
         <div class="result-actions">
           <button class="btn primary" data-act="retry">Nochmal</button>
+          <button class="btn ghost" data-act="review">Durchsehen</button>
           <button class="btn ghost" data-act="home">Übersicht</button>
         </div>
       </div>
