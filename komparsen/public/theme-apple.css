@@ -1,0 +1,70 @@
+/* ============================================================
+   THEME: APPLE — minimal, durchdacht, clean
+   Viel Weißraum, sanfte SF-artige Typo, weiche Schatten,
+   dezente Akzente. Wirkt wie ein Premium-Produkt, nicht wie
+   ein SaaS-Landing. "Teure Klarheit", keine billigen Effekte.
+   ============================================================ */
+.theme-apple {
+  --bg: #fbfbfd;
+  --bg-elev: #ffffff;
+  --ink: #1d1d1f;
+  --ink-2: #6e6e73;
+  --line: #d2d2d7;
+  --accent: #0071e3;        /* Apple-Blau */
+  --accent-press: #0058b8;
+  --accent-ink: #ffffff;
+  --radius: 14px;
+  --radius-sm: 10px;
+  --maxw: 980px;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+}
+.theme-apple body { background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; line-height: 1.47; font-size: 17px; }
+.theme-apple .nav { background: rgba(251,251,253,.8); border-bottom: 1px solid rgba(0,0,0,.08); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); }
+.theme-apple .brand-word { color: var(--ink); font-weight: 600; letter-spacing: -.01em; font-size: 20px; }
+.theme-apple .nav a { color: var(--ink-2); font-size: 14px; font-weight: 400; }
+.theme-apple .nav a:hover { color: var(--ink); text-decoration: none; }
+
+/* Hero: zentriert, ruhig, groß */
+.theme-apple .hero { text-align: center; padding: 104px 0 64px; }
+.theme-apple .hero-eyebrow { color: var(--accent); font-weight: 600; font-size: 19px; letter-spacing: 0; margin: 0 0 8px; }
+.theme-apple .hero h1 { font-family: var(--font-display); font-weight: 700; line-height: 1.04; letter-spacing: -.02em; font-size: clamp(44px, 7vw, 80px); margin: 0 0 18px; }
+.theme-apple .hero .lead { max-width: 600px; margin: 0 auto 32px; font-size: clamp(19px, 2.4vw, 22px); color: var(--ink-2); line-height: 1.4; }
+.theme-apple .hero-cta { max-width: 440px; margin: 0 auto; gap: 14px; }
+.theme-apple .hero-stat { margin-top: 28px; font-size: 15px; color: var(--ink-2); }
+
+/* Pitch: luftige Karten, weiche Schatten */
+.theme-apple .grid.cols-3 { gap: 20px; }
+.theme-apple .card {
+  background: var(--bg-elev); border: 1px solid rgba(0,0,0,.06); border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0,0,0,.05); padding: 30px 28px; margin-bottom: 0;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.theme-apple .card.hoverable:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(0,0,0,.09); }
+.theme-apple .card h3 { font-family: var(--font-display); font-weight: 600; font-size: 22px; letter-spacing: -.015em; margin: 0 0 10px; }
+.theme-apple .card .muted { color: var(--ink-2); font-size: 16px; line-height: 1.5; }
+
+/* Quote: ruhig, zentriert */
+.theme-apple .quote {
+  max-width: 760px; margin: 16px auto; padding: 48px 40px;
+  font-family: var(--font-display); font-size: clamp(24px, 3.4vw, 34px); font-weight: 600; line-height: 1.25;
+  text-align: center; color: var(--ink);
+  background: var(--bg-elev); border: 1px solid rgba(0,0,0,.06); border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0,0,0,.05);
+}
+.theme-apple .quote-sub { display: block; margin-top: 18px; font-size: 17px; font-weight: 400; color: var(--ink-2); }
+
+/* Buttons: weich, blau */
+.theme-apple .btn {
+  background: var(--accent); color: var(--accent-ink); border: 1px solid var(--accent);
+  border-radius: 980px; font-weight: 500; font-size: 16px; letter-spacing: 0;
+  padding: 13px 28px; box-shadow: none; transition: background .18s, transform .05s;
+}
+.theme-apple .btn:hover { background: var(--accent-press); border-color: var(--accent-press); transform: none; text-decoration: none; }
+.theme-apple .btn.secondary { background: transparent; color: var(--accent); border-color: transparent; }
+.theme-apple .btn.secondary:hover { color: var(--accent-press); text-decoration: underline; }
+
+/* Footer */
+.theme-apple footer { border-top: 1px solid rgba(0,0,0,.08); background: var(--bg); color: var(--ink-2); font-size: 13px; }
+.theme-apple footer a { color: var(--ink-2); }
+.theme-apple footer a:hover { color: var(--accent); }

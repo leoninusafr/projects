@@ -1,8 +1,8 @@
 /* ============================================================
    THEME: MANIFEST — ein Statement, eine Aktion
    Massive Typo, viel negativer Raum, ein CTA. Kein Grid, kein
-   Karten-Wust. Für Mutige. Wirkt wie ein Manifest, nicht wie
-   ein SaaS-Landing. Schrift: großes, fett kontrastierendes Paar.
+   Karten-Wust. Für Mutige. Durchgängig dunkel + warmes
+   Elfenbein-Akzent (einheitlich, nicht gemischt).
    ============================================================ */
 .theme-manifest {
   --bg: #0d0d0f;
@@ -20,26 +20,42 @@
 .theme-manifest body { background: var(--bg); color: var(--ink); }
 .theme-manifest .nav { background: var(--bg); border-bottom: 1px solid var(--line); }
 .theme-manifest .nav a, .theme-manifest .brand { color: var(--ink); }
-.theme-manifest .hero { display: none; }  /* Hero durch Manifest-Block ersetzt */
+.theme-manifest .nav a { font-size: 14px; }
+.theme-manifest .nav a:hover { color: var(--accent); text-decoration: none; }
+
+/* Hero durch Manifest-Block ersetzt */
+.theme-manifest .hero { display: none; }
 .theme-manifest .layout-manifest { display: block; min-height: 78vh; display: flex; align-items: center; padding: 60px 0; }
 .theme-manifest .manifest-inner { text-align: left; }
-.theme-manifest .manifest-kicker {
-  text-transform: uppercase; letter-spacing: .22em; font-size: 12px;
-  color: var(--accent); font-weight: 600; margin: 0 0 22px;
+.theme-manifest .manifest-kicker { text-transform: uppercase; letter-spacing: .22em; font-size: 12px; color: var(--accent); font-weight: 600; margin: 0 0 22px; }
+.theme-manifest .manifest-head { font-size: clamp(40px, 8vw, 92px); line-height: .98; letter-spacing: -.03em; font-weight: 800; margin: 0 0 26px; }
+.theme-manifest .manifest-sub { font-size: clamp(17px, 2.4vw, 21px); color: var(--ink-2); max-width: 540px; margin: 0 0 34px; }
+.theme-manifest .manifest-cta { background: var(--accent); color: #0d0d0f; border-radius: 999px; padding: 15px 32px; font-weight: 700; border: none; }
+.theme-manifest .manifest-cta:hover { background: var(--accent-press); text-decoration: none; }
+
+/* Pitch: durchgängig dunkel, einheitliche Karten (kein heller Mix) */
+.theme-manifest .grid.cols-3 { gap: 14px; }
+.theme-manifest .card {
+  background: var(--bg-elev); border: 1px solid var(--line); border-radius: 0;
+  box-shadow: none; padding: 26px 24px; margin-bottom: 0;
+  transition: border-color .18s, transform .18s;
 }
-.theme-manifest .manifest-head {
-  font-size: clamp(40px, 8vw, 92px); line-height: .98; letter-spacing: -.03em;
-  font-weight: 800; margin: 0 0 26px;
-}
-.theme-manifest .manifest-sub {
-  font-size: clamp(17px, 2.4vw, 21px); color: var(--ink-2); max-width: 540px; margin: 0 0 34px;
-}
-.theme-manifest .manifest-cta {
-  background: var(--accent); color: #0d0d0f; border-radius: 999px; padding: 15px 32px; font-weight: 700;
-}
-.theme-manifest .manifest-cta:hover { background: var(--accent-press); }
-.theme-manifest .card { background: var(--bg-elev); border: 1px solid var(--line); border-radius: 0; }
-.theme-manifest .container { max-width: var(--maxw); }
-.theme-manifest .quote { background: var(--bg-elev); border-left: 3px solid var(--accent); border-radius: 0; font-size: clamp(22px, 4vw, 34px); }
+.theme-manifest .card.hoverable:hover { border-color: var(--accent); transform: translateY(-3px); }
+.theme-manifest .card h3 { font-weight: 700; font-size: 21px; letter-spacing: -.01em; margin: 0 0 10px; color: var(--ink); }
+.theme-manifest .card .muted { color: var(--ink-2); font-size: 15px; }
+
+/* Quote: einheitlich dunkel, Elfenbein-Akzent */
+.theme-manifest .quote { background: var(--bg-elev); border-left: 3px solid var(--accent); border-radius: 0; font-size: clamp(22px, 4vw, 34px); max-width: none; padding: 48px 36px; }
+.theme-manifest .quote .container-inner { max-width: var(--maxw); margin: 0 auto; }
+.theme-manifest .quote-sub { color: var(--ink-2); }
+
+/* Buttons (einheitlich) */
+.theme-manifest .btn { background: var(--accent); color: #0d0d0f; border: none; border-radius: 999px; font-weight: 700; padding: 13px 28px; box-shadow: none; }
+.theme-manifest .btn:hover { background: var(--accent-press); transform: none; text-decoration: none; }
+.theme-manifest .btn.secondary { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.theme-manifest .btn.secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Footer */
 .theme-manifest footer { border-top: 1px solid var(--line); background: var(--bg); color: var(--ink-2); }
 .theme-manifest footer a { color: var(--ink-2); }
+.theme-manifest footer a:hover { color: var(--accent); }

@@ -7,9 +7,10 @@
   <link rel="icon" href="/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles.css">
   <style>
-    /* Guard: Panel unsichtbar, bis Login OK (verhindert Flash von Inhalt vor Login-Overlay) */
+    /* Guard: Panel unsichtbar, bis Login OK (verhindert Flash von Inhalt vor Login-Overlay).
+       Nav auch auf 0 — sonst sieht man kurz das Panel, bevor zur Login weitergeleitet wird. */
     body.guard:not(.auth-ok) .container { display: none !important; }
-    body.guard:not(.auth-ok) .nav { opacity: .4; }
+    body.guard:not(.auth-ok) .nav { opacity: 0 !important; pointer-events: none; }
   </style>
 </head>
 <body class="guard">
@@ -106,6 +107,9 @@
           <option value="kartei">Kartei (Gesichter-Grid als Startseite)</option>
           <option value="manifest">Manifest (großer Statement)</option>
           <option value="intro">Intro (warmer Startbildschirm)</option>
+          <option value="kino">Kino (Film/Kamera, dunkel)</option>
+          <option value="apple">Apple (minimal, clean)</option>
+          <option value="parallax">Parallax (Bewegung/Licht)</option>
         </select>
         <p class="muted">Das Design wirkt sofort auf der öffentlichen Seite. Im Admin-Panel bleibt es neutral.</p>
 

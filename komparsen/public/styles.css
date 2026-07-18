@@ -72,12 +72,14 @@ h3 { font-size: 19px; font-weight: 700; margin: 0 0 8px; }
 .muted { color: var(--ink-2); font-size: 14px; }
 .center { text-align: center; }
 
-/* Cards */
+/* Cards (Block: eckig, harte Linien, Akzent-Kopf) */
 .card {
   background: var(--bg-elev); border: 2px solid var(--ink);
   border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow);
   margin-bottom: 18px;
 }
+.card h3 { position: relative; padding-top: 14px; }
+.card h3::before { content: ""; position: absolute; top: 0; left: 0; width: 34px; height: 4px; background: var(--accent); border-radius: 2px; }
 .grid { display: grid; gap: 18px; }
 .grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
 .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
@@ -125,7 +127,7 @@ textarea { resize: vertical; min-height: 90px; }
 .hero-eyebrow { color: var(--accent); font-weight: 700; font-size: 15px; letter-spacing: .01em; margin: 0 0 10px; }
 .hero h1 { font-size: 64px; line-height: 1.0; letter-spacing: -.035em; }
 .hero .lead { max-width: 620px; margin: 18px auto 30px; font-size: 21px; }
-.hero-cta { max-width: 420px; margin: 0 auto; }
+.hero-cta { max-width: 420px; margin: 0 auto; gap: 12px; }
 .hero-stat { margin-top: 26px; font-size: 14px; color: var(--ink-2); }
 @media (max-width: 720px) { .hero { padding: 48px 0 28px; } .hero h1 { font-size: 42px; } .hero .lead { font-size: 18px; } }
 

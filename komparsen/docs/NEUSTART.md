@@ -37,8 +37,11 @@ Bei Bedarf Backup zurückspielen: `cp data/db.backup-DATUM.json data/db.json`
 
 ## 5) Main-Admin-Login
 - E-Mail: `leon63808@gmail.com`
-- Passwort: `Kast-2026!mX9qL2v`  (bitte im Admin-Panel ändern!)
+- Passwort: `@Penis123`  (von dir gesetzt; bitte IM Admin-Panel ändern!)
 - Admin-Panel: `/admin.html`
+- Security-Status: durch Audt-Tests verifiziert (siehe `docs/SECURITY.md`):
+  Path-Traversal blockt, SQLi unmöglich (JSON-DB), XSS escaped, Admin-Routen
+  nur mit Auth. HTTPS läuft über Cloudflare-Tunnel.
 
 ## 6) Was wo lebt
 - **Code**: GitHub (`leoninusafr/projects`, Repo `komparsen/`)

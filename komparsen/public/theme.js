@@ -17,7 +17,10 @@
     editorial:{ label: 'Editorial',  css: '/theme-editorial.css', body: 'theme-editorial', layouts: [] },
     kartei:   { label: 'Kartei',    css: '/theme-kartei.css',    body: 'theme-kartei',   layouts: ['kartei'] },
     manifest: { label: 'Manifest',  css: '/theme-manifest.css',  body: 'theme-manifest', layouts: ['manifest'] },
-    intro:    { label: 'Intro',     css: '/theme-intro.css',     body: 'theme-intro',    layouts: [] }
+    intro:    { label: 'Intro',     css: '/theme-intro.css',     body: 'theme-intro',    layouts: [] },
+    kino:     { label: 'Kino',     css: '/theme-kino.css',      body: 'theme-kino',     layouts: [] },
+    apple:    { label: 'Apple',     css: '/theme-apple.css',     body: 'theme-apple',    layouts: [] },
+    parallax: { label: 'Parallax',  css: '/theme-parallax.css',  body: 'theme-parallax', layouts: [] }
   };
   var KEY = 'kast_theme';
   var current = 'studio';
@@ -35,9 +38,13 @@
       document.head.appendChild(link);
     }
     if (t.body) document.body.classList.add(t.body);
+    // Design-spezifische Texte + Marquee-Repair anwenden
+    try { if (window.KAST_APPLY_CONTENT) window.KAST_APPLY_CONTENT(name); } catch (e) {}
     // optionale Layout-Sektionen zeigen/verstecken
     document.querySelector('.layout-kartei') && document.querySelector('.layout-kartei').classList.toggle('hidden', t.layouts.indexOf('kartei') < 0);
     document.querySelector('.layout-manifest') && document.querySelector('.layout-manifest').classList.toggle('hidden', t.layouts.indexOf('manifest') < 0);
+    // Parallax: Hintergrund-Shift beim Scrollen (nur wenn Theme=parallax)
+    toggleParallax(name === 'parallax');
     // Intro-Overlay nur zeigen, wenn Theme=intro und nicht schon dismissed
     toggleIntro(name === 'intro' && !introDismissed);
     try { localStorage.setItem(KEY, name); } catch (e) {}
@@ -56,6 +63,27 @@
     if (!ov) return;
     if (show) { document.body.classList.remove('intro-closed'); ov.style.display = ''; }
     else { document.body.classList.add('intro-closed'); ov.style.display = 'none'; }
+  }
+  // Parallax: Hintergrund-Shift beim Scrollen (reduziert per reduced-motion)
+  var parallaxOn = false, parallaxBound = false;
+  function onScroll() {
+    if (!parallaxOn) return;
+    var y = window.scrollY || window.pageYOffset || 0;
+    document.body.style.setProperty('--py', (y * 0.18).toFixed(1) + 'px');
+  }
+  function toggleParallax(on) {
+    parallaxOn = on;
+    if (on) {
+      if (!parallaxBound) { window.addEventListener('scroll', onScroll, { passive: true }); parallaxBound = true; }
+      onScroll();
+    } else {
+      document.body.style.removeProperty('--py');
+    }
+  }
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    // bei reduced motion Scroll-Listener nie binden
+    var _tp = toggleParallax;
+    toggleParallax = function (on) { if (on) document.body.style.setProperty('--py', '0px'); else document.body.style.removeProperty('--py'); };
   }
   function wireIntro() {
     var ov = document.querySelector('.intro');

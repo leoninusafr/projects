@@ -17,15 +17,15 @@
   <link rel="stylesheet" href="/theme-switcher.css">
   <script src="/theme.js"></script>
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "Kast",
-    "description": "Komparsen-Agentur für Nebendarsteller. Mitgliedschaft kostenlos.",
-    "url": "https://kast.example/",
-    "areaServed": "DE",
-    "sameAs": ["https://instagram.com/kast", "https://www.linkedin.com/company/kast"]
-  }
+   {
+     "@context": "https://schema.org",
+     "@type": "Organization",
+     "name": "Kast",
+     "description": "Komparsen-Agentur für Nebendarsteller. Mitgliedschaft kostenlos.",
+     "url": "https://kast.example/",
+     "areaServed": "DE",
+     "sameAs": ["https://instagram.com/kast", "https://www.linkedin.com/company/kast"]
+   }
   </script>
 </head>
 <body class="intro-closed">
@@ -53,19 +53,19 @@
   <script src="/app.js"></script>
   <script src="/nav.js"></script>
 
-  <!-- MARQUEE (nur im Studio-Theme sichtbar) -->
-  <div class="marquee" aria-hidden="true"><span>KAST — KOMPARSENAGENTUR · HAMBURG &amp; DEUTSCHLANDWEIT · KOSTENLOS WERDEN · PRODUKTIONEN ANFRAGEN <b>·</b> VOM PROFIL ZUM SET <b>·</b> DSGVO-KONFORM <b>·</b> JEDER MENSCH HAT EIN GESICHT <b>·</b> </span></div>
+  <!-- MARQUEE (nur im Studio-Theme sichtbar; Span verdoppelt für nahtlosen Loop) -->
+  <div class="marquee" aria-hidden="true"><span>KAST — KOMPARSENAGENTUR · HAMBURG &amp; DEUTSCHLANDWEIT · KOSTENLOS WERDEN · PRODUKTIONEN ANFRAGEN <b>·</b> VOM PROFIL ZUM SET <b>·</b> DSGVO-KONFORM <b>·</b> JEDER MENSCH HAT EIN GESICHT <b>·</b> </span><span>KAST — KOMPARSENAGENTUR · HAMBURG &amp; DEUTSCHLANDWEIT · KOSTENLOS WERDEN · PRODUKTIONEN ANFRAGEN <b>·</b> VOM PROFIL ZUM SET <b>·</b> DSGVO-KONFORM <b>·</b> JEDER MENSCH HAT EIN GESICHT <b>·</b> </span></div>
 
   <!-- HERO -->
   <header class="hero">
     <div class="container">
-      <p class="hero-eyebrow">Mitgliedschaft kostenlos</p>
-      <h1>Vom Profil<br>zum Set.</h1>
-      <p class="lead">Werde in zwei Minuten Komparse — und werde von Produktionen
+      <p class="hero-eyebrow" id="heroEyebrow">Mitgliedschaft kostenlos</p>
+      <h1 id="heroTitle">Vom Profil<br>zum Set.</h1>
+      <p class="lead" id="heroLead">Werde in zwei Minuten Komparse — und werde von Produktionen
         in Sekunden gefunden. Ohne Papierkram, ohne Umwege, deutschlandweit.</p>
       <div class="row hero-cta">
-        <a class="btn block" href="/onboarding.html?role=extra">Komparse werden</a>
-        <a class="btn secondary block" href="/onboarding.html?role=production">Produktion anmelden</a>
+        <a class="btn block" id="cta1" href="/onboarding.html?role=extra">Komparse werden</a>
+        <a class="btn secondary block" id="cta2" href="/onboarding.html?role=production">Produktion anmelden</a>
       </div>
       <p class="hero-stat" id="stat">Lade Statistik…</p>
     </div>
@@ -92,24 +92,12 @@
     </div>
   </section>
 
-  <!-- PITCH -->
+  <!-- PITCH (pro Design eigene Kopie + Aufbau via CONTENT + CSS) -->
   <section class="container">
-    <div class="grid cols-3">
-      <div class="card hoverable">
-        <h3>Für Komparsen</h3>
-        <p class="muted">Profil in 2 Minuten, Foto per Upload, Selfie alle 6 Monate für aktuelle Sichtbarkeit.
-          DSGVO-konform — du behältst die Kontrolle über deine Daten und kannst sie jederzeit löschen.</p>
-      </div>
-      <div class="card hoverable">
-        <h3>Für Produktionen</h3>
-        <p class="muted">Filtern oder frei suchen — „braune Haare, groß, Köln". Komparsen in den
-          Warenkorb, Anfrage mit einem Klick, Export auf Knopfdruck. Zeitnahe Vorschläge, keine Umwege.</p>
-      </div>
-      <div class="card hoverable">
-        <h3>Vertrauen & Sicherheit</h3>
-        <p class="muted">DSGVO-konform von Grund auf. Deine Daten gehören dir — Fotos und
-          Profil löschst du jederzeit selbst. Keine Weitergabe an Dritte ohne deine Einwilligung.</p>
-      </div>
+    <div class="grid cols-3 pitch" id="pitch">
+      <div class="card hoverable" data-card="0"><h3></h3><p class="muted"></p></div>
+      <div class="card hoverable" data-card="1"><h3></h3><p class="muted"></p></div>
+      <div class="card hoverable" data-card="2"><h3></h3><p class="muted"></p></div>
     </div>
   </section>
 
@@ -117,8 +105,8 @@
   <section>
     <blockquote class="quote">
       <div class="container-inner">
-        Ein Gesicht, ein Profil, ein Klick zum Set.
-        <span class="quote-sub">Kein Papierkram, keine versteckten Kosten — nur der schnellste Weg
+        <span id="quoteMain">Ein Gesicht, ein Profil, ein Klick zum Set.</span>
+        <span class="quote-sub" id="quoteSub">Kein Papierkram, keine versteckten Kosten — nur der schnellste Weg
           zwischen dir und deiner nächsten Produktion.</span>
       </div>
     </blockquote>
@@ -140,6 +128,7 @@
       var el = document.getElementById('stat');
       var FALLBACK = 'Deutschlandweit verfügbar — werde jetzt Teil der Kartei.';
       function set(t) { try { if (el) el.textContent = t; } catch (e) {} }
+      try { if (window.KAST_FALLBACK_STAT) FALLBACK = window.KAST_FALLBACK_STAT; } catch (e) {}
       set(FALLBACK); // sofort sichern: nie "Lade Statistik…"
       function go() {
         var done = false;
@@ -167,3 +156,4 @@
     })();
   </script>
   </body>
+</html>
