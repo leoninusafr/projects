@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#fbfbfd" />
+  <title>LernHub</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+</head>
+<body data-theme="light">
+
+  <!-- Icon-Sprite -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="i-logo" viewBox="0 0 24 24">
+      <rect x="3" y="3" width="18" height="18" rx="5" fill="currentColor"/>
+      <path d="M8 12.5l2.8 2.8L16.5 9" stroke="var(--surface)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-film" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="16" rx="3"/>
+      <line x1="7" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="17" y2="20"/>
+      <line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/>
+    </symbol>
+    <symbol id="i-atom" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/>
+      <ellipse cx="12" cy="12" rx="9" ry="4"/>
+      <ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(60 12 12)"/>
+      <ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(120 12 12)"/>
+    </symbol>
+    <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="8" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="8" y1="18" x2="20" y2="18"/>
+      <circle cx="4" cy="6" r="1.1" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.1" fill="currentColor" stroke="none"/>
+    </symbol>
+    <symbol id="i-repeat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 9a8 8 0 0 1 14-3l2 2"/><path d="M20 4v5h-5"/>
+      <path d="M20 15a8 8 0 0 1-14 3l-2-2"/><path d="M4 20v-5h5"/>
+    </symbol>
+    <symbol id="i-fresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="8.5"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+    </symbol>
+    <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15 5l-7 7 7 7"/>
+    </symbol>
+    <symbol id="i-forward" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 5l7 7-7 7"/>
+    </symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="4.2"/><line x1="12" y1="2.5" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="21.5"/>
+      <line x1="2.5" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="21.5" y2="12"/>
+      <line x1="5" y1="5" x2="6.8" y2="6.8"/><line x1="17.2" y1="17.2" x2="19" y2="19"/>
+      <line x1="19" y1="5" x2="17.2" y2="6.8"/><line x1="6.8" y1="17.2" x2="5" y2="19"/>
+    </symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 14.5A8 8 0 0 1 9.5 4 7 7 0 1 0 20 14.5z"/>
+    </symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 12.5l4.5 4.5L19 7"/>
+    </symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 6l12 12M18 6L6 18"/>
+    </symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="4" y1="20" x2="20" y2="20"/><rect x="6" y="11" width="3" height="6"/><rect x="11" y="7" width="3" height="10"/><rect x="16" y="13" width="3" height="4"/>
+    </symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 21V4"/><path d="M5 4h12l-2 4 2 4H5"/>
+    </symbol>
+  </svg>
+
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark"><use href="#i-logo"/></svg>
+      <span class="brand-name">LernHub</span>
+    </div>
+    <div class="topbar-actions">
+      <button id="importBtn" class="icon-btn" aria-label="Fortschritt laden" title="Fortschritt laden">
+        <svg class="icon"><use href="#i-fresh"/></svg>
+      </button>
+      <button id="exportBtn" class="icon-btn" aria-label="Fortschritt speichern" title="Fortschritt speichern">
+        <svg class="icon"><use href="#i-flag"/></svg>
+      </button>
+      <button id="themeToggle" class="icon-btn" aria-label="Erscheinungsbild wechseln" title="Hell / Dunkel">
+        <svg class="icon" id="themeIcon"><use href="#i-moon"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <input type="file" id="importFile" accept="application/json" hidden />
+
+  <main id="app" class="app"></main>
+
+  <footer class="footer">
+    <span id="progressLabel"></span>
+  </footer>
+
+  <!-- Screens -->
+  <template id="tpl-home">
+    <section class="screen home">
+      <div class="hero">
+        <h1>Zwei Klausuren. Ein Plan.</h1>
+        <p class="sub">Rechnen, prüfen, den Weg verstehen. Mit eigener Formelsammlung — also üben wir genau die Rechnung.</p>
+      </div>
+      <div class="cards" id="moduleCards"></div>
+    </section>
+  </template>
+
+  <template id="tpl-module">
+    <section class="screen module">
+      <button class="back-btn" data-nav="home">
+        <svg class="icon"><use href="#i-back"/></svg> Fächer
+      </button>
+      <div class="module-head">
+        <h2 id="modTitle"></h2>
+        <p id="modMeta" class="sub"></p>
+      </div>
+
+      <label class="switch-row" id="exactRow">
+        <span class="switch-label">
+          <span class="switch-title">Exakt wie Übungsklausur</span>
+          <span class="switch-sub">Keine Abwandlung — Originalwerte 1:1</span>
+        </span>
+        <span class="switch"><input type="checkbox" id="exactToggle"><span class="track"></span></span>
+      </label>
+
+      <div class="mode-grid">
+        <button class="mode-card" data-mode="all">
+          <svg class="mode-icon"><use href="#i-list"/></svg>
+          <span class="mode-body"><span class="mode-title">Alle Aufgaben</span><span class="mode-sub">Kompletter Durchlauf</span></span>
+        </button>
+        <button class="mode-card" data-mode="wrong">
+          <svg class="mode-icon"><use href="#i-repeat"/></svg>
+          <span class="mode-body"><span class="mode-title">Nur falsche</span><span class="mode-sub">Was zuletzt gehaftet hat</span></span>
+        </button>
+        <button class="mode-card" data-mode="unseen">
+          <svg class="mode-icon"><use href="#i-fresh"/></svg>
+          <span class="mode-body"><span class="mode-title">Noch nicht gesehen</span><span class="mode-sub">Frische Runde</span></span>
+        </button>
+      </div>
+
+      <div class="stat-row" id="modStats"></div>
+    </section>
+  </template>
+
+  <template id="tpl-quiz">
+    <section class="screen quiz">
+      <div class="quiz-progress">
+        <span class="qcrumb" id="qCrumb"></span>
+        <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+        <span class="qcount" id="qCount"></span>
+      </div>
+      <div class="quiz-card" id="quizCard"></div>
+    </section>
+  </template>
+
+  <template id="tpl-result">
+    <section class="screen result">
+      <div class="result-card">
+        <div class="result-badge" id="resultBadge">
+          <svg class="icon-lg"><use href="#i-check"/></svg>
+        </div>
+        <h2 id="resultTitle"></h2>
+        <p id="resultText" class="sub"></p>
+        <div class="result-stats" id="resultStats"></div>
+        <div class="result-actions">
+          <button class="btn primary" data-act="retry">Nochmal</button>
+          <button class="btn ghost" data-act="home">Übersicht</button>
+        </div>
+      </div>
+    </section>
+  </template>
+
+  <script src="data/videotechnik2.js"></script>
+  <script src="data/physik2.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# LernHub — Klausur-Trainer (statische Web-App)
+# Build: keiner nötig. Netlify: base = repo-root, publish = ., keine Redirects nötig.
+
+# ignore
+.venv/
+__pycache__/
+*.pyc
+pdfparse/
+.DS_Store
