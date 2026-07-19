@@ -20,7 +20,8 @@ let state = {
   // Session restore keys
   currentTab: 'dashboard',
   activeLevelId: null,
-  currentSubQuestionIndex: 0
+  currentSubQuestionIndex: 0,
+  currentLevelQueue: []
 };
 
 // Titles based on completed level count + 1 (Tier 1 to 16)
@@ -52,6 +53,7 @@ function loadState() {
       currentTab = state.currentTab || 'dashboard';
       activeLevelId = state.activeLevelId || null;
       currentSubQuestionIndex = state.currentSubQuestionIndex || 0;
+      currentLevelQueue = state.currentLevelQueue || [];
     } catch (e) {
       console.error("Failed to parse state", e);
     }
@@ -287,6 +289,7 @@ function getCurrentStageNum() {
 // --- CAMPAIGN MACHINE ---
 let activeLevelId = null;
 let currentSubQuestionIndex = 0;
+let currentLevelQueue = [];
 let currentBossTask = null;
 let currentShuffledOptions = [];
 let hasChecked = false; // Tracks if current answer has been verified
@@ -364,12 +367,6 @@ function selectCampaignLevel(lvlId) {
 }
 
 function selectLevel(lvlId) {
-  activeLevelId = lvlId;
-  currentSubQuestionIndex = 0;
-  state.activeLevelId = lvlId;
-  state.currentSubQuestionIndex = 0;
-  saveState();
-  
   // Find level in DB
   let levelObj = null;
   let stageObj = null;
@@ -383,6 +380,21 @@ function selectLevel(lvlId) {
   }
   
   if (!levelObj) return;
+
+  const isNewLevel = (lvlId !== state.activeLevelId);
+  activeLevelId = lvlId;
+  state.activeLevelId = lvlId;
+  
+  if (isNewLevel || !state.currentLevelQueue || state.currentLevelQueue.length === 0) {
+    currentSubQuestionIndex = 0;
+    state.currentSubQuestionIndex = 0;
+    currentLevelQueue = levelObj.questionIds ? [...levelObj.questionIds] : [];
+    state.currentLevelQueue = currentLevelQueue;
+  } else {
+    currentSubQuestionIndex = state.currentSubQuestionIndex || 0;
+    currentLevelQueue = state.currentLevelQueue || (levelObj.questionIds ? [...levelObj.questionIds] : []);
+  }
+  saveState();
   
   const workspaceActive = document.getElementById('workspace-active-state');
   workspaceActive.style.display = 'block';
@@ -503,8 +515,7 @@ function getDynamicKlausur04() {
 function setupNormalLevel(levelObj) {
   document.getElementById('boss-profile-card').style.display = 'none';
   
-  const qIds = levelObj.questionIds;
-  const qId = qIds[currentSubQuestionIndex];
+  const qId = currentLevelQueue[currentSubQuestionIndex];
   
   let qObj = EXAM_QUESTIONS.find(q => q.id === qId);
   if (!qObj) return;
@@ -515,7 +526,7 @@ function setupNormalLevel(levelObj) {
   
   currentActiveQuestion = qObj;
   
-  document.getElementById('active-q-category').innerText = `${levelObj.title.toUpperCase()} (Schritt ${currentSubQuestionIndex + 1}/${qIds.length})`;
+  document.getElementById('active-q-category').innerText = `${levelObj.title.toUpperCase()} (Schritt ${currentSubQuestionIndex + 1}/${currentLevelQueue.length})`;
   document.getElementById('active-q-title').innerText = qObj.title;
   
   const textEl = document.getElementById('active-q-text');
@@ -704,8 +715,7 @@ document.getElementById('btn-check-answer').addEventListener('click', () => {
         document.getElementById('didactic-solution').style.display = 'none';
       }
     } else {
-      const qIds = levelObj.questionIds;
-      const isLastSub = (currentSubQuestionIndex === qIds.length - 1);
+      const isLastSub = (currentSubQuestionIndex === currentLevelQueue.length - 1);
       if (isLastSub) {
         if (nextLvlId) {
           selectCampaignLevel(nextLvlId);
@@ -738,8 +748,7 @@ document.getElementById('btn-check-answer').addEventListener('click', () => {
 
 // Check Normal theory/practice answers
 function handleCheckNormalAnswer(levelObj, feedbackEl) {
-  const qIds = levelObj.questionIds;
-  const qId = qIds[currentSubQuestionIndex];
+  const qId = currentLevelQueue[currentSubQuestionIndex];
   const qObj = (currentActiveQuestion && currentActiveQuestion.id === qId) ? currentActiveQuestion : EXAM_QUESTIONS.find(q => q.id === qId);
   if (!qObj) return;
   
@@ -818,7 +827,7 @@ function handleCheckNormalAnswer(levelObj, feedbackEl) {
     // Highlight correct/incorrect options
     highlightQuizOptions(qObj);
     
-    const isLastSub = (currentSubQuestionIndex === qIds.length - 1);
+    const isLastSub = (currentSubQuestionIndex === currentLevelQueue.length - 1);
     const checkBtn = document.getElementById('btn-check-answer');
     
     if (isLastSub) {
@@ -854,13 +863,37 @@ function handleCheckNormalAnswer(levelObj, feedbackEl) {
     revealSolution(qObj);
     
   } else {
+    hasChecked = true; // Freeze state
     feedbackEl.className = 'feedback-alert error';
-    feedbackEl.innerHTML = `<strong>Leider falsch.</strong> Schau dir die Erklärung unten an, korrigiere deine Eingabe und versuche es noch einmal!`;
+    feedbackEl.innerHTML = `<strong>Leider falsch.</strong> Schau dir die Erklärung unten an. Keine Sorge: Diese Aufgabe wird am Ende des Levels wiederholt!`;
     
-    // Highlight correct and wrong options to show which were correct and what they chose wrong
+    // Freeze choices list
+    const choiceList = document.querySelector('.choice-list');
+    if (choiceList) choiceList.classList.add('disabled');
+    
+    // Freeze text fields
+    if (qObj.type === 'multi-field') {
+      qObj.fields.forEach(field => {
+        const el = document.getElementById(`field-${field.id}`);
+        if (el) el.disabled = true;
+      });
+    }
+    
+    // Highlight correct and wrong options
     highlightQuizOptions(qObj);
     
-    // In incorrect state, we DO NOT freeze options so they can try again. We just show solutions.
+    // Add the question to the end of the queue if it's not already scheduled for repetition
+    const futureQueue = currentLevelQueue.slice(currentSubQuestionIndex + 1);
+    if (!futureQueue.includes(qId)) {
+      currentLevelQueue.push(qId);
+      state.currentLevelQueue = currentLevelQueue;
+      saveState();
+    }
+    
+    const checkBtn = document.getElementById('btn-check-answer');
+    checkBtn.innerHTML = 'Nächste Aufgabe <i class="fa-solid fa-chevron-right"></i>';
+    checkBtn.className = 'btn btn-primary';
+    
     revealSolution(qObj);
   }
 }
@@ -974,7 +1007,10 @@ function handleCheckBossAnswer(levelObj, stageObj, feedbackEl) {
 }
 
 function cleanInput(val) {
-  return val.trim().toLowerCase().replace(',', '.').replace(/\s/g, '').replace(/ohm/g, 'Ω');
+  let cleaned = val.trim().toLowerCase().replace(',', '.').replace(/\s/g, '').replace(/\*/g, '');
+  cleaned = cleaned.replace(/ohm/g, 'ω').replace(/Ω/g, 'ω').replace(/ω/g, 'ω');
+  cleaned = cleaned.replace(/\^3/g, '³').replace(/\^2/g, '²');
+  return cleaned;
 }
 
 function revealSolution(qObj) {
@@ -1076,8 +1112,7 @@ function togglePinFormula(formulaId) {
       if (l) { levelObj = l; break; }
     }
     if (levelObj) {
-      const qIds = levelObj.questionIds;
-      const qId = qIds ? qIds[currentSubQuestionIndex] : null;
+      const qId = currentLevelQueue ? currentLevelQueue[currentSubQuestionIndex] : null;
       const qObj = (currentActiveQuestion && currentActiveQuestion.id === qId) ? currentActiveQuestion : EXAM_QUESTIONS.find(q => q.id === qId);
       if (qObj && qObj.formulaId) {
         updatePinButton(qObj.formulaId);
@@ -1114,8 +1149,7 @@ document.getElementById('btn-pin-formula').addEventListener('click', () => {
   if (levelObj.type === 'boss') {
     togglePinFormula(stageObj.bossGenerator.replace('_calc', ''));
   } else {
-    const qIds = levelObj.questionIds;
-    const qId = qIds[currentSubQuestionIndex];
+    const qId = currentLevelQueue[currentSubQuestionIndex];
     const qObj = (currentActiveQuestion && currentActiveQuestion.id === qId) ? currentActiveQuestion : EXAM_QUESTIONS.find(q => q.id === qId);
     if (qObj && qObj.formulaId) {
       togglePinFormula(qObj.formulaId);
