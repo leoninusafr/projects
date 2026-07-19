@@ -613,17 +613,12 @@ function setupNormalLevel(levelObj) {
 
 // --- BOSS LEVEL LOGIC (2 HP Math Fight) ---
 function setupBossLevel(levelObj, stageObj) {
-  const bProfile = document.getElementById('boss-profile-card');
-  bProfile.style.display = 'flex';
-  
-  document.getElementById('boss-name-label').innerText = stageObj.bossName;
-  document.getElementById('boss-avatar-emoji').innerText = stageObj.bossEmoji;
-  
   if (state.bossHP[levelObj.id] === undefined) {
     state.bossHP[levelObj.id] = 2;
   }
   
-  updateBossHPBar(levelObj.id);
+  const hp = state.bossHP[levelObj.id];
+  const taskNum = 3 - hp;
   
   const generatorKey = stageObj.bossGenerator;
   const gen = GENERATOR_DB[generatorKey];
@@ -631,8 +626,8 @@ function setupBossLevel(levelObj, stageObj) {
   
   currentBossTask = gen.generate();
   
-  document.getElementById('active-q-category').innerText = `Praxisaufgabe: ${stageObj.bossName.replace('der ', '').replace('die ', '').replace('den ', '').replace('Der ', '').replace('Die ', '').replace('Den ', '')}`;
-  document.getElementById('active-q-title').innerText = gen.title;
+  document.getElementById('active-q-category').innerText = `Praxis-Berechnung`;
+  document.getElementById('active-q-title').innerText = `Teilaufgabe ${taskNum} von 2`;
   
   const textEl = document.getElementById('active-q-text');
   textEl.innerHTML = `<strong>Löse die folgenden Berechnungen für diese Praxisaufgabe:</strong><br><br>${currentBossTask.instruction}`;
@@ -664,20 +659,7 @@ function setupBossLevel(levelObj, stageObj) {
 }
 
 function updateBossHPBar(levelId) {
-  const hp = state.bossHP[levelId];
-  const percent = (hp / 2) * 100;
-  
-  const bar = document.getElementById('boss-hp-bar');
-  bar.style.width = `${percent}%`;
-  
-  const text = document.getElementById('boss-hp-text');
-  text.innerText = `HP: ${hp} / 2`;
-  
-  if (hp === 1) {
-    bar.style.background = 'linear-gradient(90deg, #d97706 0%, #f59e0b 100%)';
-  } else {
-    bar.style.background = 'linear-gradient(90deg, #b91c1c 0%, #ef4444 100%)';
-  }
+  // Boss card removed from UI. Safe empty placeholder.
 }
 
 // --- CHECKING ANSWERS ---
