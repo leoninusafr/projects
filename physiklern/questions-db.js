@@ -149,7 +149,7 @@ export const EXAM_QUESTIONS = [
     id: 'klausur_08',
     title: '8. Effektivwert & mittlere Leistung',
     category: 'Grundlagen',
-    question: 'Eine periodische, stückweise lineare Spannung $u(t)$ mit Periode $T = 6\\text{ s}$ liegt an einem Widerstand $R = 1\\text{ k}\\Omega$ an. Die Kurve ist wie folgt definiert:<br>- $0 \\le t < 1$: $u(t) = t$<br>- $1 \\le t < 2$: $u(t) = 1$<br>- $2 \\le t < 4$: $u(t) = 3-t$<br>- $4 \\le t < 5$: $u(t) = -1$<br>- $5 \\le t < 6$: $u(t) = t-6$<br><br>Berechne die mittlere Leistung $P$, die am Widerstand abfällt.',
+    question: 'Eine periodische, stückweise lineare Spannung $u(t)$ mit Periode $T = 6\\text{ s}$ liegt an einem Widerstand $R = 1\\text{ k}\\Omega$ an. Die Kurve ist wie folgt definiert:<br>• $0 \\le t < 1$: $u(t) = t$<br>• $1 \\le t < 2$: $u(t) = 1$<br>• $2 \\le t < 4$: $u(t) = 3-t$<br>• $4 \\le t < 5$: $u(t) = -1$<br>• $5 \\le t < 6$: $u(t) = t-6$<br><br>Berechne die mittlere Leistung $P$, die am Widerstand abfällt.',
     type: 'multi-field',
     fields: [
       { id: 'rms_integral', label: 'Wert des Integrals $\\int_0^T u^2(t) dt$ ($V^2 s$):', placeholder: 'z.B. 1.25 oder 5/4', correct: '10/3' },
@@ -198,7 +198,7 @@ export const EXAM_QUESTIONS = [
     solution: {
       intuition: 'Eine Welle legt pro Sekunde eine Distanz zurück, die sich aus der Länge einer Schwingung ($\\lambda$) multipliziert mit der Anzahl der Schwingungen pro Sekunde ($f$) ergibt.',
       redThread: 'Formel lautet $c = \\lambda \\cdot f$.',
-      calculation: 'Es gilt:\<br>$$c = \\lambda \\cdot f = \\frac{\\lambda}{T}$$\<br>Mit:\<br>- $c$ = Ausbreitungsgeschwindigkeit (Schallgeschwindigkeit) in $\\text{m/s}$\<br>- $\\lambda$ = Wellenlänge (räumliche Periode) in Meter ($\\text{m}$)\<br>- $f$ = Frequenz (zeitliche Wiederholungsrate) in Hertz ($\\text{Hz}$ bzw. $\\text{1/s}$)'
+      calculation: 'Es gilt:\<br>$$c = \\lambda \\cdot f = \\frac{\\lambda}{T}$$\<br>Mit:\<br>• $c$ = Ausbreitungsgeschwindigkeit (Schallgeschwindigkeit) in $\\text{m/s}$\<br>• $\\lambda$ = Wellenlänge (räumliche Periode) in Meter ($\\text{m}$)\<br>• $f$ = Frequenz (zeitliche Wiederholungsrate) in Hertz ($\\text{Hz}$ bzw. $\\text{1/s}$)'
     }
   },
   {
