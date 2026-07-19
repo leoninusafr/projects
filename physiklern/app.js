@@ -21,7 +21,8 @@ let state = {
   currentTab: 'dashboard',
   activeLevelId: null,
   currentSubQuestionIndex: 0,
-  currentLevelQueue: []
+  currentLevelQueue: [],
+  soundEnabled: true
 };
 
 // Titles based on completed level count + 1 (Tier 1 to 16)
@@ -54,6 +55,7 @@ function loadState() {
       activeLevelId = state.activeLevelId || null;
       currentSubQuestionIndex = state.currentSubQuestionIndex || 0;
       currentLevelQueue = state.currentLevelQueue || [];
+      state.soundEnabled = (state.soundEnabled !== undefined) ? state.soundEnabled : true;
     } catch (e) {
       console.error("Failed to parse state", e);
     }
@@ -832,6 +834,7 @@ function handleCheckNormalAnswer(levelObj, feedbackEl) {
     
     if (isLastSub) {
       feedbackEl.innerHTML = `<strong>Richtig gelöst!</strong> Das Level wurde komplett abgeschlossen. +20 XP wurden gutgeschrieben.`;
+      playSound('success');
       
       if (!state.completedLevels.includes(levelObj.id)) {
         state.completedLevels.push(levelObj.id);
@@ -855,6 +858,7 @@ function handleCheckNormalAnswer(levelObj, feedbackEl) {
       }
     } else {
       feedbackEl.innerHTML = `<strong>Richtig gelöst!</strong> Klicke auf „Nächste Frage“, um fortzufahren.`;
+      playSound('correct');
       
       checkBtn.innerHTML = 'Nächste Frage <i class="fa-solid fa-chevron-right"></i>';
       checkBtn.className = 'btn btn-primary';
@@ -866,6 +870,7 @@ function handleCheckNormalAnswer(levelObj, feedbackEl) {
     hasChecked = true; // Freeze state
     feedbackEl.className = 'feedback-alert error';
     feedbackEl.innerHTML = `<strong>Leider falsch.</strong> Schau dir die Erklärung unten an. Keine Sorge: Diese Aufgabe wird am Ende des Levels wiederholt!`;
+    playSound('incorrect');
     
     // Freeze choices list
     const choiceList = document.querySelector('.choice-list');
@@ -970,6 +975,7 @@ function handleCheckBossAnswer(levelObj, stageObj, feedbackEl) {
       // Boss defeated
       feedbackEl.className = 'feedback-alert success';
       feedbackEl.innerHTML = `<strong>💥 Boss besiegt!</strong> Du hast den ${stageObj.bossName} erfolgreich vertrieben und die Stage abgeschlossen! +50 XP erhalten.`;
+      playSound('success');
       
       if (!state.completedLevels.includes(levelObj.id)) {
         state.completedLevels.push(levelObj.id);
@@ -991,6 +997,7 @@ function handleCheckBossAnswer(levelObj, stageObj, feedbackEl) {
       // Boss hurt but alive
       feedbackEl.className = 'feedback-alert success';
       feedbackEl.innerHTML = `<strong>💥 Treffer!</strong> Du hast dem Boss 1 HP abgezogen! Klicke auf „Nächste Boss-Aufgabe“ für die finale Runde.`;
+      playSound('correct');
       
       checkBtn.innerHTML = 'Nächste Boss-Aufgabe <i class="fa-solid fa-chevron-right"></i>';
       checkBtn.className = 'btn btn-primary';
@@ -1002,6 +1009,7 @@ function handleCheckBossAnswer(levelObj, stageObj, feedbackEl) {
   } else {
     feedbackEl.className = 'feedback-alert error';
     feedbackEl.innerHTML = `<strong>Rechenfehler!</strong> Der Boss pariert deinen Angriff. Korrigiere deine Werte und probiere es erneut.`;
+    playSound('incorrect');
     revealBossSolution(currentBossTask);
   }
 }
@@ -1236,6 +1244,8 @@ function renderStats() {
   const rankIdx = Math.min(completedCount, RANKS.length - 1);
   document.getElementById('stats-level').innerText = RANKS[rankIdx];
   
+  renderCategoryProgress();
+  
   const achievementsContainer = document.getElementById('achievements-list');
   achievementsContainer.innerHTML = '';
   
@@ -1330,6 +1340,7 @@ function loadNextQuickie() {
     awardXP(xpEarned);
     
     showToast(`Quiz beendet! Du hast ${quickieScore}/5 Fragen richtig beantwortet. (+${xpEarned} XP)`, 'success');
+    playSound('success');
     
     if (quickieScore === 5) {
       checkAchievement('perfect_quickie');
@@ -1351,9 +1362,11 @@ function handleQuickieAnswer(selectedIdx, btnElement) {
   if (isCorrect) {
     btnElement.classList.add('correct');
     quickieScore++;
+    playSound('correct');
   } else {
     btnElement.classList.add('wrong');
     optionsContainer.childNodes[q.correct].classList.add('correct');
+    playSound('incorrect');
   }
   
   const feedbackEl = document.getElementById('quickie-feedback');
@@ -1485,6 +1498,7 @@ function submitSprintAnswer() {
     feedbackEl.innerHTML = `<strong>Korrekt!</strong> +1 Punkt`;
     sprintScore++;
     document.getElementById('sprint-score').innerText = sprintScore;
+    playSound('correct');
     
     setTimeout(() => {
       loadSprintTask();
@@ -1493,6 +1507,7 @@ function submitSprintAnswer() {
   } else {
     feedbackEl.className = 'feedback-alert error';
     feedbackEl.innerHTML = `<strong>Falsch!</strong> Richtig gewesen wäre: <strong>${currentSprintTask.correct}</strong>`;
+    playSound('incorrect');
     
     setTimeout(() => {
       loadSprintTask();
@@ -1509,6 +1524,7 @@ function finishSprint() {
   awardXP(xp);
   
   showToast(`Sprint beendet! Du hast ${sprintScore} Aufgaben richtig gelöst. (+${xp} XP)`, 'success');
+  playSound('success');
   
   if (sprintScore >= 8) {
     checkAchievement('sprint_champ');
@@ -1546,6 +1562,134 @@ document.getElementById('btn-back-to-overview').addEventListener('click', () => 
   initCampaign();
 });
 
+// --- AUDIO SYNTHESIZER (Web Audio API) ---
+let audioCtx = null;
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+}
+
+function playSound(type) {
+  if (!state.soundEnabled) return;
+  
+  try {
+    initAudio();
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    
+    const now = audioCtx.currentTime;
+    
+    if (type === 'correct') {
+      // Satisfying double-tone chime (rising)
+      const osc1 = audioCtx.createOscillator();
+      const osc2 = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      
+      osc1.type = 'sine';
+      osc2.type = 'sine';
+      
+      osc1.frequency.setValueAtTime(523.25, now);
+      osc2.frequency.setValueAtTime(659.25, now + 0.08);
+      
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.15, now + 0.02);
+      gain.gain.linearRampToValueAtTime(0.15, now + 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(audioCtx.destination);
+      
+      osc1.start(now);
+      osc1.stop(now + 0.4);
+      osc2.start(now + 0.08);
+      osc2.stop(now + 0.4);
+      
+    } else if (type === 'incorrect') {
+      // Low falling sawtooth/triangle thud
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(150, now);
+      osc.frequency.exponentialRampToValueAtTime(70, now + 0.25);
+      
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.2, now + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+      
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      
+      osc.start(now);
+      osc.stop(now + 0.3);
+      
+    } else if (type === 'success') {
+      // Fanfare (arpeggio C major)
+      const notes = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
+      notes.forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+        
+        gain.gain.setValueAtTime(0, now + idx * 0.08);
+        gain.gain.linearRampToValueAtTime(0.12, now + idx * 0.08 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.35);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.start(now + idx * 0.08);
+        osc.stop(now + idx * 0.08 + 0.35);
+      });
+    }
+  } catch (err) {
+    console.error("Web Audio API error:", err);
+  }
+}
+
+function updateSoundButton() {
+  const btn = document.getElementById('btn-toggle-sound');
+  if (!btn) return;
+  if (state.soundEnabled) {
+    btn.innerHTML = '<i class="fa-solid fa-volume-high text-cyan"></i>';
+    btn.title = "Sounds stummschalten";
+  } else {
+    btn.innerHTML = '<i class="fa-solid fa-volume-xmark text-muted"></i>';
+    btn.title = "Sounds aktivieren";
+  }
+}
+
+function renderCategoryProgress() {
+  const container = document.getElementById('category-progress-list');
+  if (!container) return;
+  container.innerHTML = '';
+  
+  CAMPAIGN_STAGES.forEach(stage => {
+    const totalLevels = stage.levels.length;
+    const completedCount = stage.levels.filter(lvl => state.completedLevels.includes(lvl.id)).length;
+    const percent = Math.round((completedCount / totalLevels) * 100);
+    
+    const item = document.createElement('div');
+    item.className = 'category-progress-item';
+    item.innerHTML = `
+      <div class="category-progress-header" style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+        <span style="font-weight: 500;">${stage.title}</span>
+        <span style="color: var(--cyan); font-weight: 600;">${completedCount} / ${totalLevels} gelöst</span>
+      </div>
+      <div class="progress-bar-container" style="background: rgba(255,255,255,0.05); height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 15px;">
+        <div class="progress-bar-fill" style="width: ${percent}%; height: 100%; background: linear-gradient(90deg, var(--violet), var(--cyan)); border-radius: 5px; transition: width 0.3s;"></div>
+      </div>
+    `;
+    container.appendChild(item);
+  });
+}
+
 function randChoice(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -1558,6 +1702,16 @@ function roundTo(num, decimals) {
 loadState();
 updateStreak();
 switchTab(currentTab);
+
+// Initialize sound button icon
+updateSoundButton();
+
+// Sound toggle listener
+document.getElementById('btn-toggle-sound').addEventListener('click', () => {
+  state.soundEnabled = !state.soundEnabled;
+  saveState();
+  updateSoundButton();
+});
 
 // Restore active level progress if page was reloaded/refreshed during a session
 if (currentTab === 'campaign' && activeLevelId) {

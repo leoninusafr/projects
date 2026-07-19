@@ -52,6 +52,10 @@
           <i class="fa-solid fa-graduation-cap text-cyan"></i>
           <span class="value">Lvl 1</span>
         </div>
+        <!-- Sound Toggle -->
+        <button class="stat-item btn-icon" id="btn-toggle-sound" title="Sound stummschalten/aktivieren" style="background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1.1rem; padding: 0.5rem; transition: color 0.2s; display: inline-flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-volume-high text-cyan"></i>
+        </button>
       </div>
     </div>
   </header>
@@ -296,6 +300,14 @@
           <div class="card stat-summary-card">
             <div class="stat-number text-emerald" id="stats-level">Tier 1</div>
             <div class="stat-label">Klausur-Rang (Title)</div>
+          </div>
+        </div>
+
+        <!-- Category Progress Breakdown -->
+        <h3 class="section-title" style="margin-top: 30px;"><i class="fa-solid fa-graduation-cap text-cyan"></i> Fortschritt nach Stages</h3>
+        <div class="card category-progress-card" style="padding: 20px; margin-bottom: 30px; display: flex; flex-direction: column; gap: 15px;">
+          <div id="category-progress-list">
+            <!-- Will be dynamically populated with progress bars -->
           </div>
         </div>
 
