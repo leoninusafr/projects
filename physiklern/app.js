@@ -515,8 +515,6 @@ function getDynamicKlausur04() {
 
 // --- NORMAL THEORY / PRACTICE LEVEL LOGIC ---
 function setupNormalLevel(levelObj) {
-  document.getElementById('boss-profile-card').style.display = 'none';
-  
   const qId = currentLevelQueue[currentSubQuestionIndex];
   
   let qObj = EXAM_QUESTIONS.find(q => q.id === qId);
