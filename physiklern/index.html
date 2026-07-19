@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resonanz — Physik 2 Lern-Kampagne</title>
+  <meta name="description" content="Der ultimative interaktive Klausur-Trainer für Physik 2 (Physikalische Akustik) mit Stage-Kampagne, Boss-Kämpfen und Spickzettel-Generator.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg%2' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%238b5cf6'/%3E%3Cstop offset='100%25' stop-color='%2306b6d4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M10,50 L30,50 L30,20 L50,20 L50,80 L70,80 L70,50 L90,50' fill='none' stroke='url(%23grad)' stroke-width='12' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+  <!-- Google Fonts: Outfit for sleek headlines, Inter for readable UI/Math -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons for clean UI elements -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- KaTeX CSS for beautiful formula rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  
+  <!-- KaTeX JS and Auto-render extension -->
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- 1. APP HEADER (Hidden on Print, Centered inside header-content) -->
+  <header class="app-header no-print">
+    <div class="header-content">
+      <div class="logo" id="header-logo">
+        <span class="logo-icon"><i class="fa-solid fa-wave-square"></i></span>
+        <span class="logo-text">Resonanz <span class="logo-sub">Physik 2 Akustik</span></span>
+      </div>
+      
+      <div class="user-stats">
+        <!-- Streak -->
+        <div class="stat-item streak" id="streak-counter" title="Dein täglicher Streak">
+          <i class="fa-solid fa-fire text-orange"></i>
+          <span class="value">0 Tage</span>
+        </div>
+        
+        <!-- XP -->
+        <div class="stat-item xp" id="xp-counter" title="Erfahrungspunkte (XP)">
+          <i class="fa-solid fa-star text-gold"></i>
+          <span class="value">0 XP</span>
+        </div>
+
+        <!-- Level -->
+        <div class="stat-item level" id="level-counter" title="Dein Niveau">
+          <i class="fa-solid fa-graduation-cap text-cyan"></i>
+          <span class="value">Lvl 1</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 2. MAIN APP CONTAINER -->
+  <div class="app-container">
+    
+    <!-- LEFT SIDEBAR NAVIGATION (Hidden on Print) -->
+    <nav class="app-nav no-print">
+      <button class="nav-link active" data-tab="dashboard" id="nav-dashboard-btn">
+        <i class="fa-solid fa-house"></i>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-link" data-tab="campaign" id="nav-campaign-btn">
+        <i class="fa-solid fa-compass"></i>
+        <span>Lern-Kampagne</span>
+      </button>
+      <button class="nav-link" data-tab="cheatsheet" id="nav-cheatsheet-btn">
+        <i class="fa-solid fa-pen-ruler"></i>
+        <span>Spickzettel</span>
+      </button>
+      <button class="nav-link" data-tab="stats" id="nav-stats-btn">
+        <i class="fa-solid fa-chart-line"></i>
+        <span>Fortschritt</span>
+      </button>
+    </nav>
+
+    <!-- MAIN PANELS CONTENT -->
+    <main class="app-main">
+      
+      <!-- TAB 1: DASHBOARD VIEW -->
+      <section class="tab-content active" id="view-dashboard">
+        <div class="welcome-banner">
+          <div class="welcome-icon">⚡</div>
+          <div class="welcome-info">
+            <h1>Willkommen beim Akustik-Trainer!</h1>
+            <p>Noch knapp <strong>2 Tage</strong> bis zur Physik-2-Klausur. Mit diesem Tool holst du dir systematisch deine Bestehens-Garantie und schreibst am Ende die 1,0!</p>
+          </div>
+        </div>
+
+        <!-- Progress Widget "Bestehens-Garantie" -->
+        <div class="widget card guarantee-widget">
+          <div class="guarantee-header">
+            <h3><i class="fa-solid fa-shield-halved text-emerald"></i> Dein Weg zur Bestehens-Garantie</h3>
+            <span class="guarantee-percentage" id="guarantee-percent">0%</span>
+          </div>
+          <p>Schließe alle 15 Kampagnen-Levels (Theorie, Rechenaufgaben &amp; Boss-Kämpfe) ab, um deine Bestehens-Wahrscheinlichkeit auf 100% zu bringen!</p>
+          <div class="progress-bar-container">
+            <div class="progress-bar" id="guarantee-progress" style="width: 0%;"></div>
+          </div>
+          <div class="guarantee-footer">
+            <span id="guarantee-task-count">0 von 15 Levels abgeschlossen</span>
+            <button class="btn btn-primary" id="btn-start-marathon"><i class="fa-solid fa-play"></i> Kampagne fortsetzen</button>
+          </div>
+        </div>
+
+        <!-- Training Mode Grid -->
+        <div class="training-modes-grid">
+          <!-- Campaign Card -->
+          <div class="card training-card campaign-card-dashboard">
+            <div class="training-card-header">
+              <h3><i class="fa-solid fa-compass text-violet"></i> Klausur-Kampagne</h3>
+              <span class="badge badge-pink" id="dashboard-campaign-badge">Stage 1/5</span>
+            </div>
+            <p>Bestreite die geführte Kampagne durch alle 5 Hauptkapitel. Löse Altklausurfragen und besiege Rechen-Bosse!</p>
+            <button class="btn btn-primary btn-full" id="btn-dashboard-to-campaign">Kampagne fortsetzen <i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+
+          <!-- Quickie -->
+          <div class="card training-card quickie-card">
+            <div class="training-card-header">
+              <h3><i class="fa-solid fa-bolt text-pink"></i> Vorlesungs-Quickie</h3>
+              <span class="badge badge-pink">Quiz</span>
+            </div>
+            <p>5 schnelle Multiple-Choice-Fragen aus den Vorlesungsfolien zur Auffrischung der Theorie.</p>
+            <button class="btn btn-pink btn-full" id="start-quickie-btn">Quickie starten <i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+          
+          <!-- Sprint -->
+          <div class="card training-card sprint-card">
+            <div class="training-card-header">
+              <h3><i class="fa-solid fa-stopwatch text-orange"></i> Formel-Sprint</h3>
+              <span class="badge badge-orange">Tempo</span>
+            </div>
+            <p>Löse in 60 Sekunden so viele Berechnungen wie möglich. Perfekt unter Zeitdruck!</p>
+            <button class="btn btn-orange btn-full" id="start-sprint-btn">Sprint starten <i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+
+        <!-- Bottom Layout Row -->
+        <div class="dashboard-layout">
+          <!-- Left side: Tips -->
+          <div class="dashboard-info-column">
+            <div class="card info-card">
+              <h3><i class="fa-solid fa-lightbulb text-gold"></i> Heutiger Akustik-Tipp</h3>
+              <p id="daily-tip">Wärme erhöht die Schallgeschwindigkeit in Gasen ($c \approx 331 + 0{,}6 \cdot T_C$). Orgelpfeifen erklingen daher im Sommer höher gestimmt als im kalten Winter!</p>
+            </div>
+          </div>
+          
+          <!-- Right side: Spicker Status -->
+          <div class="dashboard-info-column">
+            <div class="card formula-status-card">
+              <h3><i class="fa-solid fa-receipt text-violet"></i> Formelzettel-Status</h3>
+              <p>Du hast bereits <strong id="pinned-formula-count">0</strong> wichtige Formelkarten auf deinem Spickzettel gespeichert.</p>
+              <button class="btn btn-secondary btn-full" id="dashboard-to-cheatsheet-btn">Spickzettel bearbeiten &amp; drucken</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: LERN-KAMPAGNE VIEW -->
+      <section class="tab-content" id="view-campaign">
+        
+        <!-- 1. CAMPAIGN OVERVIEW (GRID SELECTOR) -->
+        <div id="campaign-overview-view">
+          <div class="tab-header">
+            <h2>Klausur-Kampagne</h2>
+            <p>Wähle eine Stage oder ein Level aus, um das Training zu starten. Du kannst die Level in beliebiger Reihenfolge absolvieren.</p>
+          </div>
+          <div class="stages-grid" id="stages-selector-grid">
+            <!-- Dynamically populated stage cards with levels -->
+          </div>
+        </div>
+
+        <!-- 2. LEARNING WORKSPACE (FOCUSED TASK VIEW) -->
+        <div id="campaign-learning-view" style="display: none;">
+          <div class="workspace-nav-bar">
+            <button class="btn btn-secondary" id="btn-back-to-overview"><i class="fa-solid fa-arrow-left"></i> Zurück zur Übersicht</button>
+          </div>
+
+          <div class="question-workspace card" id="question-workspace" style="margin-top: 15px;">
+            <!-- Boss Profile Card (Only visible on Boss Levels) -->
+            <div class="boss-card" id="boss-profile-card" style="display: none;">
+              <div class="boss-avatar" id="boss-avatar-emoji">👹</div>
+              <div class="boss-info">
+                <div class="boss-name" id="boss-name-label">Der DGL-Dämon</div>
+                <div class="boss-hp-container">
+                  <div class="boss-hp-bar" id="boss-hp-bar" style="width: 100%;"></div>
+                  <div class="boss-hp-text" id="boss-hp-text">HP: 2 / 2</div>
+                </div>
+              </div>
+            </div>
+
+            <div id="workspace-active-state">
+              <div class="workspace-header">
+                <span class="question-badge" id="active-q-category">STAGE 1 — LEVEL 1</span>
+                <h3 id="active-q-title">Theorie-Frage</h3>
+              </div>
+              
+              <div class="question-text" id="active-q-text">
+                Aufgabe lädt...
+              </div>
+
+              <!-- Interactive fields container -->
+              <div class="question-interaction" id="active-q-interaction">
+                <!-- Will be dynamically populated with inputs/choices -->
+              </div>
+
+              <div class="workspace-actions">
+                <div class="workspace-actions-left">
+                  <button class="btn btn-violet" id="btn-pin-formula"><i class="fa-solid fa-thumbtack"></i> Formel pinnen</button>
+                  <button class="btn btn-secondary" id="btn-next-boss-task" style="display: none;"><i class="fa-solid fa-rotate"></i> Andere Zahlen generieren</button>
+                </div>
+                <button class="btn btn-primary" id="btn-check-answer"><i class="fa-solid fa-circle-check"></i> Antwort prüfen</button>
+              </div>
+
+              <div class="feedback-alert" id="active-q-feedback" style="display: none;"></div>
+
+              <!-- Collapsible Didactic Solution -->
+              <div class="didactic-solution-container" id="didactic-solution" style="display: none;">
+                <h4 class="solution-toggle-title"><i class="fa-solid fa-graduation-cap"></i> Erklärung &amp; Rechenweg</h4>
+                
+                <div class="didactic-content">
+                  <div class="didactic-section intuition">
+                    <h5><i class="fa-solid fa-lightbulb"></i> 1. Physikalischer Gedanke &amp; Intuition</h5>
+                    <p id="sol-intuition"></p>
+                  </div>
+                  
+                  <div class="didactic-section redthread">
+                    <h5><i class="fa-solid fa-route"></i> 2. Der rote Faden (Herangehensweise)</h5>
+                    <p id="sol-redthread"></p>
+                  </div>
+                  
+                  <div class="didactic-section calculation">
+                    <h5><i class="fa-solid fa-calculator"></i> 3. Herleitung &amp; Berechnung</h5>
+                    <p id="sol-calculation"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: SPICKZETTEL VIEW -->
+      <section class="tab-content" id="view-cheatsheet">
+        <div class="tab-header no-print">
+          <h2>Dein Akustik-Spickzettel</h2>
+          <p>Füge eigene Notizen, Ergänzungen oder Tricks direkt auf den Formelkarten ein. Klicke auf „Spickzettel drucken“, um eine extrem platzsparende, physische A4-Vorlage zu erstellen.</p>
+          <div class="cheatsheet-actions">
+            <button class="btn btn-primary" id="btn-print-cheatsheet"><i class="fa-solid fa-print"></i> Spickzettel drucken (A4)</button>
+            <button class="btn btn-secondary" id="btn-pin-all-formulas"><i class="fa-solid fa-thumbtack"></i> Alle Formeln pinnen</button>
+            <button class="btn btn-secondary" id="btn-clear-cheatsheet"><i class="fa-solid fa-trash-can"></i> Zurücksetzen</button>
+          </div>
+        </div>
+
+        <!-- Print Page Wrapper (Will be formatted during print) -->
+        <div class="cheatsheet-grid" id="cheatsheet-grid">
+          <!-- Dynamic Formel-Cards go here -->
+          <div class="no-formulas-state no-print" id="no-formulas-state">
+            <i class="fa-solid fa-receipt"></i>
+            <h3>Dein Spickzettel ist noch leer</h3>
+            <p>Löse Aufgaben im Altklausur-Trainer oder klicke oben auf „Alle Formeln pinnen“, um Karten hinzuzufügen.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: STATS VIEW -->
+      <section class="tab-content" id="view-stats">
+        <div class="tab-header">
+          <h2>Dein Lernfortschritt</h2>
+          <p>Verfolge dein Vorbereitungsniveau für die Physik-2-Klausur.</p>
+        </div>
+
+        <div class="stats-grid">
+          <!-- Overview Cards -->
+          <div class="card stat-summary-card">
+            <div class="stat-number text-gold" id="stats-xp">0</div>
+            <div class="stat-label">Gesamte XP</div>
+          </div>
+          
+          <div class="card stat-summary-card">
+            <div class="stat-number text-orange" id="stats-streak">0</div>
+            <div class="stat-label">Aktueller Streak (Tage)</div>
+          </div>
+
+          <div class="card stat-summary-card">
+            <div class="stat-number text-cyan" id="stats-solved-count">0 / 15</div>
+            <div class="stat-label">Kampagnen-Levels</div>
+          </div>
+
+          <div class="card stat-summary-card">
+            <div class="stat-number text-emerald" id="stats-level">Tier 1</div>
+            <div class="stat-label">Klausur-Rang (Title)</div>
+          </div>
+        </div>
+
+        <!-- Achievements Section -->
+        <h3 class="section-title"><i class="fa-solid fa-trophy text-gold"></i> Deine Erfolge</h3>
+        <div class="achievements-list" id="achievements-list">
+          <!-- Will be dynamically populated with badges -->
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- INTERACTIVE MODAL OVERLAYS (Hidden on Print) -->
+  <!-- 1. QUICKIE QUIZ MODAL -->
+  <div class="modal-overlay no-print" id="quickie-modal" style="display: none;">
+    <div class="modal card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-bolt text-pink"></i> Vorlesungs-Quickie</h3>
+        <button class="btn-close" id="btn-close-quickie"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="quickie-progress">
+          <div class="quickie-progress-fill" id="quickie-progress-fill" style="width: 0%;"></div>
+        </div>
+        <div class="quickie-q-counter" id="quickie-q-counter">Frage 1 von 5</div>
+        <div class="quickie-question-text" id="quickie-question-text">Frage lädt...</div>
+        
+        <div class="quickie-options" id="quickie-options">
+          <!-- Dynamic options -->
+        </div>
+        
+        <div class="feedback-alert" id="quickie-feedback" style="display: none; margin-top: 15px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btn-next-quickie" style="display: none;">Nächste Frage <i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. SPRINT QUIZ MODAL -->
+  <div class="modal-overlay no-print" id="sprint-modal" style="display: none;">
+    <div class="modal card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-stopwatch text-orange"></i> Formel-Sprint</h3>
+        <div class="sprint-timer-badge" id="sprint-timer">60s</div>
+      </div>
+      <div class="modal-body">
+        <div class="sprint-score-indicator">
+          <span>Richtig gelöst: <strong id="sprint-score" class="text-orange">0</strong></span>
+        </div>
+        <div class="sprint-question" id="sprint-question-text">
+          Rechnung lädt...
+        </div>
+        <div class="sprint-interaction" id="sprint-interaction">
+          <!-- Dynamic input -->
+        </div>
+        <div class="feedback-alert" id="sprint-feedback" style="display: none; margin-top: 15px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-orange btn-full" id="btn-sprint-submit">Antwort abgeben</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import application JS -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>

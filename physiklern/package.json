@@ -1,0 +1,14 @@
+{
+  "name": "physik2-lernwebsite",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Interactive exam prep for Physikalische Akustik",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^4.4.9"
+  }
+}
