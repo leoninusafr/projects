@@ -631,11 +631,11 @@ function setupBossLevel(levelObj, stageObj) {
   
   currentBossTask = gen.generate();
   
-  document.getElementById('active-q-category').innerText = `BOSS-KAMPF: ${stageObj.bossName}`;
+  document.getElementById('active-q-category').innerText = `Praxisaufgabe: ${stageObj.bossName.replace('der ', '').replace('die ', '').replace('den ', '').replace('Der ', '').replace('Die ', '').replace('Den ', '')}`;
   document.getElementById('active-q-title').innerText = gen.title;
   
   const textEl = document.getElementById('active-q-text');
-  textEl.innerHTML = `<strong>Der Boss fordert dich heraus! Rechne richtig, um ihn zu verletzen!</strong><br><br>${currentBossTask.instruction}`;
+  textEl.innerHTML = `<strong>Löse die folgenden Berechnungen für diese Praxisaufgabe:</strong><br><br>${currentBossTask.instruction}`;
   renderMath(textEl);
   
   const interactionContainer = document.getElementById('active-q-interaction');
@@ -850,10 +850,10 @@ function handleCheckNormalAnswer(levelObj, feedbackEl) {
       const nextLvlId = getNextLevelId(levelObj.id);
       if (nextLvlId) {
         const nextLvlObj = getLevelObj(nextLvlId);
-        checkBtn.innerHTML = `Nächstes Level: ${nextLvlObj.title} <i class="fa-solid fa-arrow-right"></i>`;
+        checkBtn.innerHTML = `Nächste Aufgabe <i class="fa-solid fa-arrow-right"></i>`;
         checkBtn.className = 'btn btn-success';
       } else {
-        checkBtn.innerHTML = 'Kampagne beendet! 🏆 <i class="fa-solid fa-flag-checkered"></i>';
+        checkBtn.innerHTML = 'Alle Aufgaben beendet! 🏆 <i class="fa-solid fa-flag-checkered"></i>';
         checkBtn.className = 'btn btn-success';
       }
     } else {
@@ -974,7 +974,7 @@ function handleCheckBossAnswer(levelObj, stageObj, feedbackEl) {
     if (hp <= 0) {
       // Boss defeated
       feedbackEl.className = 'feedback-alert success';
-      feedbackEl.innerHTML = `<strong>💥 Boss besiegt!</strong> Du hast den ${stageObj.bossName} erfolgreich vertrieben und die Stage abgeschlossen! +50 XP erhalten.`;
+      feedbackEl.innerHTML = `<strong>Hervorragend gelöst!</strong> Die Praxisaufgabe wurde erfolgreich abgeschlossen! +50 XP erhalten.`;
       playSound('success');
       
       if (!state.completedLevels.includes(levelObj.id)) {
@@ -987,19 +987,19 @@ function handleCheckBossAnswer(levelObj, stageObj, feedbackEl) {
       const nextLvlId = getNextLevelId(levelObj.id);
       if (nextLvlId) {
         const nextLvlObj = getLevelObj(nextLvlId);
-        checkBtn.innerHTML = `Nächstes Level: ${nextLvlObj.title} <i class="fa-solid fa-circle-chevron-right"></i>`;
+        checkBtn.innerHTML = `Nächste Aufgabe <i class="fa-solid fa-chevron-right"></i>`;
         checkBtn.className = 'btn btn-success';
       } else {
-        checkBtn.innerHTML = 'Kampagne beendet! 🏆 <i class="fa-solid fa-flag-checkered"></i>';
+        checkBtn.innerHTML = 'Alle Aufgaben beendet! 🏆 <i class="fa-solid fa-flag-checkered"></i>';
         checkBtn.className = 'btn btn-success';
       }
     } else {
       // Boss hurt but alive
       feedbackEl.className = 'feedback-alert success';
-      feedbackEl.innerHTML = `<strong>💥 Treffer!</strong> Du hast dem Boss 1 HP abgezogen! Klicke auf „Nächste Boss-Aufgabe“ für die finale Runde.`;
+      feedbackEl.innerHTML = `<strong>Richtig gelöst!</strong> Klicke auf „Nächste Aufgabe“ für den zweiten Teil.`;
       playSound('correct');
       
-      checkBtn.innerHTML = 'Nächste Boss-Aufgabe <i class="fa-solid fa-chevron-right"></i>';
+      checkBtn.innerHTML = 'Nächste Aufgabe <i class="fa-solid fa-chevron-right"></i>';
       checkBtn.className = 'btn btn-primary';
       saveState();
     }
@@ -1008,7 +1008,7 @@ function handleCheckBossAnswer(levelObj, stageObj, feedbackEl) {
     
   } else {
     feedbackEl.className = 'feedback-alert error';
-    feedbackEl.innerHTML = `<strong>Rechenfehler!</strong> Der Boss pariert deinen Angriff. Korrigiere deine Werte und probiere es erneut.`;
+    feedbackEl.innerHTML = `<strong>Rechenfehler!</strong> Überprüfe deinen Rechenweg, korrigiere deine Werte und probiere es erneut.`;
     playSound('incorrect');
     revealBossSolution(currentBossTask);
   }

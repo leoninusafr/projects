@@ -33,7 +33,7 @@ export const EXAM_QUESTIONS = [
     fields: [
       { id: 'u_feder', label: 'Federkonstante ($D$):', placeholder: 'z.B. kg', correct: 'N/m' },
       { id: 'u_energie', label: 'Energie ($E$):', placeholder: 'z.B. s', correct: 'J' },
-      { id: 'u_dichte', label: 'Massendichte ($\rho$):', placeholder: 'z.B. m', correct: 'kg/m³' },
+      { id: 'u_dichte', label: 'Massendichte ($\\rho$):', placeholder: 'z.B. m', correct: 'kg/m³' },
       { id: 'u_druck', label: 'Schalldruck ($p$):', placeholder: 'z.B. kg', correct: 'Pa' },
       { id: 'u_frequenz', label: 'Frequenz ($f$):', placeholder: 'z.B. s', correct: 'Hz' },
       { id: 'u_schnelle', label: 'Schallschnelle ($v$):', placeholder: 'z.B. m', correct: 'm/s' },
@@ -142,17 +142,17 @@ export const EXAM_QUESTIONS = [
     solution: {
       intuition: 'Der Dezibel-Pegel ist logarithmisch. $-3$ dB entspricht einer Leistungshalbierung.',
       redThread: 'Verknüpfe den Pegelverlust von $-3$ dB mit dem Leistungsverhältnis: $\\Delta L_P = 10 \\cdot \\log_{10}(P_{out}/P_{in})$.',
-      calculation: 'Berechnung des Leistungsverhältnisses für $\\Delta L = -3 \\text{ dB}$:\<br>$$-3 = 10 \\log_{10}\left(\\frac{P_{out}}{P_{in}}\right) \\implies -0{,}3 = \\log_{10}\left(\\frac{P_{out}}{P_{in}}\right) \\implies \\frac{P_{out}}{P_{in}} = 10^{-0{,}3} \\approx 0{,}50$$ (d.h. 50% Leistung).\<br>Für die Spannung gilt:\<br>$$\\frac{U_{out}}{U_{in}} = \\sqrt{\\frac{P_{out}}{P_{in}}} = \\sqrt{0{,}5} \\approx 0{,}707$$ (d.h. ca. 70,7% der Eingangsspannung, nicht 50%).'
+      calculation: 'Berechnung des Leistungsverhältnisses für $\\Delta L = -3 \\text{ dB}$:\<br>$$-3 = 10 \\log_{10}\\left(\\frac{P_{out}}{P_{in}}\\right) \\implies -0{,}3 = \\log_{10}\\left(\\frac{P_{out}}{P_{in}}\\right) \\implies \\frac{P_{out}}{P_{in}} = 10^{-0{,}3} \\approx 0{,}50$$ (d.h. 50% Leistung).\<br>Für die Spannung gilt:\<br>$$\\frac{U_{out}}{U_{in}} = \\sqrt{\\frac{P_{out}}{P_{in}}} = \\sqrt{0{,}5} \\approx 0{,}707$$ (d.h. ca. 70,7% der Eingangsspannung, nicht 50%).'
     }
   },
   {
     id: 'klausur_08',
     title: '8. Effektivwert & mittlere Leistung',
     category: 'Grundlagen',
-    question: 'Eine periodische, stückweise lineare Spannung $u(t)$ mit Periode $T = 6\text{ s}$ liegt an einem Widerstand $R = 1\text{ k}\Omega$ an. Die Kurve ist wie folgt definiert:<br>- $0 \le t < 1$: $u(t) = t$<br>- $1 \le t < 2$: $u(t) = 1$<br>- $2 \le t < 4$: $u(t) = 3-t$<br>- $4 \le t < 5$: $u(t) = -1$<br>- $5 \le t < 6$: $u(t) = t-6$<br><br>Berechne die mittlere Leistung $P$, die am Widerstand abfällt.',
+    question: 'Eine periodische, stückweise lineare Spannung $u(t)$ mit Periode $T = 6\\text{ s}$ liegt an einem Widerstand $R = 1\\text{ k}\\Omega$ an. Die Kurve ist wie folgt definiert:<br>- $0 \\le t < 1$: $u(t) = t$<br>- $1 \\le t < 2$: $u(t) = 1$<br>- $2 \\le t < 4$: $u(t) = 3-t$<br>- $4 \\le t < 5$: $u(t) = -1$<br>- $5 \\le t < 6$: $u(t) = t-6$<br><br>Berechne die mittlere Leistung $P$, die am Widerstand abfällt.',
     type: 'multi-field',
     fields: [
-      { id: 'rms_integral', label: 'Wert des Integrals $\int_0^T u^2(t) dt$ ($V^2 s$):', placeholder: 'z.B. 1.25 oder 5/4', correct: '10/3' },
+      { id: 'rms_integral', label: 'Wert des Integrals $\\int_0^T u^2(t) dt$ ($V^2 s$):', placeholder: 'z.B. 1.25 oder 5/4', correct: '10/3' },
       { id: 'rms_power', label: 'Mittlere Leistung P (in mW):', placeholder: 'z.B. 4.2', correct: '0.56' }
     ],
     formulaId: 'rms_value',
@@ -187,11 +187,11 @@ export const EXAM_QUESTIONS = [
     id: 'klausur_10',
     title: '10. Fundamentaler Wellenzusammenhang',
     category: 'Wellen',
-    question: 'In welcher mathematischen Beziehung stehen die Ausbreitungsgeschwindigkeit $c$, die Frequenz $f$ und die Wellenlänge $\lambda$ zueinander?<br>Trage die Formel und die Bedeutung der Symbole ein.',
+    question: 'In welcher mathematischen Beziehung stehen die Ausbreitungsgeschwindigkeit $c$, die Frequenz $f$ und die Wellenlänge $\\lambda$ zueinander?<br>Trage die Formel und die Bedeutung der Symbole ein.',
     type: 'multi-field',
     fields: [
       { id: 'wave_eq', label: 'Formel:', placeholder: 'z.B. a = b * c', correct: 'c = lambda * f' },
-      { id: 'lambda_unit', label: 'SI-Einheit von $\lambda$:', placeholder: 'z.B. m', correct: 'm' },
+      { id: 'lambda_unit', label: 'SI-Einheit von $\\lambda$:', placeholder: 'z.B. m', correct: 'm' },
       { id: 'f_unit', label: 'SI-Einheit von $f$:', placeholder: 'z.B. Hz oder 1/s', correct: 'Hz' }
     ],
     formulaId: 'wave_basics',
@@ -205,12 +205,12 @@ export const EXAM_QUESTIONS = [
     id: 'klausur_11',
     title: '11. Wellenzahl und Kreisfrequenz',
     category: 'Wellen',
-    question: 'Wie hängen Kreisfrequenz $\omega$, Wellenzahl $k$ und Schallgeschwindigkeit $c$ zusammen?',
+    question: 'Wie hängen Kreisfrequenz $\\omega$, Wellenzahl $k$ und Schallgeschwindigkeit $c$ zusammen?',
     type: 'multi-field',
     fields: [
-      { id: 'w_eq', label: 'Formel für $\omega$ (Kreisfrequenz über f):', placeholder: 'z.B. 2 * pi * x', correct: '2*pi*f' },
+      { id: 'w_eq', label: 'Formel für $\\omega$ (Kreisfrequenz über f):', placeholder: 'z.B. 2 * pi * x', correct: '2*pi*f' },
       { id: 'k_eq', label: 'Formel für $k$ (Wellenzahl über lambda):', placeholder: '2*pi/lambda', correct: '2*pi/lambda' },
-      { id: 'w_k_rel', label: 'Verknüpfung (Formel für $\omega$ über c und k):', placeholder: 'z.B. a * b', correct: 'c*k' }
+      { id: 'w_k_rel', label: 'Verknüpfung (Formel für $\\omega$ über c und k):', placeholder: 'z.B. a * b', correct: 'c*k' }
     ],
     formulaId: 'wave_basics',
     solution: {
@@ -243,7 +243,7 @@ export const EXAM_QUESTIONS = [
     id: 'klausur_13',
     title: '13. Orgelpfeife & Temperatureinfluss',
     category: 'Rohre',
-    question: 'Eine Orgelpfeife wird in der kalten Kirche bei $T_1 = 5^\circ\text{C}$ bespielt und klingt mit $f_1 = 440\text{ Hz}$. Welche Frequenz $f_2$ erklingt im Hochsommer bei $T_2 = 35^\circ\text{C}$?<br>Berechne die Schallgeschwindigkeiten und die neue Frequenz.',
+    question: 'Eine Orgelpfeife wird in der kalten Kirche bei $T_1 = 5^\\circ\\text{C}$ bespielt und klingt mit $f_1 = 440\\text{ Hz}$. Welche Frequenz $f_2$ erklingt im Hochsommer bei $T_2 = 35^\\circ\\text{C}$?<br>Berechne die Schallgeschwindigkeiten und die neue Frequenz.',
     type: 'multi-field',
     fields: [
       { id: 'c_5deg', label: 'c bei 5°C (in m/s):', placeholder: 'z.B. 334', correct: '334' },
@@ -253,15 +253,15 @@ export const EXAM_QUESTIONS = [
     formulaId: 'temperature_speed',
     solution: {
       intuition: 'Wärmere Luft erhöht die Schallgeschwindigkeit. Da die Länge der Pfeife gleich bleibt, steigt die Frequenz – die Orgel verstimmt sich nach oben.',
-      redThread: '1. Berechne $c_1$ bei $5^\circ$C mit $c \\approx 331 + 0{,}6 \\cdot T$.\<br>2. Berechne $c_2$ bei $35^\circ$C.\<br>3. Da die Wellenlänge $\\lambda$ konstant ist, gilt $f_2 = f_1 \\cdot \\frac{c_2}{c_1}$.',
-      calculation: '1. Schallgeschwindigkeit bei $5^\circ$C:\<br>$$c_1 = 331 \\text{ m/s} + 0{,}6 \\cdot 5 = 334 \\text{ m/s}$$\<br>2. Schallgeschwindigkeit bei $35^\circ$C:\<br>$$c_2 = 331 \\text{ m/s} + 0{,}6 \\cdot 35 = 352 \\text{ m/s}$$\<br>3. Frequenzberechnung bei konstanter Rohrlänge $L$ (daher $\\lambda = \\text{konst.}$):\<br>$$f_2 = f_1 \\cdot \\frac{c_2}{c_1} = 440 \\text{ Hz} \\cdot \\frac{352}{334} \\approx 463{,}7 \\text{ Hz} \\approx 464 \\text{ Hz}$$'
+      redThread: '1. Berechne $c_1$ bei $5^\\circ$C mit $c \\approx 331 + 0{,}6 \\cdot T$.\<br>2. Berechne $c_2$ bei $35^\\circ$C.\<br>3. Da die Wellenlänge $\\lambda$ konstant ist, gilt $f_2 = f_1 \\cdot \\frac{c_2}{c_1}$.',
+      calculation: '1. Schallgeschwindigkeit bei $5^\\circ$C:\<br>$$c_1 = 331 \\text{ m/s} + 0{,}6 \\cdot 5 = 334 \\text{ m/s}$$\<br>2. Schallgeschwindigkeit bei $35^\\circ$C:\<br>$$c_2 = 331 \\text{ m/s} + 0{,}6 \\cdot 35 = 352 \\text{ m/s}$$\<br>3. Frequenzberechnung bei konstanter Rohrlänge $L$ (daher $\\lambda = \\text{konst.}$):\<br>$$f_2 = f_1 \\cdot \\frac{c_2}{c_1} = 440 \\text{ Hz} \\cdot \\frac{352}{334} \\approx 463{,}7 \\text{ Hz} \\approx 464 \\text{ Hz}$$'
     }
   },
   {
     id: 'klausur_14',
     title: '14. Graphen vs. Diamant',
     category: 'Wellen',
-    question: 'Welche Schallgeschwindigkeit erwarten Sie in Graphen im Vergleich zu Diamant (Schallgeschwindigkeit Diamant $\approx 18.000\text{ m/s}$)?',
+    question: 'Welche Schallgeschwindigkeit erwarten Sie in Graphen im Vergleich zu Diamant (Schallgeschwindigkeit Diamant $\\approx 18.000\\text{ m/s}$)?',
     type: 'multiple-choice',
     options: [
       'Deutlich niedriger als in Luft, da das zweidimensionale Gitter keine mechanischen Schallwellen entlang der Atomlagen tragen kann.',
@@ -648,7 +648,7 @@ export const CAMPAIGN_STAGES = [
     levels: [
       { id: 'stage1_lvl1', type: 'theorie', title: 'Theorie-Check', questionIds: ['klausur_01', 'klausur_04', 'klausur_09'] },
       { id: 'stage1_lvl2', type: 'praxis', title: 'Einheiten & Klassifikation', questionIds: ['klausur_02', 'klausur_21'] },
-      { id: 'stage1_lvl3', type: 'boss', title: 'Boss-Kampf: RMS-König' }
+      { id: 'stage1_lvl3', type: 'boss', title: 'RMS-Mittelwert-Berechnung' }
     ]
   },
   {
@@ -660,7 +660,7 @@ export const CAMPAIGN_STAGES = [
     levels: [
       { id: 'stage2_lvl1', type: 'theorie', title: 'Dämpfung & Resonanz', questionIds: ['klausur_05', 'klausur_06'] },
       { id: 'stage2_lvl2', type: 'praxis', title: 'Bewegungsgleichung', questionIds: ['klausur_03'] },
-      { id: 'stage2_lvl3', type: 'boss', title: 'Boss-Kampf: DGL-Dämon' }
+      { id: 'stage2_lvl3', type: 'boss', title: 'Federpendel-DGL-Berechnung' }
     ]
   },
   {
@@ -672,7 +672,7 @@ export const CAMPAIGN_STAGES = [
     levels: [
       { id: 'stage3_lvl1', type: 'theorie', title: 'Filter-Dämpfung', questionIds: ['klausur_07'] },
       { id: 'stage3_lvl2', type: 'praxis', title: 'Effektivwert-Integral', questionIds: ['klausur_08'] },
-      { id: 'stage3_lvl3', type: 'boss', title: 'Boss-Kampf: Kugelwellen-Krake' }
+      { id: 'stage3_lvl3', type: 'boss', title: 'Kugelwellen-Pegel-Berechnung' }
     ]
   },
   {
@@ -684,7 +684,7 @@ export const CAMPAIGN_STAGES = [
     levels: [
       { id: 'stage4_lvl1', type: 'theorie', title: 'Akustik-Konzepte', questionIds: ['klausur_14', 'klausur_15', 'klausur_16', 'klausur_17', 'klausur_18', 'klausur_20', 'klausur_22'] },
       { id: 'stage4_lvl2', type: 'praxis', title: 'Wellenzahl & Frequenz', questionIds: ['klausur_10', 'klausur_11'] },
-      { id: 'stage4_lvl3', type: 'boss', title: 'Boss-Kampf: Orgel-Titan' }
+      { id: 'stage4_lvl3', type: 'boss', title: 'Orgelrohr-Frequenz-Berechnung' }
     ]
   },
   {
@@ -696,7 +696,7 @@ export const CAMPAIGN_STAGES = [
     levels: [
       { id: 'stage5_lvl1', type: 'theorie', title: 'Instrumenten-Physik', questionIds: ['klausur_23', 'klausur_24'] },
       { id: 'stage5_lvl2', type: 'praxis', title: 'Mündungskorrektur & Helium', questionIds: ['klausur_12', 'klausur_13', 'klausur_19', 'klausur_25'] },
-      { id: 'stage5_lvl3', type: 'boss', title: 'Boss-Kampf: Mündungs-Meister' }
+      { id: 'stage5_lvl3', type: 'boss', title: 'Mündungskorrektur-Berechnung' }
     ]
   }
 ];

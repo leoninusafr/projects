@@ -29,11 +29,11 @@ export const GENERATOR_DB = {
         ],
         solution: {
           intuition: 'Die Steifigkeit der Feder treibt die Masse an. Mehr Federkraft (größeres D) beschleunigt das System, mehr Trägheit (größere Masse m) bremst es aus.',
-          redThread: '1. Kreisfrequenz über $\\omega_0 = \\sqrt{D/m}$ berechnen.\\n2. Frequenz über $f_0 = \\omega_0 / 2\\pi$ berechnen.',
-          calculation: `Gegeben: $m = ${m.toString().replace('.', ',')}\\,\\text{kg}$ und $D = ${D}\\,\\text{N/m}$.\\n\\n` +
-                       `1. Eigenkreisfrequenz:\\n` +
-                       `$$\\omega_0 = \\sqrt{\\frac{D}{m}} = \\sqrt{\\frac{${D}}{${m}}} = \\sqrt{${roundTo(D/m, 4)}} \\approx ${roundTo(w0, 2).toString().replace('.', ',')}\\,\\text{rad/s}$$\\n` +
-                       `2. Schwingungsfrequenz:\\n` +
+          redThread: '1. Kreisfrequenz über $\\omega_0 = \\sqrt{D/m}$ berechnen.<br>2. Frequenz über $f_0 = \\omega_0 / 2\\pi$ berechnen.',
+          calculation: `Gegeben: $m = ${m.toString().replace('.', ',')}\\,\\text{kg}$ und $D = ${D}\\,\\text{N/m}$.<br><br>` +
+                       `1. Eigenkreisfrequenz:<br>` +
+                       `$$\\omega_0 = \\sqrt{\\frac{D}{m}} = \\sqrt{\\frac{${D}}{${m}}} = \\sqrt{${roundTo(D/m, 4)}} \\approx ${roundTo(w0, 2).toString().replace('.', ',')}\\,\\text{rad/s}$$<br>` +
+                       `2. Schwingungsfrequenz:<br>` +
                        `$$f_0 = \\frac{\\omega_0}{2\\pi} = \\frac{${roundTo(w0, 4).toString().replace('.', ',')}}{2\\pi} \\approx ${roundTo(f0, 2).toString().replace('.', ',')}\\,\\text{Hz}$$`
         }
       };
@@ -65,13 +65,13 @@ export const GENERATOR_DB = {
         ],
         solution: {
           intuition: 'Durch Erwärmung sinkt die Dichte der Luft, wodurch die Schallwellen schneller laufen. Bei unveränderter Länge der Pfeife muss der Ton höher klingen.',
-          redThread: '1. Schallgeschwindigkeiten $c_1$ und $c_2$ berechnen.\\n2. Da $\\lambda$ konstant bleibt, die Verhältnisformel $f_2 = f_1 \\cdot (c_2 / c_1)$ anwenden.',
-          calculation: `1. Schallgeschwindigkeit bei $T_1 = ${T1}^\\circ\\text{C}$:\\n` +
-                       `$$c_1 = 331{,}4 + 0{,}6 \\cdot T_1 = 331{,}4 + 0{,}6 \\cdot (${T1}) = ${roundTo(c1, 1).toString().replace('.', ',')}\\,\\text{m/s}$$\\n` +
-                       `2. Schallgeschwindigkeit bei $T_2 = ${T2}^\\circ\\text{C}$:\\n` +
-                       `$$c_2 = 331{,}4 + 0{,}6 \\cdot T_2 = 331{,}4 + 0{,}6 \\cdot ${T2} = ${roundTo(c2, 1).toString().replace('.', ',')}\\,\\text{m/s}$$\\n` +
-                       `3. Neue Frequenz:\\n` +
-                       `$$f_2 = f_1 \\cdot \\frac{c_2}{c_1} = ${f1} \\cdot \\frac{${roundTo(c2, 1)}}{${roundTo(c1, 1)}} \\approx ${roundTo(f2, 2).toString().replace('.', ',')}\\,\\text{Hz} \\\\rightarrow ${Math.round(f2)}\\,\\text{Hz}$$`
+          redThread: '1. Schallgeschwindigkeiten $c_1$ und $c_2$ berechnen.<br>2. Da $\\lambda$ konstant bleibt, die Verhältnisformel $f_2 = f_1 \\cdot (c_2 / c_1)$ anwenden.',
+          calculation: `1. Schallgeschwindigkeit bei $T_1 = ${T1}^\\circ\\text{C}$:<br>` +
+                       `$$c_1 = 331{,}4 + 0{,}6 \\cdot T_1 = 331{,}4 + 0{,}6 \\cdot (${T1}) = ${roundTo(c1, 1).toString().replace('.', ',')}\\,\\text{m/s}$$<br>` +
+                       `2. Schallgeschwindigkeit bei $T_2 = ${T2}^\\circ\\text{C}$:<br>` +
+                       `$$c_2 = 331{,}4 + 0{,}6 \\cdot T_2 = 331{,}4 + 0{,}6 \\cdot ${T2} = ${roundTo(c2, 1).toString().replace('.', ',')}\\,\\text{m/s}$$<br>` +
+                       `3. Neue Frequenz:<br>` +
+                       `$$f_2 = f_1 \\cdot \\frac{c_2}{c_1} = ${f1} \\cdot \\frac{${roundTo(c2, 1)}}{${roundTo(c1, 1)}} \\approx ${roundTo(f2, 2).toString().replace('.', ',')}\\,\\text{Hz} \\rightarrow ${Math.round(f2)}\\,\\text{Hz}$$`
         }
       };
     }
@@ -100,13 +100,13 @@ export const GENERATOR_DB = {
         ],
         solution: {
           intuition: 'Der Schalldruck sinkt umgekehrt proportional zum Abstand ($1/r$). Die Intensität (Energie pro Fläche) sinkt quadratisch ($1/r^2$), weil sich die Energie auf eine Kugeloberfläche ($4\\pi r^2$) verteilt.',
-          redThread: '1. Schalldruck über $p_2 = p_1 \\cdot (r_1 / r_2)$ berechnen.\\n2. Intensitätsabfall über $(r_2 / r_1)^2$ ermitteln.',
-          calculation: `Gegeben: $r_1 = ${r1}\\,\\text{m}$, $r_2 = ${r2}\\,\\text{m}$ (Faktor $r_2/r_1 = ${factor}$) und $p_1 = ${p1.toString().replace('.', ',')}\\,\\text{Pa}$.\\n\\n` +
-                       `1. Schalldruck am Punkt 2:\\n` +
-                       `$$p_2 = p_1 \\cdot \\frac{r_1}{r_2} = ${p1.toString().replace('.', ',')} \\cdot \\frac{${r1}}{${r2}} = \\frac{${p1.toString().replace('.', ',')}}{${factor}} \\approx ${roundTo(p2, 3).toString().replace('.', ',')}\\,\\text{Pa}$$\\n` +
-                       `2. Intensitätsverlauf:\\n` +
-                       `Da $I \\propto p^2 \\propto \\frac{1}{r^2}$ gilt:\\n` +
-                       `$$\\frac{I_1}{I_2} = \\left(\\frac{r_2}{r_1}\\right)^2 = ${factor}^2 = ${I_drop}$$\\n` +
+          redThread: '1. Schalldruck über $p_2 = p_1 \\cdot (r_1 / r_2)$ berechnen.<br>2. Intensitätsabfall über $(r_2 / r_1)^2$ ermitteln.',
+          calculation: `Gegeben: $r_1 = ${r1}\\,\\text{m}$, $r_2 = ${r2}\\,\\text{m}$ (Faktor $r_2/r_1 = ${factor}$) und $p_1 = ${p1.toString().replace('.', ',')}\\,\\text{Pa}$.<br><br>` +
+                       `1. Schalldruck am Punkt 2:<br>` +
+                       `$$p_2 = p_1 \\cdot \\frac{r_1}{r_2} = ${p1.toString().replace('.', ',')} \\cdot \\frac{${r1}}{${r2}} = \\frac{${p1.toString().replace('.', ',')}}{${factor}} \\approx ${roundTo(p2, 3).toString().replace('.', ',')}\\,\\text{Pa}$$<br>` +
+                       `2. Intensitätsverlauf:<br>` +
+                       `Da $I \\propto p^2 \\propto \\frac{1}{r^2}$ gilt:<br>` +
+                       `$$\\frac{I_1}{I_2} = \\left(\\frac{r_2}{r_1}\\right)^2 = ${factor}^2 = ${I_drop}$$<br>` +
                        `Die Intensität sinkt folglich auf das $1/${I_drop}$-fache (Abfallfaktor ${I_drop}).`
         }
       };
@@ -151,13 +151,13 @@ export const GENERATOR_DB = {
         ],
         solution: {
           intuition: 'Am offenen Ende endet das Mitschwingen der Luftteilchen nicht abrupt. Sie greifen etwas in den Außenraum aus, wodurch das Rohr akustisch länger wird.',
-          redThread: `1. Bestimme die effektive Länge $L_{eff}$ unter Addition von $0{,}6 \\cdot r$ pro offenem Ende.\\n2. Berechne $f_1$ für den Rohrtyp (${type === 'offen' ? 'offen: c/(2Leff)' : 'geschlossen: c/(4Leff)'}).`,
-          calculation: `Gegeben: $L = ${L.toString().replace('.', ',')}\\,\\text{m}$, $r = ${r.toString().replace('.', ',')}\\,\\text{m}$, $c = 343\\,\\text{m/s}$.\\n\\n` +
-                       `1. Berechnung der effektiven Länge $L_{eff}$ (${type_desc}):\\n` +
-                       `${dL_desc}\\n` +
-                       `$$L_{eff} = ${L.toString().replace('.', ',')} + ${type === 'offen' ? '1{,}2 \\cdot ' + r.toString().replace('.', ',') : '0{,}6 \\cdot ' + r.toString().replace('.', ',')} = ${roundTo(Leff, 4).toString().replace('.', ',')}\\,\\text{m} \\\\approx ${roundTo(Leff, 3).toString().replace('.', ',')}\\,\\text{m}$$\\n` +
-                       `2. Berechnung der Grundfrequenz:\\n` +
-                       `${formula_desc}\\n` +
+          redThread: `1. Bestimme die effektive Länge $L_{eff}$ unter Addition von $0{,}6 \\cdot r$ pro offenem Ende.<br>2. Berechne $f_1$ für den Rohrtyp (${type === 'offen' ? 'offen: c/(2Leff)' : 'geschlossen: c/(4Leff)'}).`,
+          calculation: `Gegeben: $L = ${L.toString().replace('.', ',')}\\,\\text{m}$, $r = ${r.toString().replace('.', ',')}\\,\\text{m}$, $c = 343\\,\\text{m/s}$.<br><br>` +
+                       `1. Berechnung der effektiven Länge $L_{eff}$ (${type_desc}):<br>` +
+                       `${dL_desc}<br>` +
+                       `$$L_{eff} = ${L.toString().replace('.', ',')} + ${type === 'offen' ? '1{,}2 \\cdot ' + r.toString().replace('.', ',') : '0{,}6 \\cdot ' + r.toString().replace('.', ',')} = ${roundTo(Leff, 4).toString().replace('.', ',')}\\,\\text{m} \\approx ${roundTo(Leff, 3).toString().replace('.', ',')}\\,\\text{m}$$<br>` +
+                       `2. Berechnung der Grundfrequenz:<br>` +
+                       `${formula_desc}<br>` +
                        `$$f_1 = \\frac{343}{${type === 'offen' ? '2 \\cdot ' + roundTo(Leff, 4).toString() : '4 \\cdot ' + roundTo(Leff, 4).toString()}} \\approx ${roundTo(f1, 1).toString().replace('.', ',')}\\,\\text{Hz}$$`
         }
       };
@@ -181,24 +181,24 @@ export const GENERATOR_DB = {
         name = 'Sinusförmige Wechselspannung';
         u_eff = u_max / Math.sqrt(2);
         formula_tex = '$$U_{eff} = \\frac{U_{max}}{\\sqrt{2}}$$';
-        u_eff_desc = `$$\\\\frac{${u_max}}{\\\\sqrt{2}} \\\\approx ${roundTo(u_eff, 2).toString().replace('.', ',')}\\,\\\\text{V}$$`;
+        u_eff_desc = `$$\\frac{${u_max}}{\\sqrt{2}} \\approx ${roundTo(u_eff, 2).toString().replace('.', ',')}\\,\\text{V}$$`;
       } else if (type === 'dreieck') {
         name = 'Symmetrische Dreiecksspannung';
         u_eff = u_max / Math.sqrt(3);
         formula_tex = '$$U_{eff} = \\frac{U_{max}}{\\sqrt{3}}$$';
-        u_eff_desc = `$$\\\\frac{${u_max}}{\\\\sqrt{3}} \\\\approx ${roundTo(u_eff, 2).toString().replace('.', ',')}\\,\\\\text{V}$$`;
+        u_eff_desc = `$$\\frac{${u_max}}{\\sqrt{3}} \\approx ${roundTo(u_eff, 2).toString().replace('.', ',')}\\,\\text{V}$$`;
       } else if (type === 'rechteck_50') {
         name = 'Rechteckpuls (Tastgrad D = 50%, symmetrisch)';
         u_eff = u_max; // since u(t)^2 is always u_max^2 (if bipolar) or u_max/sqrt(2) if unipolar.
         // Let's assume unipolar: 0 to T/2 has u_max, T/2 to T has 0.
         u_eff = u_max * Math.sqrt(0.5);
         formula_tex = '$$U_{eff} = U_{max} \\cdot \\sqrt{D} = U_{max} \\cdot \\sqrt{0{,}5}$$';
-        u_eff_desc = `$$${u_max} \\\\cdot \\\\sqrt{0{,}5} \\\\approx ${roundTo(u_eff, 2).toString().replace('.', ',')}\\,\\\\text{V}$$`;
+        u_eff_desc = `$$${u_max} \\cdot \\sqrt{0{,}5} \\approx ${roundTo(u_eff, 2).toString().replace('.', ',')}\\,\\text{V}$$`;
       } else {
         name = 'Rechteckpuls (Tastgrad D = 25%, unipolar)';
         u_eff = u_max * Math.sqrt(0.25); // u_max * 0.5
         formula_tex = '$$U_{eff} = U_{max} \\cdot \\sqrt{D} = U_{max} \\cdot 0{,}5$$';
-        u_eff_desc = `$$${u_max} \\\\cdot 0{,}5 = ${roundTo(u_eff, 2).toString().replace('.', ',')}\\,\\\\text{V}$$`;
+        u_eff_desc = `$$${u_max} \\cdot 0{,}5 = ${roundTo(u_eff, 2).toString().replace('.', ',')}\\,\\text{V}$$`;
       }
       
       const P = (u_eff * u_eff) / R;
@@ -213,12 +213,12 @@ export const GENERATOR_DB = {
         ],
         solution: {
           intuition: 'Der Effektivwert RMS entspricht der thermisch wirksamen Gleichspannung. Bei komplexeren Formen hängt er vom Formfaktor oder Tastgrad ab.',
-          redThread: `1. Wähle die Effektivwertformel für den Signal-Typ (${name}).\\n2. Setze $U_{max}$ ein, um $U_{eff}$ zu bestimmen.\\n3. Berechne die Leistung mit $P = U_{eff}^2 / R$.`,
-          calculation: `Gegeben: Signaltyp = ${name}, $U_{max} = ${u_max}\\,\\text{V}$, $R = ${R}\\,\\Omega$.\\n\\n` +
-                       `1. Berechnung des Effektivwerts $U_{eff}$:\\n` +
-                       `${formula_tex}\\n` +
-                       `${u_eff_desc}\\n` +
-                       `2. Berechnung der Leistung:\\n` +
+          redThread: `1. Wähle die Effektivwertformel für den Signal-Typ (${name}).<br>2. Setze $U_{max}$ ein, um $U_{eff}$ zu bestimmen.<br>3. Berechne die Leistung mit $P = U_{eff}^2 / R$.`,
+          calculation: `Gegeben: Signaltyp = ${name}, $U_{max} = ${u_max}\\,\\text{V}$, $R = ${R}\\,\\Omega$.<br><br>` +
+                       `1. Berechnung des Effektivwerts $U_{eff}$:<br>` +
+                       `${formula_tex}<br>` +
+                       `${u_eff_desc}<br>` +
+                       `2. Berechnung der Leistung:<br>` +
                        `$$P = \\frac{U_{eff}^2}{R} = \\frac{(${roundTo(u_eff, 4).toString()})^2}{${R}} = \\frac{${roundTo(u_eff*u_eff, 3).toString().replace('.', ',')}}{${R}} \\approx ${roundTo(P, 3).toString().replace('.', ',')}\\,\\text{W}$$`
         }
       };
