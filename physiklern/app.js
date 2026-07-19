@@ -771,8 +771,8 @@ function handleCheckNormalAnswer(levelObj, feedbackEl) {
       const userVal = cleanInput(inputEl.value);
       const correctVal = cleanInput(field.correct);
       
-      const uf = parseFloat(userVal);
-      const cf = parseFloat(correctVal);
+      const uf = parseFractionOrDecimal(userVal);
+      const cf = parseFractionOrDecimal(correctVal);
       
       let fieldCorrect = false;
       if (!isNaN(uf) && !isNaN(cf)) {
@@ -917,8 +917,8 @@ function handleCheckBossAnswer(levelObj, stageObj, feedbackEl) {
     const userVal = cleanInput(inputEl.value);
     const correctVal = cleanInput(field.correct);
     
-    const uf = parseFloat(userVal);
-    const cf = parseFloat(correctVal);
+    const uf = parseFractionOrDecimal(userVal);
+    const cf = parseFractionOrDecimal(correctVal);
     
     let fieldCorrect = false;
     if (!isNaN(uf) && !isNaN(cf)) {
@@ -992,6 +992,21 @@ function handleCheckBossAnswer(levelObj, stageObj, feedbackEl) {
     playSound('incorrect');
     revealBossSolution(currentBossTask);
   }
+}
+
+function parseFractionOrDecimal(val) {
+  if (!val) return NaN;
+  if (val.includes('/')) {
+    const parts = val.split('/');
+    if (parts.length === 2) {
+      const num = parseFloat(parts[0]);
+      const den = parseFloat(parts[1]);
+      if (!isNaN(num) && !isNaN(den) && den !== 0) {
+        return num / den;
+      }
+    }
+  }
+  return parseFloat(val);
 }
 
 function cleanInput(val) {
@@ -1460,8 +1475,8 @@ function submitSprintAnswer() {
   const userVal = cleanInput(inputEl.value);
   const correctVal = cleanInput(currentSprintTask.correct);
   
-  const uf = parseFloat(userVal);
-  const cf = parseFloat(correctVal);
+  const uf = parseFractionOrDecimal(userVal);
+  const cf = parseFractionOrDecimal(correctVal);
   
   let isCorrect = false;
   if (!isNaN(uf) && !isNaN(cf)) {
